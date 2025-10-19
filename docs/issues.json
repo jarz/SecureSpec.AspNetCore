@@ -1,0 +1,883 @@
+{
+  "issues": [
+    {
+      "id": "1.1",
+      "phase": 1,
+      "title": "Implement Canonical Serializer with Deterministic Hash Generation",
+      "priority": "critical",
+      "labels": ["phase-1", "core", "serialization"],
+      "effort_days": "3-5",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "AC 1-10: Canonical serialization with UTF-8, LF endings, no BOM, normalized whitespace",
+        "AC 19-21: SHA256 hash generation and ETag format",
+        "AC 499: SHA256 hashing after normalization",
+        "Component arrays sorted lexically",
+        "Numeric serialization locale invariance"
+      ],
+      "description": "Implement the canonical JSON/YAML serializer that produces deterministic output with stable SHA256 hashes across rebuilds."
+    },
+    {
+      "id": "1.2",
+      "phase": 1,
+      "title": "Implement SchemaId Strategy with Collision Handling",
+      "priority": "critical",
+      "labels": ["phase-1", "core", "schema"],
+      "effort_days": "3-4",
+      "dependencies": ["1.1"],
+      "acceptance_criteria": [
+        "AC 401: SchemaId generic naming deterministic",
+        "AC 402: Collision applies _schemaDup{N} suffix",
+        "AC 403: Collision suffix numbering stable",
+        "AC 404: SchemaId strategy override applied",
+        "AC 405: Collision diagnostic SCH001 emitted",
+        "AC 406: Generic nested types canonical form",
+        "AC 407: Nullable generic arguments canonical ordering",
+        "AC 408: Removing type reclaims suffix sequence"
+      ],
+      "description": "Implement SchemaId generation strategy with deterministic collision suffix handling (_schemaDup{N})."
+    },
+    {
+      "id": "1.3",
+      "phase": 1,
+      "title": "Implement CLR Primitive Type Mapping",
+      "priority": "critical",
+      "labels": ["phase-1", "core", "schema", "type-mapping"],
+      "effort_days": "2-3",
+      "dependencies": ["1.2"],
+      "acceptance_criteria": [
+        "AC 409-419: All CLR primitive type mappings",
+        "Guid, DateTime, DateOnly, TimeOnly support",
+        "byte[] and IFormFile mapping",
+        "Decimal handling",
+        "Nullable value types",
+        "Enum string and integer modes"
+      ],
+      "description": "Implement complete CLR primitive to OpenAPI type mapping with all standard .NET types."
+    },
+    {
+      "id": "1.4",
+      "phase": 1,
+      "title": "Implement Nullability Semantics (OpenAPI 3.0 & 3.1)",
+      "priority": "critical",
+      "labels": ["phase-1", "core", "schema", "nullability"],
+      "effort_days": "2-3",
+      "dependencies": ["1.3"],
+      "acceptance_criteria": [
+        "AC 420-426: Nullability representation",
+        "OpenAPI 3.0: nullable:true",
+        "OpenAPI 3.1: union types",
+        "Array and dictionary nullable handling",
+        "OneOf variant nullable support"
+      ],
+      "description": "Implement nullability representation for both OpenAPI 3.0 and 3.1 versions."
+    },
+    {
+      "id": "1.5",
+      "phase": 1,
+      "title": "Implement Recursion Detection and Depth Limits",
+      "priority": "high",
+      "labels": ["phase-1", "core", "schema", "safety"],
+      "effort_days": "2",
+      "dependencies": ["1.2"],
+      "acceptance_criteria": [
+        "AC 427-431: Recursion and depth handling",
+        "Max depth 32 (configurable)",
+        "Cycle detection with placeholder",
+        "SCH001-DEPTH diagnostic"
+      ],
+      "description": "Implement cycle detection and maximum traversal depth with proper diagnostics."
+    },
+    {
+      "id": "1.6",
+      "phase": 1,
+      "title": "Implement Dictionary and AdditionalProperties Handling",
+      "priority": "high",
+      "labels": ["phase-1", "core", "schema"],
+      "effort_days": "2",
+      "dependencies": ["1.3"],
+      "acceptance_criteria": [
+        "AC 432-437: Dictionary and additionalProperties",
+        "DataAnnotations on value types",
+        "Conflict detection (ANN001)",
+        "Unicode normalization"
+      ],
+      "description": "Implement Dictionary<string,T> mapping to OpenAPI additionalProperties with constraint support."
+    },
+    {
+      "id": "1.7",
+      "phase": 1,
+      "title": "Implement DataAnnotations Ingestion",
+      "priority": "high",
+      "labels": ["phase-1", "core", "schema", "validation"],
+      "effort_days": "2-3",
+      "dependencies": ["1.3"],
+      "acceptance_criteria": [
+        "AC 31-40: DataAnnotations mapping",
+        "Required, Range, MinLength, MaxLength, StringLength, RegularExpression",
+        "Conflict detection with ANN001 diagnostic"
+      ],
+      "description": "Implement ingestion of DataAnnotations attributes with conflict detection."
+    },
+    {
+      "id": "1.8",
+      "phase": 1,
+      "title": "Implement Enum Advanced Behavior",
+      "priority": "high",
+      "labels": ["phase-1", "core", "schema", "enums"],
+      "effort_days": "2-3",
+      "dependencies": ["1.3"],
+      "acceptance_criteria": [
+        "AC 438-443: Enum advanced behavior",
+        "Declaration order stability",
+        "String/integer representation toggle",
+        "Virtualization for >10K values (VIRT001)",
+        "Search across virtualized segments"
+      ],
+      "description": "Implement enum handling with virtualization for large enums and proper ordering."
+    },
+    {
+      "id": "2.1",
+      "phase": 2,
+      "title": "Implement HTTP Bearer Security Scheme",
+      "priority": "critical",
+      "labels": ["phase-2", "security", "authentication"],
+      "effort_days": "1-2",
+      "dependencies": ["1.1"],
+      "acceptance_criteria": [
+        "AC 189-195: HTTP Bearer implementation",
+        "AC 221: Basic auth inference blocked (AUTH001)",
+        "Header sanitization"
+      ],
+      "description": "Implement HTTP Bearer token authentication scheme without Basic auth inference."
+    },
+    {
+      "id": "2.2",
+      "phase": 2,
+      "title": "Implement API Key Security Schemes (Header & Query)",
+      "priority": "critical",
+      "labels": ["phase-2", "security", "authentication"],
+      "effort_days": "1-2",
+      "dependencies": ["1.1"],
+      "acceptance_criteria": [
+        "AC 196-198: API Key header and query",
+        "Name sanitization",
+        "Diagnostic logging"
+      ],
+      "description": "Implement API Key authentication in both header and query parameter locations."
+    },
+    {
+      "id": "2.3",
+      "phase": 2,
+      "title": "Implement OAuth Authorization Code Flow with PKCE",
+      "priority": "critical",
+      "labels": ["phase-2", "security", "oauth"],
+      "effort_days": "3-5",
+      "dependencies": ["1.1"],
+      "acceptance_criteria": [
+        "AC 199-208: Authorization Code flow with PKCE",
+        "AC 431-435: Auto code challenge/verifier",
+        "CSRF double-submit and rotation",
+        "Token exchange and refresh"
+      ],
+      "description": "Implement OAuth 2.0 Authorization Code flow with required PKCE."
+    },
+    {
+      "id": "2.4",
+      "phase": 2,
+      "title": "Implement OAuth Client Credentials Flow",
+      "priority": "high",
+      "labels": ["phase-2", "security", "oauth"],
+      "effort_days": "2-3",
+      "dependencies": ["1.1"],
+      "acceptance_criteria": [
+        "AC 209-213: Client Credentials flow",
+        "Scoped client authentication",
+        "Token management"
+      ],
+      "description": "Implement OAuth 2.0 Client Credentials flow with scope support."
+    },
+    {
+      "id": "2.5",
+      "phase": 2,
+      "title": "Implement Mutual TLS Security Scheme",
+      "priority": "medium",
+      "labels": ["phase-2", "security", "authentication"],
+      "effort_days": "1",
+      "dependencies": ["1.1"],
+      "acceptance_criteria": [
+        "AC 214-216: Mutual TLS display",
+        "No certificate upload capability",
+        "External cert management documentation"
+      ],
+      "description": "Implement Mutual TLS scheme display (display only, no cert upload)."
+    },
+    {
+      "id": "2.6",
+      "phase": 2,
+      "title": "Implement Security Requirement AND/OR Semantics",
+      "priority": "high",
+      "labels": ["phase-2", "security", "logic"],
+      "effort_days": "2",
+      "dependencies": ["2.1", "2.2", "2.3", "2.4", "2.5"],
+      "acceptance_criteria": [
+        "AC 217-220: Security AND/OR semantics",
+        "AND within requirement",
+        "OR across objects",
+        "Documentation and examples"
+      ],
+      "description": "Implement security requirement logic: AND within requirement, OR across objects."
+    },
+    {
+      "id": "2.7",
+      "phase": 2,
+      "title": "Implement Per-Operation Security Overrides",
+      "priority": "high",
+      "labels": ["phase-2", "security", "operations"],
+      "effort_days": "2",
+      "dependencies": ["2.1", "2.2", "2.3", "2.4", "2.5", "2.6"],
+      "acceptance_criteria": [
+        "AC 464-468: Per-operation security",
+        "Override without merge",
+        "Empty array clears global",
+        "Deterministic ordering",
+        "Mutation logging"
+      ],
+      "description": "Implement per-operation security array that overrides global when present."
+    },
+    {
+      "id": "2.8",
+      "phase": 2,
+      "title": "Implement Policy and Role to Scope Mappings",
+      "priority": "medium",
+      "labels": ["phase-2", "security", "authorization"],
+      "effort_days": "2",
+      "dependencies": ["2.6"],
+      "acceptance_criteria": [
+        "AC 222-223: Policy/Role mapping hooks",
+        "POL001 and ROLE001 diagnostics",
+        "Configuration examples"
+      ],
+      "description": "Implement PolicyToScope and RoleToScope mapping hooks with diagnostics."
+    },
+    {
+      "id": "3.1",
+      "phase": 3,
+      "title": "Implement SecureSpec UI Base Framework",
+      "priority": "critical",
+      "labels": ["phase-3", "ui", "frontend"],
+      "effort_days": "5-7",
+      "dependencies": ["1.1"],
+      "acceptance_criteria": [
+        "AC 331-340: Base UI structure",
+        "Component architecture",
+        "State management",
+        "Routing framework"
+      ],
+      "description": "Implement the base SecureSpec UI framework with proper structure and organization."
+    },
+    {
+      "id": "3.2",
+      "phase": 3,
+      "title": "Implement Operation Display and Navigation",
+      "priority": "critical",
+      "labels": ["phase-3", "ui", "operations"],
+      "effort_days": "3-4",
+      "dependencies": ["3.1"],
+      "acceptance_criteria": [
+        "AC 341-345: Operation display and grouping",
+        "Tag-based organization",
+        "Collapse/expand functionality",
+        "Operation filtering"
+      ],
+      "description": "Implement operation display with proper grouping, tags, and navigation."
+    },
+    {
+      "id": "3.3",
+      "phase": 3,
+      "title": "Implement Deep Linking and OperationId Display",
+      "priority": "high",
+      "labels": ["phase-3", "ui", "navigation"],
+      "effort_days": "2",
+      "dependencies": ["3.2"],
+      "acceptance_criteria": [
+        "AC 469-472: Deep linking and operationId display",
+        "Hash navigation with scroll",
+        "Anchor retention when disabled",
+        "Focus highlight on update"
+      ],
+      "description": "Implement deep linking with hash navigation and operationId display control."
+    },
+    {
+      "id": "3.4",
+      "phase": 3,
+      "title": "Implement Try It Out Request Execution",
+      "priority": "critical",
+      "labels": ["phase-3", "ui", "execution"],
+      "effort_days": "5-7",
+      "dependencies": ["3.2", "4.5"],
+      "acceptance_criteria": [
+        "AC 346-355: Try It Out functionality",
+        "Parameter input forms",
+        "Request body editors",
+        "cURL generation",
+        "Response display"
+      ],
+      "description": "Implement the Try It Out functionality with request building and execution."
+    },
+    {
+      "id": "3.5",
+      "phase": 3,
+      "title": "Implement Models Panel with Expansion Control",
+      "priority": "high",
+      "labels": ["phase-3", "ui", "models"],
+      "effort_days": "3-4",
+      "dependencies": ["3.1"],
+      "acceptance_criteria": [
+        "AC 477-480: Model expansion depths",
+        "Configurable expand depth",
+        "Collapsible placeholders",
+        "Deterministic re-rendering"
+      ],
+      "description": "Implement Models/Schemas panel with configurable expansion depths."
+    },
+    {
+      "id": "3.6",
+      "phase": 3,
+      "title": "Implement Search and Filter Functionality",
+      "priority": "high",
+      "labels": ["phase-3", "ui", "search"],
+      "effort_days": "2-3",
+      "dependencies": ["3.2"],
+      "acceptance_criteria": [
+        "AC 481-486: Search and filter",
+        "InitialFilter support",
+        "Control character sanitization",
+        "Debounce (150ms default)",
+        "Memory cap for results"
+      ],
+      "description": "Implement operation search/filter with sanitization and debounce."
+    },
+    {
+      "id": "3.7",
+      "phase": 3,
+      "title": "Implement Supported Submit Methods Whitelist",
+      "priority": "medium",
+      "labels": ["phase-3", "ui", "configuration"],
+      "effort_days": "1-2",
+      "dependencies": ["3.4"],
+      "acceptance_criteria": [
+        "AC 473-476: Method whitelisting",
+        "TRACE/CONNECT excluded",
+        "HEAD support",
+        "Immediate reflection",
+        "LIM001 diagnostic"
+      ],
+      "description": "Implement HTTP method whitelisting with proper UI feedback."
+    },
+    {
+      "id": "3.8",
+      "phase": 3,
+      "title": "Implement Server Variable Substitution",
+      "priority": "medium",
+      "labels": ["phase-3", "ui", "configuration"],
+      "effort_days": "2",
+      "dependencies": ["3.1"],
+      "acceptance_criteria": [
+        "AC 356-360: Server variable substitution",
+        "Safe editing with validation",
+        "Revert invalid changes",
+        "Request isolation"
+      ],
+      "description": "Implement safe server variable editing with revert on invalid and isolation."
+    },
+    {
+      "id": "3.9",
+      "phase": 3,
+      "title": "Implement Vendor Extension Display",
+      "priority": "medium",
+      "labels": ["phase-3", "ui", "extensions"],
+      "effort_days": "2",
+      "dependencies": ["3.1"],
+      "acceptance_criteria": [
+        "AC 487-492: Vendor extensions",
+        "5120 byte truncation",
+        "Token type restrictions",
+        "Lexical ordering",
+        "Sanitized structure"
+      ],
+      "description": "Implement vendor extension display with sanitization and truncation."
+    },
+    {
+      "id": "3.10",
+      "phase": 3,
+      "title": "Implement Links and Callbacks Display",
+      "priority": "low",
+      "labels": ["phase-3", "ui", "advanced"],
+      "effort_days": "2-3",
+      "dependencies": ["3.1"],
+      "acceptance_criteria": [
+        "AC 493-497: Links and callbacks",
+        "Circular link detection",
+        "operationRef fallback",
+        "Read-only callbacks",
+        "Broken $ref handling"
+      ],
+      "description": "Implement read-only display of Links and Callbacks with edge case handling."
+    },
+    {
+      "id": "4.1",
+      "phase": 4,
+      "title": "Implement Document Generation Performance Targets",
+      "priority": "critical",
+      "labels": ["phase-4", "performance", "core"],
+      "effort_days": "3-5",
+      "dependencies": ["1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8"],
+      "acceptance_criteria": [
+        "AC 297-300: Performance targets",
+        "<500ms for 1000 operations",
+        "Performance monitoring",
+        "Degraded/failure thresholds"
+      ],
+      "description": "Optimize document generation to meet performance targets."
+    },
+    {
+      "id": "4.2",
+      "phase": 4,
+      "title": "Implement Large Schema Virtualization",
+      "priority": "high",
+      "labels": ["phase-4", "performance", "virtualization"],
+      "effort_days": "3-4",
+      "dependencies": ["1.3", "1.8"],
+      "acceptance_criteria": [
+        "AC 301-303: Virtualization thresholds",
+        ">200 properties or >50 nested",
+        "VIRT001 diagnostic",
+        "Lazy loading"
+      ],
+      "description": "Implement virtualization for large schemas with lazy loading."
+    },
+    {
+      "id": "4.3",
+      "phase": 4,
+      "title": "Implement Example Generation Throttling",
+      "priority": "high",
+      "labels": ["phase-4", "performance", "examples"],
+      "effort_days": "2",
+      "dependencies": ["1.3"],
+      "acceptance_criteria": [
+        "AC 304-306: Example throttling",
+        "25ms time budget",
+        "EXM001 diagnostic",
+        "Thread-safe atomic counters"
+      ],
+      "description": "Implement example synthesis throttling with time budget."
+    },
+    {
+      "id": "4.4",
+      "phase": 4,
+      "title": "Implement Resource Guards (Size & Time)",
+      "priority": "critical",
+      "labels": ["phase-4", "performance", "safety"],
+      "effort_days": "2-3",
+      "dependencies": ["1.1"],
+      "acceptance_criteria": [
+        "AC 319-324: Resource guards",
+        "Size and time limits",
+        "Fallback document generation",
+        "PERF001 diagnostic"
+      ],
+      "description": "Implement size and time guards with fallback behavior."
+    },
+    {
+      "id": "4.5",
+      "phase": 4,
+      "title": "Implement WASM Sandbox Isolation",
+      "priority": "critical",
+      "labels": ["phase-4", "security", "sandbox"],
+      "effort_days": "5-7",
+      "dependencies": ["3.4"],
+      "acceptance_criteria": [
+        "AC 209-213: Sandbox isolation",
+        "Memory and CPU limits",
+        "No network/DOM access",
+        "Abort reason codes"
+      ],
+      "description": "Implement WASM sandbox for request execution with strict limits."
+    },
+    {
+      "id": "4.6",
+      "phase": 4,
+      "title": "Implement Thread-Safe Document Cache",
+      "priority": "high",
+      "labels": ["phase-4", "performance", "concurrency"],
+      "effort_days": "2-3",
+      "dependencies": ["1.1"],
+      "acceptance_criteria": [
+        "AC 325-330: Thread-safe cache",
+        "RW lock strategy",
+        "Cache invalidation",
+        "Integrity revalidation"
+      ],
+      "description": "Implement thread-safe document cache with RW lock."
+    },
+    {
+      "id": "4.7",
+      "phase": 4,
+      "title": "Implement Asset Caching with Integrity",
+      "priority": "medium",
+      "labels": ["phase-4", "performance", "caching"],
+      "effort_days": "2",
+      "dependencies": ["1.1"],
+      "acceptance_criteria": [
+        "Cache-Control headers",
+        "Post-expiry integrity checks",
+        "Configurable cache lifetime"
+      ],
+      "description": "Implement Cache-Control headers for assets with integrity revalidation."
+    },
+    {
+      "id": "5.1",
+      "phase": 5,
+      "title": "Implement Structured Diagnostics System",
+      "priority": "critical",
+      "labels": ["phase-5", "diagnostics", "monitoring"],
+      "effort_days": "3-4",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "AC 381-390: Diagnostic event structure",
+        "All error codes defined",
+        "Severity levels",
+        "Context metadata",
+        "Sanitization flags"
+      ],
+      "description": "Implement comprehensive structured diagnostics logging system."
+    },
+    {
+      "id": "5.2",
+      "phase": 5,
+      "title": "Implement Diagnostics Retention with Bounded Purge",
+      "priority": "high",
+      "labels": ["phase-5", "diagnostics", "storage"],
+      "effort_days": "2-3",
+      "dependencies": ["5.1"],
+      "acceptance_criteria": [
+        "AC 391-400: Retention policy",
+        "Size-based purge (RET001)",
+        "Age-based purge (RET002)",
+        "Atomic FIFO ordering"
+      ],
+      "description": "Implement diagnostics retention with atomic FIFO purge."
+    },
+    {
+      "id": "5.3",
+      "phase": 5,
+      "title": "Implement Rate Limiting Buckets",
+      "priority": "critical",
+      "labels": ["phase-5", "security", "rate-limiting"],
+      "effort_days": "3-4",
+      "dependencies": ["3.4"],
+      "acceptance_criteria": [
+        "AC 301-303: Rate limit buckets",
+        "TryItOut, OAuth, SpecDownload buckets",
+        "Sliding window counters",
+        "Retry-After header",
+        "LIM001 diagnostic"
+      ],
+      "description": "Implement rate limiting with separate buckets and sliding windows."
+    },
+    {
+      "id": "5.4",
+      "phase": 5,
+      "title": "Implement Filter Pipeline Ordering",
+      "priority": "high",
+      "labels": ["phase-5", "core", "extensibility"],
+      "effort_days": "2-3",
+      "dependencies": ["1.3", "1.7"],
+      "acceptance_criteria": [
+        "AC 459-463: Filter pipeline ordering",
+        "Schema → Operation → Parameter → RequestBody → Document → PreSerialize",
+        "Timestamp verification tests"
+      ],
+      "description": "Implement ordered filter pipeline execution with proper propagation."
+    },
+    {
+      "id": "5.5",
+      "phase": 5,
+      "title": "Implement PreSerialize Mutation Boundaries",
+      "priority": "high",
+      "labels": ["phase-5", "core", "security"],
+      "effort_days": "2",
+      "dependencies": ["5.4"],
+      "acceptance_criteria": [
+        "AC 400, 433: Mutation boundaries",
+        "Only servers/security mutable",
+        "Schema mutation blocked",
+        "Mutation logging"
+      ],
+      "description": "Implement PreSerialize filter boundaries with mutation enforcement."
+    },
+    {
+      "id": "5.6",
+      "phase": 5,
+      "title": "Implement Concurrency Guarantees",
+      "priority": "high",
+      "labels": ["phase-5", "performance", "concurrency"],
+      "effort_days": "2",
+      "dependencies": ["4.6", "5.4"],
+      "acceptance_criteria": [
+        "AC 38-39: Thread safety",
+        "Immutable filter lists",
+        "Isolated PreSerialize contexts",
+        "Atomic counters"
+      ],
+      "description": "Ensure thread safety across all components with proper locking."
+    },
+    {
+      "id": "6.1",
+      "phase": 6,
+      "title": "Implement Accessibility (WCAG 2.1 AA)",
+      "priority": "high",
+      "labels": ["phase-6", "accessibility", "ui"],
+      "effort_days": "3-5",
+      "dependencies": ["3.1"],
+      "acceptance_criteria": [
+        "AC 325-360: WCAG 2.1 AA compliance",
+        "Skip link, keyboard navigation",
+        "aria-expanded sync, modal focus trap",
+        "Contrast ratios ≥4.5:1",
+        "Screen reader support"
+      ],
+      "description": "Implement full WCAG 2.1 Level AA accessibility compliance."
+    },
+    {
+      "id": "6.2",
+      "phase": 6,
+      "title": "Implement Content Security Policy (CSP)",
+      "priority": "critical",
+      "labels": ["phase-6", "security", "csp"],
+      "effort_days": "2-3",
+      "dependencies": ["3.1"],
+      "acceptance_criteria": [
+        "AC 209-213, 498: CSP enforcement",
+        "Strict policy with nonce",
+        "No unsafe-eval",
+        "CSP001 diagnostic"
+      ],
+      "description": "Implement strict CSP policy with nonce generation and enforcement."
+    },
+    {
+      "id": "6.3",
+      "phase": 6,
+      "title": "Implement Integrity Enforcement (SHA256 + SRI)",
+      "priority": "critical",
+      "labels": ["phase-6", "security", "integrity"],
+      "effort_days": "2-3",
+      "dependencies": ["1.1"],
+      "acceptance_criteria": [
+        "AC 19-21, 304-306, 499-500: Integrity checks",
+        "SHA256 verification",
+        "SRI support",
+        "SEC001 critical diagnostic"
+      ],
+      "description": "Implement SHA256 hash verification with SRI support."
+    },
+    {
+      "id": "6.4",
+      "phase": 6,
+      "title": "Implement Header and Input Sanitization",
+      "priority": "critical",
+      "labels": ["phase-6", "security", "sanitization"],
+      "effort_days": "2-3",
+      "dependencies": ["3.1"],
+      "acceptance_criteria": [
+        "AC 31-32, 238-241, 435: Sanitization",
+        "CRLF strip, Unicode normalization",
+        "Header sanitization ordering",
+        "HD001 diagnostic"
+      ],
+      "description": "Implement comprehensive sanitization for headers and user input."
+    },
+    {
+      "id": "6.5",
+      "phase": 6,
+      "title": "Implement Signature Support (Optional Extension)",
+      "priority": "low",
+      "labels": ["phase-6", "security", "signing"],
+      "effort_days": "2-3",
+      "dependencies": ["6.3"],
+      "acceptance_criteria": [
+        "Signature generation",
+        "Signature verification",
+        "Algorithm agility",
+        "Exit code 5 on mismatch"
+      ],
+      "description": "Implement optional cryptographic signature support for documents."
+    },
+    {
+      "id": "6.6",
+      "phase": 6,
+      "title": "Implement Fallback Document Behavior",
+      "priority": "high",
+      "labels": ["phase-6", "safety", "resilience"],
+      "effort_days": "2",
+      "dependencies": ["4.4"],
+      "acceptance_criteria": [
+        "AC 41: Fallback triggers",
+        "Minimal surface: Info only",
+        "No stale operation leakage",
+        "Previous doc discarded"
+      ],
+      "description": "Implement fallback document generation on failures."
+    },
+    {
+      "id": "6.7",
+      "phase": 6,
+      "title": "Implement Media Type Handling and Content Negotiation",
+      "priority": "high",
+      "labels": ["phase-6", "core", "media-types"],
+      "effort_days": "3-4",
+      "dependencies": ["1.3"],
+      "acceptance_criteria": [
+        "AC 452-458: Media type handling",
+        "Deterministic ordering",
+        "Shared schema $ref",
+        "Multipart validation",
+        "Binary size threshold"
+      ],
+      "description": "Implement deterministic media type ordering and content negotiation."
+    },
+    {
+      "id": "6.8",
+      "phase": 6,
+      "title": "Implement Polymorphism Support",
+      "priority": "high",
+      "labels": ["phase-6", "core", "schema", "polymorphism"],
+      "effort_days": "3-5",
+      "dependencies": ["1.3"],
+      "acceptance_criteria": [
+        "AC 444-451: Polymorphism",
+        "AllOf/OneOf/Automatic/Flatten strategies",
+        "Discriminator handling",
+        "Reserved keyword escaping"
+      ],
+      "description": "Implement full polymorphism support with multiple strategies."
+    },
+    {
+      "id": "6.9",
+      "phase": 6,
+      "title": "Implement Example Precedence Engine",
+      "priority": "medium",
+      "labels": ["phase-6", "core", "examples"],
+      "effort_days": "2-3",
+      "dependencies": ["1.3"],
+      "acceptance_criteria": [
+        "AC 4: Example precedence",
+        "Named > Single/Attribute > Component > Generated > Blocked",
+        "Proper resolution order"
+      ],
+      "description": "Implement example precedence engine with proper resolution order."
+    },
+    {
+      "id": "6.10",
+      "phase": 6,
+      "title": "Implement Multi-File XML Documentation Ingestion",
+      "priority": "medium",
+      "labels": ["phase-6", "core", "documentation"],
+      "effort_days": "2-3",
+      "dependencies": ["1.3"],
+      "acceptance_criteria": [
+        "AC 9: Multi-file XML ingestion",
+        "Ordered merge logic",
+        "Conflict detection",
+        "Proper comment resolution"
+      ],
+      "description": "Implement ordered merge of multiple XML documentation files."
+    },
+    {
+      "id": "X.1",
+      "phase": "cross-cutting",
+      "title": "Create CLI Tools",
+      "priority": "high",
+      "labels": ["tooling", "cli"],
+      "effort_days": "3-5",
+      "dependencies": ["1.1", "6.3"],
+      "acceptance_criteria": [
+        "Document generation command",
+        "Validation command",
+        "Integrity check command",
+        "Exit codes 0-5 mapping",
+        "Configuration file support"
+      ],
+      "description": "Create CLI tools for document generation, validation, and integrity checking."
+    },
+    {
+      "id": "X.2",
+      "phase": "cross-cutting",
+      "title": "Create Comprehensive Test Suite",
+      "priority": "critical",
+      "labels": ["testing", "quality"],
+      "effort_days": "ongoing",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "Unit tests per testing strategy",
+        "Integration tests per testing strategy",
+        "E2E tests per testing strategy",
+        "Performance tests for all categories"
+      ],
+      "description": "Create comprehensive test coverage as specified in testing strategy."
+    },
+    {
+      "id": "X.3",
+      "phase": "cross-cutting",
+      "title": "Create Migration Guide from Swashbuckle",
+      "priority": "high",
+      "labels": ["documentation", "migration"],
+      "effort_days": "3-5",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "API mapping documentation",
+        "Breaking changes documentation",
+        "Migration examples",
+        "Step-by-step guide",
+        "Common pitfall warnings"
+      ],
+      "description": "Create comprehensive migration guide from Swashbuckle.AspNetCore."
+    },
+    {
+      "id": "X.4",
+      "phase": "cross-cutting",
+      "title": "Create Configuration Documentation",
+      "priority": "high",
+      "labels": ["documentation"],
+      "effort_days": "3-5",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "All configuration options documented",
+        "Default values specified",
+        "Examples for common scenarios",
+        "Security configuration guidance",
+        "Performance tuning guidance"
+      ],
+      "description": "Create comprehensive configuration documentation with examples."
+    },
+    {
+      "id": "X.5",
+      "phase": "cross-cutting",
+      "title": "Implement Monitoring and Observability",
+      "priority": "medium",
+      "labels": ["monitoring", "observability"],
+      "effort_days": "2-3",
+      "dependencies": ["5.1", "5.3", "4.5"],
+      "acceptance_criteria": [
+        "Gen latency p95 instrumentation",
+        "Integrity failure counting",
+        "Rate limit violation counters",
+        "Sandbox memory gauges",
+        "Diagnostics purge frequency",
+        "Alert threshold configuration"
+      ],
+      "description": "Implement metrics collection and observability."
+    }
+  ]
+}
