@@ -260,13 +260,16 @@ if (app.Environment.IsProduction())
 
 ### 2. Authentication
 
-Protect documentation access:
+Protect documentation access with multiple strategies:
+
+#### Basic Authentication/Authorization
 
 ```csharp
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/docs/{*path}", async context =>
+// Require authentication for all SecureSpec endpoints
+app.MapGet("/securespec/{*path}", async context =>
 {
     if (!context.User.Identity?.IsAuthenticated ?? true)
     {
@@ -278,6 +281,153 @@ app.MapGet("/docs/{*path}", async context =>
 })
 .RequireAuthorization();
 ```
+
+#### Role-Based Access Control (RBAC)
+
+```csharp
+// Define authorization policy
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("DocumentationAccess", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("Developer", "ApiConsumer");
+    });
+    
+    options.AddPolicy("InternalOnly", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("employee", "true");
+    });
+});
+
+// Apply policy to endpoints
+app.MapGet("/securespec/{*path}", /* handler */)
+   .RequireAuthorization("DocumentationAccess");
+```
+
+#### API Key Authentication
+
+```csharp
+// Custom API key middleware
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/securespec"))
+    {
+        var apiKey = context.Request.Headers["X-API-Key"].FirstOrDefault();
+        
+        if (string.IsNullOrEmpty(apiKey) || !IsValidApiKey(apiKey))
+        {
+            context.Response.StatusCode = 401;
+            context.Response.Headers.WWWAuthenticate = "ApiKey";
+            await context.Response.WriteAsync("Invalid or missing API key");
+            return;
+        }
+    }
+    await next();
+});
+
+bool IsValidApiKey(string apiKey)
+{
+    // Validate against secure store (Azure Key Vault, etc.)
+    var validKeys = configuration.GetSection("ApiKeys").Get<string[]>();
+    return validKeys?.Contains(apiKey) ?? false;
+}
+```
+
+#### JWT Bearer Token Authentication
+
+```csharp
+// Configure JWT authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "https://auth.example.com";
+        options.Audience = "api-documentation";
+        options.RequireHttpsMetadata = true;
+        
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+// Require JWT for documentation
+app.MapGet("/securespec/{*path}", /* handler */)
+   .RequireAuthorization();
+```
+
+#### IP Allowlisting
+
+```csharp
+// Restrict to internal network
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | 
+                               ForwardedHeaders.XForwardedProto;
+});
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/securespec"))
+    {
+        var remoteIp = context.Connection.RemoteIpAddress;
+        var allowedNetworks = new[]
+        {
+            IPNetwork.Parse("10.0.0.0/8"),      // Private network
+            IPNetwork.Parse("172.16.0.0/12"),   // Private network
+            IPNetwork.Parse("192.168.0.0/16")   // Private network
+        };
+        
+        if (!allowedNetworks.Any(network => network.Contains(remoteIp)))
+        {
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsync("Access denied from external network");
+            return;
+        }
+    }
+    await next();
+});
+```
+
+#### Multi-Environment Strategy
+
+```csharp
+// Environment-specific authentication
+if (app.Environment.IsDevelopment())
+{
+    // Development: No auth for convenience
+    app.MapGet("/securespec/{*path}", /* handler */);
+}
+else if (app.Environment.IsStaging())
+{
+    // Staging: Basic authentication
+    app.MapGet("/securespec/{*path}", /* handler */)
+       .RequireAuthorization();
+}
+else if (app.Environment.IsProduction())
+{
+    // Production: Strict OAuth + RBAC
+    app.MapGet("/securespec/{*path}", /* handler */)
+       .RequireAuthorization("InternalOnly");
+}
+```
+
+#### Recommendations by API Type
+
+| API Type | Recommended Auth | Justification |
+|----------|-----------------|---------------|
+| Public API | Optional or API Key | Documentation is meant to be discoverable |
+| Partner API | API Key or OAuth | Control access, track usage |
+| Internal API | OAuth + RBAC | Strong authentication, role-based access |
+| Microservices (internal) | Mutual TLS + JWT | Service-to-service authentication |
+| Development | None or Basic | Developer convenience |
+
+**Security Note**: For highly sensitive APIs, consider deploying documentation to a separate, authenticated service rather than embedding it in the public API.
 
 ### 3. Content Security Policy
 

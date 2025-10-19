@@ -296,13 +296,101 @@ SecureSpec.AspNetCore is designed with security as a primary concern. This threa
 
 **Mitigation**:
 - This is intentional functionality
+- **Authentication layer recommended** for OpenAPI endpoints (see Authentication Strategies below)
 - Authorization required for sensitive endpoints
 - Documentation access control (host app responsibility)
 - Omit sensitive endpoints from documentation
+- Role-based access to different API documentation versions
+- IP allowlisting for internal-only documentation
 
 **Acceptance Criteria**: N/A
 
 **Residual Risk**: High (accepted - this is the product's purpose)
+
+**Authentication Strategies**:
+
+The host application can implement multiple authentication layers:
+
+1. **ASP.NET Core Authentication/Authorization**
+   ```csharp
+   // Require authentication for all SecureSpec endpoints
+   app.MapGet("/securespec/{*path}", /* handler */)
+      .RequireAuthorization();
+   
+   // Or with specific policy
+   app.MapGet("/securespec/{*path}", /* handler */)
+      .RequireAuthorization("InternalOnly");
+   ```
+
+2. **API Key Authentication**
+   ```csharp
+   // Custom middleware for API key
+   app.Use(async (context, next) =>
+   {
+       if (context.Request.Path.StartsWithSegments("/securespec"))
+       {
+           var apiKey = context.Request.Headers["X-API-Key"];
+           if (!ValidateApiKey(apiKey))
+           {
+               context.Response.StatusCode = 401;
+               return;
+           }
+       }
+       await next();
+   });
+   ```
+
+3. **IP Allowlisting**
+   ```csharp
+   // Restrict to internal network
+   app.Use(async (context, next) =>
+   {
+       if (context.Request.Path.StartsWithSegments("/securespec"))
+       {
+           var remoteIp = context.Connection.RemoteIpAddress;
+           if (!IsInternalIP(remoteIp))
+           {
+               context.Response.StatusCode = 403;
+               return;
+           }
+       }
+       await next();
+   });
+   ```
+
+4. **OAuth/JWT Bearer Token**
+   ```csharp
+   services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+       .AddJwtBearer(options => { /* config */ });
+   
+   app.MapGet("/securespec/{*path}", /* handler */)
+      .RequireAuthorization();
+   ```
+
+5. **Multi-Environment Strategy**
+   ```csharp
+   // Development: Open access
+   // Staging: Basic auth
+   // Production: Full OAuth + role-based
+   if (app.Environment.IsProduction())
+   {
+       app.MapGet("/securespec/{*path}", /* handler */)
+          .RequireAuthorization("DocumentationReader");
+   }
+   ```
+
+6. **Separate Documentation Service** (Zero-trust approach)
+   - Deploy documentation to separate subdomain (docs.api.example.com)
+   - Implement full authentication stack
+   - No direct access from public API
+   - Log all access attempts
+
+**Recommended Configuration**:
+- Production: OAuth/JWT + role-based authorization
+- Staging: Basic authentication minimum
+- Development: Optional (convenience vs security trade-off)
+- Public APIs: Consider unauthenticated access acceptable if API itself is public
+- Internal APIs: Always require authentication
 
 ---
 
