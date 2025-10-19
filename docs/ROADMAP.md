@@ -5,7 +5,7 @@ gantt
     title SecureSpec.AspNetCore Implementation Timeline
     dateFormat  YYYY-MM-DD
     section Phase 1: Core
-    Canonical Serializer       :crit, p1-1, 2025-01-01, 5d
+    Canonical Serializer       :crit, p1-1, 2025-11-01, 5d
     SchemaId Strategy          :crit, p1-2, after p1-1, 4d
     CLR Type Mapping           :crit, p1-3, after p1-2, 3d
     Nullability Semantics      :crit, p1-4, after p1-3, 3d
@@ -67,7 +67,7 @@ gantt
     
     section Cross-Cutting
     CLI Tools                  :x1, after p1-1, 5d
-    Test Suite                 :x2, 2025-01-01, 63d
+    Test Suite                 :x2, 2025-11-01, 63d
     Migration Guide            :x3, after p2-8, 5d
     Configuration Docs         :x4, after p2-8, 5d
     Monitoring                 :x5, after p5-1, 3d

@@ -1,21 +1,10 @@
-# Quick Reference: Creating Issues from PRD
+# Quick Reference: SecureSpec.AspNetCore Implementation
 
 ## TL;DR
 
-```bash
-# Option 1: Using Python (Recommended)
-cd docs
-pip install PyGithub
-export GITHUB_TOKEN=your_token_here
-python create-issues.py
+All 54 GitHub issues have been created. View them in the repository's Issues tab.
 
-# Option 2: Using GitHub CLI
-cd docs
-gh auth login
-./create-issues.sh
-```
-
-## What Gets Created
+## Project Overview
 
 **54 GitHub issues** organized into:
 - 6 implementation phases (Phases 1-6)
@@ -27,11 +16,10 @@ gh auth login
 | File | Size | Purpose |
 |------|------|---------|
 | `ISSUES.md` | 30 KB | Human-readable issue descriptions |
-| `issues.json` | 30 KB | Machine-readable issue data |
-| `create-issues.py` | 6 KB | Python script (uses GitHub API) |
-| `create-issues.sh` | 15 KB | Bash script (uses GitHub CLI) |
-| `README.md` | 7.5 KB | Complete documentation |
+| `README.md` | 7.5 KB | Implementation guide |
 | `SUMMARY.md` | 6.5 KB | Statistics and overview |
+| `ROADMAP.md` | 10 KB | Visual timeline and dependencies |
+| `QUICKREF.md` | 4 KB | This quick reference |
 | `PRD.md` | 37 KB | Original requirements document |
 
 ## Issue Breakdown by Phase
@@ -55,50 +43,37 @@ Cross-Cutting: Tools, Tests, Docs      →  5 issues (Ongoing)
 - **Medium** (9): Nice to have
 - **Low** (1): Optional
 
-## Commands Cheat Sheet
+## Getting Started
 
-### Python Script
+### View Issues
+All issues are in the GitHub repository:
 ```bash
-# Install dependencies
-pip install PyGithub
+# View in browser
+gh issue list
 
-# Create token at: https://github.com/settings/tokens
-# Required scopes: repo (all permissions)
-
-# Dry run (preview)
-python create-issues.py --dry-run
-
-# Create issues
-export GITHUB_TOKEN=ghp_...
-python create-issues.py
-
-# Different repo
-python create-issues.py --repo owner/repo
+# Or visit: https://github.com/jarz/SecureSpec.AspNetCore/issues
 ```
 
-### GitHub CLI
+### Set Up Project Management
 ```bash
-# Install: https://cli.github.com/
-# Authenticate
-gh auth login
+# Create milestones for each phase
+gh milestone create "Phase 1: Core OpenAPI"
+gh milestone create "Phase 2: Security"
+# ... etc
 
-# Dry run (preview)
-./create-issues.sh --dry-run
-
-# Create issues (Phase 1 & 2 only)
-./create-issues.sh
+# Or use the GitHub web UI for Projects
 ```
 
-### Manual Editing
+### Start Development
 ```bash
-# Edit issue definitions
-vim issues.json
+# Clone the repository
+git clone https://github.com/jarz/SecureSpec.AspNetCore.git
 
-# Validate JSON
-python -m json.tool issues.json
+# Check out a branch for your work
+git checkout -b feature/phase-1-serializer
 
-# Re-run script to create
-python create-issues.py
+# Reference issue numbers in commits
+git commit -m "Implement canonical serializer (#1)"
 ```
 
 ## Key Features Covered
@@ -125,33 +100,34 @@ python create-issues.py
 - Tests, Docs, Monitoring
 - WCAG 2.1 AA accessibility
 
-## Common Issues & Solutions
+## Common Workflows
 
-**Problem**: "PyGithub not installed"
+**Find issues to work on**
 ```bash
-pip install PyGithub
+# List open issues by phase
+gh issue list --label "phase-1"
+
+# List critical priority issues
+gh issue list --label "priority-critical"
 ```
 
-**Problem**: "Not authenticated with GitHub CLI"
-```bash
-gh auth login
-```
+**Track progress**
+- Use GitHub Projects for kanban board
+- Create milestones for each phase
+- Link pull requests to issues with "Closes #N"
 
-**Problem**: Rate limited
-- Wait 60 seconds (automatic retry)
-- Script includes 1s delay between requests
-
-**Problem**: Token has no permissions
-- Create new token with `repo` scope
-- https://github.com/settings/tokens
+**Review dependencies**
+- Check ROADMAP.md for dependency diagrams
+- Review ISSUES.md for dependency lists
+- Work through phases in order
 
 ## Best Practices
 
-1. ✅ Always dry-run first: `--dry-run`
-2. ✅ Create milestones for each phase
-3. ✅ Use GitHub Projects to track
-4. ✅ Review ISSUES.md before creating
-5. ✅ Start with Phase 1 critical issues
+1. ✅ Follow phase order: Start with Phase 1
+2. ✅ Create milestones: One per phase
+3. ✅ Use GitHub Projects: Visualize workflow
+4. ✅ Review ROADMAP.md: Understand dependencies
+5. ✅ Link commits: Reference issue numbers
 
 ## Critical Path
 
@@ -162,9 +138,9 @@ Serializer      Security         UI + Try It   WASM          CSP +
 + SchemaId      + OAuth          Out           Sandbox       Integrity
 ```
 
-## Success Criteria
+## Project Success Criteria
 
-- ✓ All 54 issues created
+- ✓ All 54 issues completed
 - ✓ All 500 AC from PRD met
 - ✓ All tests passing
 - ✓ WCAG 2.1 AA compliant
