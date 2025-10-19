@@ -1,0 +1,10 @@
+# GitHub Actions Workflows
+
+This directory will contain CI/CD workflows once the project has code to build and test.
+
+Planned workflows:
+- Build and test on multiple platforms
+- Security scanning
+- Code coverage reporting
+- Documentation deployment
+- Release automation

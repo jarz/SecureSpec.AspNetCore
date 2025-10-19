@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/jarz/SecureSpec.AspNetCore/tree/main/docs
+    about: Check the comprehensive documentation for help
+  - name: 💬 Discussions
+    url: https://github.com/jarz/SecureSpec.AspNetCore/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 🔒 Security Policy
+    url: https://github.com/jarz/SecureSpec.AspNetCore/blob/main/SECURITY.md
+    about: Report security vulnerabilities privately (DO NOT create public issues)
