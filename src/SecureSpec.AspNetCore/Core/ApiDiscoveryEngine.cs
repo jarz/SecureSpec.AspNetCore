@@ -12,7 +12,7 @@ public class ApiDiscoveryEngine
     public Task<IEnumerable<EndpointMetadata>> DiscoverEndpointsAsync()
     {
         // TODO: Implement endpoint discovery
-        return Task.FromResult(Enumerable.Empty<EndpointMetadata>());
+        throw new NotImplementedException();
     }
 }
 
