@@ -42,6 +42,7 @@ public class SchemaGenerator
         // - Generic notation: Outer«Inner»
         // - Collision suffix: _schemaDup{N}
 
-        return type.Name;
+        // TODO: Implement SchemaId generation with collision handling, generic notation, and collision suffix.
+        throw new NotImplementedException("GenerateSchemaId is not yet implemented.");
     }
 }
