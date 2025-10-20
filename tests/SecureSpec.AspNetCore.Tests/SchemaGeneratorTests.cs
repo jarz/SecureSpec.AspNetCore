@@ -14,7 +14,7 @@ public class SchemaGeneratorTests
     private class AnotherClass { }
     private class GenericClass<T> { }
     private class NestedGeneric<TOuter, TInner> { }
-    
+
     private enum TestEnum
     {
         Value1,

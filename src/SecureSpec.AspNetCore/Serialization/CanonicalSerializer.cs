@@ -95,7 +95,9 @@ public class CanonicalSerializer
         ArgumentNullException.ThrowIfNull(hash);
 
         if (hash.Length < 16)
+        {
             throw new ArgumentException("Hash must be at least 16 characters", nameof(hash));
+        }
 
         return $"W/\"sha256:{hash[..16]}\"";
     }
@@ -162,13 +164,22 @@ public class CanonicalSerializer
             case JsonValueKind.Number:
                 // Use invariant culture for numeric serialization (AC 45)
                 if (element.TryGetInt32(out var intValue))
+                {
                     writer.WriteNumberValue(intValue);
+                }
                 else if (element.TryGetInt64(out var longValue))
+                {
                     writer.WriteNumberValue(longValue);
+                }
                 else if (element.TryGetDouble(out var doubleValue))
+                {
                     writer.WriteNumberValue(doubleValue);
+                }
                 else
+                {
                     writer.WriteRawValue(element.GetRawText());
+                }
+
                 break;
 
             case JsonValueKind.True:

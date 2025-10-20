@@ -33,7 +33,7 @@ public class OAuthOptions
     public void AuthorizationCode(Action<OAuthFlowConfiguration> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
-        
+
         var config = new OAuthFlowConfiguration();
         configure(config);
         AuthorizationCodeFlow = config;
@@ -45,7 +45,7 @@ public class OAuthOptions
     public void ClientCredentials(Action<OAuthFlowConfiguration> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
-        
+
         var config = new OAuthFlowConfiguration();
         configure(config);
         ClientCredentialsFlow = config;
