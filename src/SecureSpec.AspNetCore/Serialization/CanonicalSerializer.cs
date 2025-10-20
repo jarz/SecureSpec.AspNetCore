@@ -24,7 +24,7 @@ public class CanonicalSerializer
         // - LF line endings
         // - No BOM
 
-        return "{}";
+        throw new NotImplementedException();
     }
 
     /// <summary>
