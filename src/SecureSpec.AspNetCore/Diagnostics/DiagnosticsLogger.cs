@@ -36,6 +36,38 @@ public class DiagnosticsLogger
     }
 
     /// <summary>
+    /// Logs an informational message.
+    /// </summary>
+    public void LogInfo(string code, string message, object? context = null)
+    {
+        Log(DiagnosticLevel.Info, code, message, context);
+    }
+
+    /// <summary>
+    /// Logs a warning message.
+    /// </summary>
+    public void LogWarning(string code, string message, object? context = null)
+    {
+        Log(DiagnosticLevel.Warn, code, message, context);
+    }
+
+    /// <summary>
+    /// Logs an error message.
+    /// </summary>
+    public void LogError(string code, string message, object? context = null)
+    {
+        Log(DiagnosticLevel.Error, code, message, context);
+    }
+
+    /// <summary>
+    /// Logs a critical error message.
+    /// </summary>
+    public void LogCritical(string code, string message, object? context = null)
+    {
+        Log(DiagnosticLevel.Critical, code, message, context);
+    }
+
+    /// <summary>
     /// Gets all diagnostic events.
     /// </summary>
     public IReadOnlyList<DiagnosticEvent> GetEvents()
@@ -43,6 +75,17 @@ public class DiagnosticsLogger
         lock (_lock)
         {
             return _events.ToList();
+        }
+    }
+
+    /// <summary>
+    /// Clears all diagnostic events.
+    /// </summary>
+    public void Clear()
+    {
+        lock (_lock)
+        {
+            _events.Clear();
         }
     }
 }
