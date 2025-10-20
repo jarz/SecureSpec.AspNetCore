@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Diagnostics;
 using SecureSpec.AspNetCore.Schema;
@@ -13,6 +14,22 @@ public class SchemaGeneratorTests
     private class AnotherClass { }
     private class GenericClass<T> { }
     private class NestedGeneric<TOuter, TInner> { }
+    
+    private enum TestEnum
+    {
+        Value1,
+        Value2,
+        Value3
+    }
+
+    private enum NumericEnum
+    {
+        Zero = 0,
+        One = 1,
+        Two = 2
+    }
+
+    #region SchemaId Tests
 
     [Fact]
     public void GenerateSchemaId_WithSimpleType_ReturnsTypeName()
@@ -259,4 +276,341 @@ public class SchemaGeneratorTests
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => generator.RemoveType(null!));
     }
+
+    #endregion
+
+    #region Type Mapping Tests
+
+    [Fact]
+    public void GenerateSchema_WithGuid_ReturnsStringUuid()
+    {
+        // Arrange (AC 409)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(Guid));
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+        Assert.Equal("uuid", schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithDateTime_ReturnsStringDateTime()
+    {
+        // Arrange (AC 410)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(DateTime));
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+        Assert.Equal("date-time", schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithDateTimeOffset_ReturnsStringDateTime()
+    {
+        // Arrange (AC 410)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(DateTimeOffset));
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+        Assert.Equal("date-time", schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithDateOnly_ReturnsStringDate()
+    {
+        // Arrange (AC 411)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(DateOnly));
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+        Assert.Equal("date", schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithTimeOnly_ReturnsStringTime()
+    {
+        // Arrange (AC 412)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(TimeOnly));
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+        Assert.Equal("time", schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithByteArray_ReturnsStringByte()
+    {
+        // Arrange (AC 413)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(byte[]));
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+        Assert.Equal("byte", schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithIFormFile_ReturnsStringBinary()
+    {
+        // Arrange (AC 414)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(IFormFile));
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+        Assert.Equal("binary", schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithDecimal_ReturnsNumber()
+    {
+        // Arrange (AC 415)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(decimal));
+
+        // Assert
+        Assert.Equal("number", schema.Type);
+        Assert.Null(schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithNullableInt_SetsNullableTrue()
+    {
+        // Arrange (AC 416)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(int?));
+
+        // Assert
+        Assert.Equal("integer", schema.Type);
+        Assert.True(schema.Nullable);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithEnum_StringMode_PreservesDeclarationOrder()
+    {
+        // Arrange (AC 417)
+        var options = new SchemaOptions { UseEnumStrings = true };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(TestEnum));
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+        Assert.Equal(3, schema.Enum.Count);
+        Assert.Equal("Value1", ((Microsoft.OpenApi.Any.OpenApiString)schema.Enum[0]).Value);
+        Assert.Equal("Value2", ((Microsoft.OpenApi.Any.OpenApiString)schema.Enum[1]).Value);
+        Assert.Equal("Value3", ((Microsoft.OpenApi.Any.OpenApiString)schema.Enum[2]).Value);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithEnum_IntegerMode_UsesTypeInteger()
+    {
+        // Arrange (AC 418)
+        var options = new SchemaOptions { UseEnumStrings = false };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(NumericEnum));
+
+        // Assert
+        Assert.Equal("integer", schema.Type);
+        Assert.Equal(3, schema.Enum.Count);
+        Assert.Equal(0, ((Microsoft.OpenApi.Any.OpenApiInteger)schema.Enum[0]).Value);
+        Assert.Equal(1, ((Microsoft.OpenApi.Any.OpenApiInteger)schema.Enum[1]).Value);
+        Assert.Equal(2, ((Microsoft.OpenApi.Any.OpenApiInteger)schema.Enum[2]).Value);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithEnum_AppliesNamingPolicy()
+    {
+        // Arrange (AC 419)
+        var options = new SchemaOptions
+        {
+            UseEnumStrings = true,
+            EnumNamingPolicy = name => name.ToUpperInvariant()
+        };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(TestEnum));
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+        Assert.Equal("VALUE1", ((Microsoft.OpenApi.Any.OpenApiString)schema.Enum[0]).Value);
+        Assert.Equal("VALUE2", ((Microsoft.OpenApi.Any.OpenApiString)schema.Enum[1]).Value);
+        Assert.Equal("VALUE3", ((Microsoft.OpenApi.Any.OpenApiString)schema.Enum[2]).Value);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithInt_ReturnsIntegerInt32()
+    {
+        // Arrange
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(int));
+
+        // Assert
+        Assert.Equal("integer", schema.Type);
+        Assert.Equal("int32", schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithLong_ReturnsIntegerInt64()
+    {
+        // Arrange
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(long));
+
+        // Assert
+        Assert.Equal("integer", schema.Type);
+        Assert.Equal("int64", schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithFloat_ReturnsNumberFloat()
+    {
+        // Arrange
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(float));
+
+        // Assert
+        Assert.Equal("number", schema.Type);
+        Assert.Equal("float", schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithDouble_ReturnsNumberDouble()
+    {
+        // Arrange
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(double));
+
+        // Assert
+        Assert.Equal("number", schema.Type);
+        Assert.Equal("double", schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithBool_ReturnsBoolean()
+    {
+        // Arrange
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(bool));
+
+        // Assert
+        Assert.Equal("boolean", schema.Type);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithString_ReturnsString()
+    {
+        // Arrange
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(string));
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithCustomMapping_UsesMapping()
+    {
+        // Arrange
+        var options = new SchemaOptions();
+        options.TypeMappings.Map<SimpleClass>(m =>
+        {
+            m.Type = "custom";
+            m.Format = "custom-format";
+        });
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(SimpleClass));
+
+        // Assert
+        Assert.Equal("custom", schema.Type);
+        Assert.Equal("custom-format", schema.Format);
+    }
+
+    [Fact]
+    public void GenerateSchema_ThrowsOnNullType()
+    {
+        // Arrange
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => generator.GenerateSchema(null!));
+    }
+
+    #endregion
 }

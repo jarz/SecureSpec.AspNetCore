@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Diagnostics;
@@ -33,16 +34,129 @@ public class SchemaGenerator
     {
         ArgumentNullException.ThrowIfNull(type);
 
-        // TODO: Implement schema generation
-        // - CLR type mapping
-        // - Nullability resolution
-        // - DataAnnotations integration
-        // - Polymorphism handling
-        // - Recursion detection
-
-        return new OpenApiSchema
+        // Handle nullable value types
+        var underlyingType = Nullable.GetUnderlyingType(type);
+        if (underlyingType != null)
         {
-            Type = "object"
+            var schema = GenerateSchema(underlyingType);
+            schema.Nullable = true; // AC 416
+            return schema;
+        }
+
+        // Check for custom type mappings first
+        if (_options.TypeMappings.TryGetMapping(type, out var customMapping) && customMapping != null)
+        {
+            return new OpenApiSchema
+            {
+                Type = customMapping.Type,
+                Format = customMapping.Format
+            };
+        }
+
+        // Handle primitive types (AC 409-418)
+        return type switch
+        {
+            // AC 409: Guid → type:string format:uuid
+            Type t when t == typeof(Guid) => new OpenApiSchema { Type = "string", Format = "uuid" },
+            
+            // AC 410: DateTime/DateTimeOffset → type:string format:date-time
+            Type t when t == typeof(DateTime) || t == typeof(DateTimeOffset) => 
+                new OpenApiSchema { Type = "string", Format = "date-time" },
+            
+            // AC 411: DateOnly → type:string format:date
+            Type t when t == typeof(DateOnly) => 
+                new OpenApiSchema { Type = "string", Format = "date" },
+            
+            // AC 412: TimeOnly → type:string format:time
+            Type t when t == typeof(TimeOnly) => 
+                new OpenApiSchema { Type = "string", Format = "time" },
+            
+            // AC 413: byte[] → type:string format:byte (base64url)
+            Type t when t == typeof(byte[]) => 
+                new OpenApiSchema { Type = "string", Format = "byte" },
+            
+            // AC 414: IFormFile → type:string format:binary
+            Type t when t == typeof(IFormFile) => 
+                new OpenApiSchema { Type = "string", Format = "binary" },
+            
+            // AC 415: Decimal → type:number (no format)
+            Type t when t == typeof(decimal) => 
+                new OpenApiSchema { Type = "number" },
+            
+            // Standard numeric types
+            Type t when t == typeof(int) || t == typeof(long) || 
+                       t == typeof(short) || t == typeof(byte) || 
+                       t == typeof(sbyte) || t == typeof(uint) || 
+                       t == typeof(ulong) || t == typeof(ushort) => 
+                new OpenApiSchema { Type = "integer", Format = GetIntegerFormat(t) },
+            
+            Type t when t == typeof(float) => 
+                new OpenApiSchema { Type = "number", Format = "float" },
+            
+            Type t when t == typeof(double) => 
+                new OpenApiSchema { Type = "number", Format = "double" },
+            
+            Type t when t == typeof(bool) => 
+                new OpenApiSchema { Type = "boolean" },
+            
+            Type t when t == typeof(string) => 
+                new OpenApiSchema { Type = "string" },
+            
+            // AC 417-419: Enum handling
+            Type t when t.IsEnum => GenerateEnumSchema(t),
+            
+            // Default to object for complex types
+            _ => new OpenApiSchema { Type = "object" }
+        };
+    }
+
+    /// <summary>
+    /// Generates a schema for an enum type.
+    /// </summary>
+    private OpenApiSchema GenerateEnumSchema(Type enumType)
+    {
+        var schema = new OpenApiSchema();
+
+        if (_options.UseEnumStrings)
+        {
+            // AC 417: String mode preserves declaration order
+            schema.Type = "string";
+            var enumNames = Enum.GetNames(enumType);
+            
+            // Apply naming policy if configured (AC 419)
+            var processedNames = _options.EnumNamingPolicy != null
+                ? enumNames.Select(n => _options.EnumNamingPolicy(n))
+                : enumNames;
+
+            foreach (var name in processedNames)
+            {
+                schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiString(name));
+            }
+        }
+        else
+        {
+            // AC 418: Integer mode uses type:integer
+            schema.Type = "integer";
+            var enumValues = Enum.GetValues(enumType);
+            foreach (var value in enumValues)
+            {
+                schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiInteger(Convert.ToInt32(value)));
+            }
+        }
+
+        return schema;
+    }
+
+    /// <summary>
+    /// Gets the integer format for a numeric type.
+    /// </summary>
+    private static string? GetIntegerFormat(Type type)
+    {
+        return type switch
+        {
+            Type t when t == typeof(long) || t == typeof(ulong) => "int64",
+            Type t when t == typeof(int) || t == typeof(uint) => "int32",
+            _ => null
         };
     }
 
