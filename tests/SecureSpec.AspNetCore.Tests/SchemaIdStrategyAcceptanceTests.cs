@@ -6,10 +6,10 @@ using SecureSpec.AspNetCore.Schema;
 namespace SecureSpec.AspNetCore.Tests;
 
 /// <summary>
-/// Comprehensive verification of all Phase 1.2 acceptance criteria.
-/// This test class demonstrates that all ACs are implemented and working correctly.
+/// Acceptance tests for SchemaId Strategy (Phase 1.2).
+/// Verifies all acceptance criteria (AC 401-408) are implemented correctly.
 /// </summary>
-public class Phase1_2_AcceptanceCriteriaVerification
+public class SchemaIdStrategyAcceptanceTests
 {
     [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation scenarios.")]
     private sealed class TypeA { }
