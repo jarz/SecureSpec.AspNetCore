@@ -33,7 +33,7 @@ public class OAuthOptions
     public void AuthorizationCode(Action<OAuthFlowConfiguration> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
-        
+
         var config = new OAuthFlowConfiguration();
         configure(config);
         AuthorizationCodeFlow = config;
@@ -45,7 +45,7 @@ public class OAuthOptions
     public void ClientCredentials(Action<OAuthFlowConfiguration> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
-        
+
         var config = new OAuthFlowConfiguration();
         configure(config);
         ClientCredentialsFlow = config;
@@ -70,17 +70,17 @@ public class OAuthFlowConfiguration
     /// <summary>
     /// Gets or sets the authorization URL.
     /// </summary>
-    public string? AuthorizationUrl { get; set; }
+    public Uri? AuthorizationUrl { get; set; }
 
     /// <summary>
     /// Gets or sets the token URL.
     /// </summary>
-    public string? TokenUrl { get; set; }
+    public Uri? TokenUrl { get; set; }
 
     /// <summary>
     /// Gets or sets the refresh URL.
     /// </summary>
-    public string? RefreshUrl { get; set; }
+    public Uri? RefreshUrl { get; set; }
 
     /// <summary>
     /// Gets the collection of scopes.

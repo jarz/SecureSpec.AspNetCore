@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Diagnostics;
-using System.Text;
+using System.Globalization;
 
 namespace SecureSpec.AspNetCore.Schema;
 
@@ -58,53 +58,53 @@ public class SchemaGenerator
         {
             // AC 409: Guid → type:string format:uuid
             Type t when t == typeof(Guid) => new OpenApiSchema { Type = "string", Format = "uuid" },
-            
+
             // AC 410: DateTime/DateTimeOffset → type:string format:date-time
-            Type t when t == typeof(DateTime) || t == typeof(DateTimeOffset) => 
+            Type t when t == typeof(DateTime) || t == typeof(DateTimeOffset) =>
                 new OpenApiSchema { Type = "string", Format = "date-time" },
-            
+
             // AC 411: DateOnly → type:string format:date
-            Type t when t == typeof(DateOnly) => 
+            Type t when t == typeof(DateOnly) =>
                 new OpenApiSchema { Type = "string", Format = "date" },
-            
+
             // AC 412: TimeOnly → type:string format:time
-            Type t when t == typeof(TimeOnly) => 
+            Type t when t == typeof(TimeOnly) =>
                 new OpenApiSchema { Type = "string", Format = "time" },
-            
+
             // AC 413: byte[] → type:string format:byte (base64url)
-            Type t when t == typeof(byte[]) => 
+            Type t when t == typeof(byte[]) =>
                 new OpenApiSchema { Type = "string", Format = "byte" },
-            
+
             // AC 414: IFormFile → type:string format:binary
-            Type t when t == typeof(IFormFile) => 
+            Type t when t == typeof(IFormFile) =>
                 new OpenApiSchema { Type = "string", Format = "binary" },
-            
+
             // AC 415: Decimal → type:number (no format)
-            Type t when t == typeof(decimal) => 
+            Type t when t == typeof(decimal) =>
                 new OpenApiSchema { Type = "number" },
-            
+
             // Standard numeric types
-            Type t when t == typeof(int) || t == typeof(long) || 
-                       t == typeof(short) || t == typeof(byte) || 
-                       t == typeof(sbyte) || t == typeof(uint) || 
-                       t == typeof(ulong) || t == typeof(ushort) => 
+            Type t when t == typeof(int) || t == typeof(long) ||
+                       t == typeof(short) || t == typeof(byte) ||
+                       t == typeof(sbyte) || t == typeof(uint) ||
+                       t == typeof(ulong) || t == typeof(ushort) =>
                 new OpenApiSchema { Type = "integer", Format = GetIntegerFormat(t) },
-            
-            Type t when t == typeof(float) => 
+
+            Type t when t == typeof(float) =>
                 new OpenApiSchema { Type = "number", Format = "float" },
-            
-            Type t when t == typeof(double) => 
+
+            Type t when t == typeof(double) =>
                 new OpenApiSchema { Type = "number", Format = "double" },
-            
-            Type t when t == typeof(bool) => 
+
+            Type t when t == typeof(bool) =>
                 new OpenApiSchema { Type = "boolean" },
-            
-            Type t when t == typeof(string) => 
+
+            Type t when t == typeof(string) =>
                 new OpenApiSchema { Type = "string" },
-            
+
             // AC 417-419: Enum handling
             Type t when t.IsEnum => GenerateEnumSchema(t),
-            
+
             // Default to object for complex types
             _ => new OpenApiSchema { Type = "object" }
         };
@@ -122,7 +122,7 @@ public class SchemaGenerator
             // AC 417: String mode preserves declaration order
             schema.Type = "string";
             var enumNames = Enum.GetNames(enumType);
-            
+
             // Apply naming policy if configured (AC 419)
             var processedNames = _options.EnumNamingPolicy != null
                 ? enumNames.Select(n => _options.EnumNamingPolicy(n))
@@ -140,7 +140,7 @@ public class SchemaGenerator
             var enumValues = Enum.GetValues(enumType);
             foreach (var value in enumValues)
             {
-                schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiInteger(Convert.ToInt32(value)));
+                schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiInteger(Convert.ToInt32(value, CultureInfo.InvariantCulture)));
             }
         }
 
@@ -188,7 +188,7 @@ public class SchemaGenerator
 
         // Handle collisions with deterministic suffix (AC 402, 403)
         var finalId = ResolveCollision(type, baseId);
-        
+
         // Track the mapping
         _typeToSchemaId[type] = finalId;
 
@@ -207,7 +207,7 @@ public class SchemaGenerator
 
         // Handle generic types with canonical notation: Outer«Inner» (AC 406)
         var genericTypeName = type.Name;
-        var backtickIndex = genericTypeName.IndexOf('`');
+        var backtickIndex = genericTypeName.IndexOf('`', StringComparison.Ordinal);
         if (backtickIndex > 0)
         {
             genericTypeName = genericTypeName[..backtickIndex];
@@ -215,7 +215,7 @@ public class SchemaGenerator
 
         var genericArgs = type.GetGenericArguments();
         var argNames = genericArgs.Select(GenerateDefaultSchemaId);
-        
+
         // Use guillemet characters for generic notation (AC 406)
         return $"{genericTypeName}«{string.Join(",", argNames)}»";
     }
@@ -248,27 +248,29 @@ public class SchemaGenerator
         // Collision detected - find the next available suffix (AC 402, 403)
         var suffix = 1;
         string candidateId;
-        
+
         // Deterministic suffix numbering: _schemaDup{N} starting at 1
+        List<Type>? candidateTypes;
         do
         {
             candidateId = $"{baseId}_schemaDup{suffix}";
             suffix++;
         }
-        while (_schemaIdMap.ContainsKey(candidateId) && 
-               !_schemaIdMap[candidateId].Contains(type));
+        while (_schemaIdMap.TryGetValue(candidateId, out candidateTypes) &&
+               !candidateTypes.Contains(type));
 
         // Emit diagnostic for collision (AC 405)
         _logger.LogWarning(
-            "SCH001", 
+            "SCH001",
             $"Schema ID collision detected for type '{type.FullName}'. Using '{candidateId}' instead of '{baseId}'.");
 
         // Track the collision
-        if (!_schemaIdMap.ContainsKey(candidateId))
+        if (!_schemaIdMap.TryGetValue(candidateId, out var candidates))
         {
-            _schemaIdMap[candidateId] = new List<Type>();
+            candidates = new List<Type>();
+            _schemaIdMap[candidateId] = candidates;
         }
-        _schemaIdMap[candidateId].Add(type);
+        candidates.Add(type);
 
         return candidateId;
     }
@@ -286,7 +288,7 @@ public class SchemaGenerator
         if (_typeToSchemaId.TryGetValue(type, out var schemaId))
         {
             _typeToSchemaId.Remove(type);
-            
+
             if (_schemaIdMap.TryGetValue(schemaId, out var types))
             {
                 types.Remove(type);

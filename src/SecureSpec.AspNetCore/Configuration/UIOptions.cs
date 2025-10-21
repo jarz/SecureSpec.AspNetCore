@@ -15,7 +15,7 @@ public class UIOptions
     /// Gets or sets whether to display operation IDs.
     /// Default is false.
     /// </summary>
-    public bool DisplayOperationId { get; set; } = false;
+    public bool DisplayOperationId { get; set; }
 
     /// <summary>
     /// Gets or sets the default models expand depth.

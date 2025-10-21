@@ -3,22 +3,20 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Writers;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace SecureSpec.AspNetCore.Serialization;
 
 /// <summary>
 /// Provides deterministic serialization of OpenAPI documents with stable hash generation.
 /// </summary>
-public class CanonicalSerializer
+public static class CanonicalSerializer
 {
     /// <summary>
     /// Serializes an OpenAPI document to JSON with canonical ordering.
     /// </summary>
     /// <param name="document">The OpenAPI document to serialize.</param>
     /// <returns>The canonical JSON representation.</returns>
-    public string SerializeToJson(OpenApiDocument document)
+    public static string SerializeToJson(OpenApiDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
 
@@ -37,7 +35,7 @@ public class CanonicalSerializer
         var canonicalJson = SerializeJsonElementCanonically(jsonDoc.RootElement);
 
         // Ensure LF line endings only (no CRLF)
-        canonicalJson = canonicalJson.Replace("\r\n", "\n");
+        canonicalJson = canonicalJson.Replace("\r\n", "\n", StringComparison.Ordinal);
 
         return canonicalJson;
     }
@@ -47,7 +45,7 @@ public class CanonicalSerializer
     /// </summary>
     /// <param name="document">The OpenAPI document to serialize.</param>
     /// <returns>The canonical YAML representation.</returns>
-    public string SerializeToYaml(OpenApiDocument document)
+    public static string SerializeToYaml(OpenApiDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
 
@@ -62,7 +60,7 @@ public class CanonicalSerializer
         var yaml = stringWriter.ToString();
 
         // Ensure LF line endings only (no CRLF)
-        yaml = yaml.Replace("\r\n", "\n");
+        yaml = yaml.Replace("\r\n", "\n", StringComparison.Ordinal);
 
         return yaml;
     }
@@ -72,16 +70,16 @@ public class CanonicalSerializer
     /// </summary>
     /// <param name="content">The serialized document content.</param>
     /// <returns>The SHA256 hash as a hexadecimal string.</returns>
-    public string GenerateHash(string content)
+    public static string GenerateHash(string content)
     {
         ArgumentNullException.ThrowIfNull(content);
 
         // Normalize line endings to LF before hashing (AC 499)
-        content = content.Replace("\r\n", "\n");
+        content = content.Replace("\r\n", "\n", StringComparison.Ordinal);
 
         var bytes = Encoding.UTF8.GetBytes(content);
         var hash = SHA256.HashData(bytes);
-        return Convert.ToHexString(hash).ToLowerInvariant();
+        return ConvertToLowerHex(hash);
     }
 
     /// <summary>
@@ -90,12 +88,14 @@ public class CanonicalSerializer
     /// </summary>
     /// <param name="hash">The SHA256 hash.</param>
     /// <returns>The ETag value.</returns>
-    public string GenerateETag(string hash)
+    public static string GenerateETag(string hash)
     {
         ArgumentNullException.ThrowIfNull(hash);
 
         if (hash.Length < 16)
+        {
             throw new ArgumentException("Hash must be at least 16 characters", nameof(hash));
+        }
 
         return $"W/\"sha256:{hash[..16]}\"";
     }
@@ -103,14 +103,8 @@ public class CanonicalSerializer
     /// <summary>
     /// Serializes a JSON element with canonical ordering (lexical key ordering).
     /// </summary>
-    private string SerializeJsonElementCanonically(JsonElement element)
+    private static string SerializeJsonElementCanonically(JsonElement element)
     {
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        };
-
         using var memoryStream = new MemoryStream();
         using var writer = new Utf8JsonWriter(memoryStream, new JsonWriterOptions
         {
@@ -128,7 +122,7 @@ public class CanonicalSerializer
     /// <summary>
     /// Writes a JSON element with canonical ordering (recursive).
     /// </summary>
-    private void WriteJsonElementCanonically(Utf8JsonWriter writer, JsonElement element)
+    private static void WriteJsonElementCanonically(Utf8JsonWriter writer, JsonElement element)
     {
         switch (element.ValueKind)
         {
@@ -162,13 +156,22 @@ public class CanonicalSerializer
             case JsonValueKind.Number:
                 // Use invariant culture for numeric serialization (AC 45)
                 if (element.TryGetInt32(out var intValue))
+                {
                     writer.WriteNumberValue(intValue);
+                }
                 else if (element.TryGetInt64(out var longValue))
+                {
                     writer.WriteNumberValue(longValue);
+                }
                 else if (element.TryGetDouble(out var doubleValue))
+                {
                     writer.WriteNumberValue(doubleValue);
+                }
                 else
+                {
                     writer.WriteRawValue(element.GetRawText());
+                }
+
                 break;
 
             case JsonValueKind.True:
@@ -183,5 +186,22 @@ public class CanonicalSerializer
                 writer.WriteNullValue();
                 break;
         }
+    }
+
+    /// <summary>
+    /// Converts the provided hash bytes to a lowercase hexadecimal string.
+    /// </summary>
+    private static string ConvertToLowerHex(byte[] hash)
+    {
+        const string hexTable = "0123456789abcdef";
+        var chars = new char[hash.Length * 2];
+        for (var i = 0; i < hash.Length; i++)
+        {
+            var value = hash[i];
+            chars[i * 2] = hexTable[value >> 4];
+            chars[(i * 2) + 1] = hexTable[value & 0x0F];
+        }
+
+        return new string(chars);
     }
 }

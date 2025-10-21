@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using SecureSpec.AspNetCore.Configuration;
 
 namespace SecureSpec.AspNetCore.Tests;
 
@@ -36,7 +35,7 @@ public class SecureSpecServiceCollectionExtensionsTests
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            services.AddSecureSpec(options => { }));
+            services.AddSecureSpec(_ => { }));
     }
 
     [Fact]

@@ -12,11 +12,10 @@ public class CanonicalSerializerTests
     public void GenerateHash_WithValidContent_ReturnsLowercaseHex()
     {
         // Arrange
-        var serializer = new CanonicalSerializer();
-        var content = "test content";
+        const string content = "test content";
 
         // Act
-        var hash = serializer.GenerateHash(content);
+        var hash = CanonicalSerializer.GenerateHash(content);
 
         // Assert
         Assert.NotNull(hash);
@@ -28,11 +27,10 @@ public class CanonicalSerializerTests
     public void GenerateETag_WithValidHash_ReturnsCorrectFormat()
     {
         // Arrange
-        var serializer = new CanonicalSerializer();
-        var hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        const string hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
         // Act
-        var etag = serializer.GenerateETag(hash);
+        var etag = CanonicalSerializer.GenerateETag(hash);
 
         // Assert
         Assert.Equal("W/\"sha256:0123456789abcdef\"", etag);
@@ -41,19 +39,16 @@ public class CanonicalSerializerTests
     [Fact]
     public void GenerateETag_WithShortHash_ThrowsArgumentException()
     {
-        // Arrange
-        var serializer = new CanonicalSerializer();
-        var shortHash = "tooshort";
+        const string shortHash = "tooshort";
 
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => serializer.GenerateETag(shortHash));
+        Assert.Throws<ArgumentException>(() => CanonicalSerializer.GenerateETag(shortHash));
     }
 
     [Fact]
     public void SerializeToJson_WithSimpleDocument_ReturnsValidJson()
     {
         // Arrange
-        var serializer = new CanonicalSerializer();
         var document = new OpenApiDocument
         {
             Info = new OpenApiInfo
@@ -65,21 +60,20 @@ public class CanonicalSerializerTests
         };
 
         // Act
-        var json = serializer.SerializeToJson(document);
+        var json = CanonicalSerializer.SerializeToJson(document);
 
         // Assert
         Assert.NotNull(json);
-        Assert.Contains("\"openapi\":", json);
-        Assert.Contains("\"info\":", json);
-        Assert.Contains("\"Test API\"", json);
-        Assert.Contains("\"1.0.0\"", json);
+        Assert.Contains("\"openapi\":", json, StringComparison.Ordinal);
+        Assert.Contains("\"info\":", json, StringComparison.Ordinal);
+        Assert.Contains("\"Test API\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"1.0.0\"", json, StringComparison.Ordinal);
     }
 
     [Fact]
     public void SerializeToJson_UsesLfLineEndings()
     {
         // Arrange (AC 499)
-        var serializer = new CanonicalSerializer();
         var document = new OpenApiDocument
         {
             Info = new OpenApiInfo
@@ -91,18 +85,17 @@ public class CanonicalSerializerTests
         };
 
         // Act
-        var json = serializer.SerializeToJson(document);
+        var json = CanonicalSerializer.SerializeToJson(document);
 
         // Assert
-        Assert.DoesNotContain("\r\n", json); // No CRLF
-        Assert.Contains("\n", json); // Has LF
+        Assert.DoesNotContain("\r\n", json, StringComparison.Ordinal); // No CRLF
+        Assert.Contains("\n", json, StringComparison.Ordinal); // Has LF
     }
 
     [Fact]
     public void SerializeToYaml_WithSimpleDocument_ReturnsValidYaml()
     {
         // Arrange
-        var serializer = new CanonicalSerializer();
         var document = new OpenApiDocument
         {
             Info = new OpenApiInfo
@@ -114,21 +107,20 @@ public class CanonicalSerializerTests
         };
 
         // Act
-        var yaml = serializer.SerializeToYaml(document);
+        var yaml = CanonicalSerializer.SerializeToYaml(document);
 
         // Assert
         Assert.NotNull(yaml);
-        Assert.Contains("openapi:", yaml);
-        Assert.Contains("info:", yaml);
-        Assert.Contains("Test API", yaml);
-        Assert.Contains("1.0.0", yaml);
+        Assert.Contains("openapi:", yaml, StringComparison.Ordinal);
+        Assert.Contains("info:", yaml, StringComparison.Ordinal);
+        Assert.Contains("Test API", yaml, StringComparison.Ordinal);
+        Assert.Contains("1.0.0", yaml, StringComparison.Ordinal);
     }
 
     [Fact]
     public void SerializeToYaml_UsesLfLineEndings()
     {
         // Arrange
-        var serializer = new CanonicalSerializer();
         var document = new OpenApiDocument
         {
             Info = new OpenApiInfo
@@ -140,24 +132,23 @@ public class CanonicalSerializerTests
         };
 
         // Act
-        var yaml = serializer.SerializeToYaml(document);
+        var yaml = CanonicalSerializer.SerializeToYaml(document);
 
         // Assert
-        Assert.DoesNotContain("\r\n", yaml); // No CRLF
-        Assert.Contains("\n", yaml); // Has LF
+        Assert.DoesNotContain("\r\n", yaml, StringComparison.Ordinal); // No CRLF
+        Assert.Contains("\n", yaml, StringComparison.Ordinal); // Has LF
     }
 
     [Fact]
     public void GenerateHash_NormalizesCrLfToLf()
     {
         // Arrange (AC 499)
-        var serializer = new CanonicalSerializer();
-        var contentWithCrLf = "line1\r\nline2\r\nline3";
-        var contentWithLf = "line1\nline2\nline3";
+        const string contentWithCrLf = "line1\r\nline2\r\nline3";
+        const string contentWithLf = "line1\nline2\nline3";
 
         // Act
-        var hashCrLf = serializer.GenerateHash(contentWithCrLf);
-        var hashLf = serializer.GenerateHash(contentWithLf);
+        var hashCrLf = CanonicalSerializer.GenerateHash(contentWithCrLf);
+        var hashLf = CanonicalSerializer.GenerateHash(contentWithLf);
 
         // Assert - hashes should be identical after normalization
         Assert.Equal(hashLf, hashCrLf);
@@ -167,7 +158,6 @@ public class CanonicalSerializerTests
     public void SerializeToJson_ProducesDeterministicOutput()
     {
         // Arrange
-        var serializer = new CanonicalSerializer();
         var document = new OpenApiDocument
         {
             Info = new OpenApiInfo
@@ -180,10 +170,10 @@ public class CanonicalSerializerTests
         };
 
         // Act - serialize multiple times
-        var json1 = serializer.SerializeToJson(document);
-        var json2 = serializer.SerializeToJson(document);
-        var hash1 = serializer.GenerateHash(json1);
-        var hash2 = serializer.GenerateHash(json2);
+        var json1 = CanonicalSerializer.SerializeToJson(document);
+        var json2 = CanonicalSerializer.SerializeToJson(document);
+        var hash1 = CanonicalSerializer.GenerateHash(json1);
+        var hash2 = CanonicalSerializer.GenerateHash(json2);
 
         // Assert - output and hash should be identical
         Assert.Equal(json1, json2);
@@ -194,7 +184,6 @@ public class CanonicalSerializerTests
     public void SerializeToYaml_ProducesDeterministicOutput()
     {
         // Arrange
-        var serializer = new CanonicalSerializer();
         var document = new OpenApiDocument
         {
             Info = new OpenApiInfo
@@ -207,10 +196,10 @@ public class CanonicalSerializerTests
         };
 
         // Act - serialize multiple times
-        var yaml1 = serializer.SerializeToYaml(document);
-        var yaml2 = serializer.SerializeToYaml(document);
-        var hash1 = serializer.GenerateHash(yaml1);
-        var hash2 = serializer.GenerateHash(yaml2);
+        var yaml1 = CanonicalSerializer.SerializeToYaml(document);
+        var yaml2 = CanonicalSerializer.SerializeToYaml(document);
+        var hash1 = CanonicalSerializer.GenerateHash(yaml1);
+        var hash2 = CanonicalSerializer.GenerateHash(yaml2);
 
         // Assert - output and hash should be identical
         Assert.Equal(yaml1, yaml2);
@@ -220,40 +209,28 @@ public class CanonicalSerializerTests
     [Fact]
     public void SerializeToJson_ThrowsOnNullDocument()
     {
-        // Arrange
-        var serializer = new CanonicalSerializer();
-
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => serializer.SerializeToJson(null!));
+        Assert.Throws<ArgumentNullException>(() => CanonicalSerializer.SerializeToJson(null!));
     }
 
     [Fact]
     public void SerializeToYaml_ThrowsOnNullDocument()
     {
-        // Arrange
-        var serializer = new CanonicalSerializer();
-
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => serializer.SerializeToYaml(null!));
+        Assert.Throws<ArgumentNullException>(() => CanonicalSerializer.SerializeToYaml(null!));
     }
 
     [Fact]
     public void GenerateHash_ThrowsOnNullContent()
     {
-        // Arrange
-        var serializer = new CanonicalSerializer();
-
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => serializer.GenerateHash(null!));
+        Assert.Throws<ArgumentNullException>(() => CanonicalSerializer.GenerateHash(null!));
     }
 
     [Fact]
     public void GenerateETag_ThrowsOnNullHash()
     {
-        // Arrange
-        var serializer = new CanonicalSerializer();
-
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => serializer.GenerateETag(null!));
+        Assert.Throws<ArgumentNullException>(() => CanonicalSerializer.GenerateETag(null!));
     }
 }

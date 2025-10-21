@@ -328,8 +328,8 @@ builder.Services.AddSecureSpec(options =>
     
     options.Security.OAuth.AuthorizationCode(oauth =>
     {
-        oauth.AuthorizationUrl = "...";
-        oauth.TokenUrl = "...";
+        oauth.AuthorizationUrl = new Uri("https://auth.example.com/authorize", UriKind.Absolute);
+        oauth.TokenUrl = new Uri("https://auth.example.com/token", UriKind.Absolute);
         oauth.RequirePKCE = true; // Always required
     });
 });

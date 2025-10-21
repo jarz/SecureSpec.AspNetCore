@@ -123,6 +123,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 - .NET 8.0 SDK or later
 - Visual Studio 2022, VS Code, or Rider
+- VS Code Dev Containers extension (optional but recommended)
 - Git
 
 ### Building from Source
@@ -130,9 +131,12 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 ```bash
 git clone https://github.com/jarz/SecureSpec.AspNetCore.git
 cd SecureSpec.AspNetCore
-dotnet build
-dotnet test
+dotnet restore
+dotnet format SecureSpec.AspNetCore.sln --verify-no-changes
+dotnet test --configuration Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=70 /p:ThresholdType=line
 ```
+
+If you use VS Code, you can open the repository and select **Reopen in Container** to develop inside the preconfigured dev container.
 
 ## Security
 

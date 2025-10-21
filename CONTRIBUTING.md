@@ -17,24 +17,33 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 
 ### Setting Up Your Development Environment
 
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
-   ```bash
-   git clone https://github.com/YOUR-USERNAME/SecureSpec.AspNetCore.git
-   cd SecureSpec.AspNetCore
-   ```
-3. **Add upstream remote**:
-   ```bash
-   git remote add upstream https://github.com/jarz/SecureSpec.AspNetCore.git
-   ```
-4. **Build the project**:
-   ```bash
-   dotnet build
-   ```
-5. **Run tests**:
-   ```bash
-   dotnet test
-   ```
+1. **Open in the dev container (recommended)**
+   - Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+   - Click "Reopen in Container" when the repository loads in VS Code
+   - The container image ships with the pinned .NET SDK and common tooling already installed
+2. **Or set up locally**
+   - **Fork the repository** on GitHub
+   - **Clone your fork** locally:
+     ```bash
+     git clone https://github.com/YOUR-USERNAME/SecureSpec.AspNetCore.git
+     cd SecureSpec.AspNetCore
+     ```
+   - **Add upstream remote**:
+     ```bash
+     git remote add upstream https://github.com/jarz/SecureSpec.AspNetCore.git
+     ```
+   - **Restore dependencies**:
+     ```bash
+     dotnet restore
+     ```
+   - **Check formatting**:
+     ```bash
+     dotnet format SecureSpec.AspNetCore.sln --verify-no-changes
+     ```
+   - **Run tests with coverage**:
+     ```bash
+     dotnet test --configuration Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=70 /p:ThresholdType=line
+     ```
 
 ## How to Contribute
 
@@ -86,23 +95,17 @@ Include in your enhancement suggestion:
 
 2. **Make your changes**:
    - Follow the coding standards (see below)
-   - Write clear, concise commit messages
-   - Add tests for new functionality
-   - Update documentation as needed
-
-3. **Ensure all tests pass**:
+   - Keep changes focused and well-tested
    ```bash
-   dotnet build
-   dotnet test
+   dotnet format SecureSpec.AspNetCore.sln --verify-no-changes
+   dotnet test --configuration Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=70 /p:ThresholdType=line
    ```
+
+3. **Review locally**:
+   - Ensure formatting and tests pass
+   - Run any additional checks relevant to your change
 
 4. **Commit your changes**:
-   ```bash
-   git add .
-   git commit -m "Brief description of changes"
-   ```
-   
-   Use conventional commit format:
    - `feat:` for new features
    - `fix:` for bug fixes
    - `docs:` for documentation changes
@@ -110,6 +113,10 @@ Include in your enhancement suggestion:
    - `refactor:` for code refactoring
    - `perf:` for performance improvements
    - `chore:` for maintenance tasks
+   ```bash
+   git add .
+   git commit -m "type: concise summary"
+   ```
 
 5. **Push to your fork**:
    ```bash
@@ -119,44 +126,24 @@ Include in your enhancement suggestion:
 6. **Create a Pull Request** on GitHub:
    - Use a clear, descriptive title
    - Reference related issues (e.g., "Fixes #123")
-   - Describe your changes in detail
-   - Explain why the changes are needed
-   - Note any breaking changes
-
 7. **Respond to feedback**:
    - Address review comments promptly
    - Make requested changes in new commits
    - Mark conversations as resolved when addressed
-
-## Coding Standards
-
-### C# Style Guidelines
 
 Follow the [.NET coding conventions](https://docs.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions):
 
 - Use PascalCase for class names and method names
 - Use camelCase for local variables and parameters
 - Use meaningful, descriptive names
-- Prefer explicit types over `var` when type isn't obvious
-- Use XML documentation comments for public APIs
 
 ### Code Organization
 
-- Keep files focused and single-purpose
-- Limit file length (ideally < 500 lines)
-- Use regions sparingly, only when they improve readability
-- Follow existing project structure and namespacing
-
 ### Testing
-
-- Write unit tests for all new functionality
-- Aim for >90% code coverage for critical paths
-- Use descriptive test names: `MethodName_Scenario_ExpectedResult`
 - Follow the Arrange-Act-Assert pattern
 - Mock external dependencies
-- Tests should be fast and deterministic
 
-### Security Considerations
+### Security
 
 This is a security-focused project. All contributions must:
 
@@ -173,24 +160,14 @@ Refer to [docs/PRD.md](docs/PRD.md) Section 7 (Threat Model) for security requir
 ### Performance
 
 - Be mindful of performance implications
-- Profile code for performance bottlenecks
-- Consider memory allocations and GC pressure
-- Use async/await appropriately
-- Refer to [docs/PRD.md](docs/PRD.md) Section 5 for performance targets
-
 ## Documentation
 
 ### Code Documentation
-
-- Add XML documentation comments to all public APIs
-- Explain non-obvious code with inline comments
-- Document complex algorithms and business logic
 - Keep comments up-to-date with code changes
 
 ### User Documentation
 
 When adding features, update:
-- README.md (if affecting getting started)
 - Relevant files in `docs/` directory
 - Code examples and samples
 - Migration guides (if breaking changes)

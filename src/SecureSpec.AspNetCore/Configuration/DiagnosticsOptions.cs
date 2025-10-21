@@ -28,5 +28,5 @@ public class DiagnosticsOptions
     /// Gets or sets whether to include detailed error information.
     /// Default is false (should only be enabled in development).
     /// </summary>
-    public bool IncludeDetailedErrors { get; set; } = false;
+    public bool IncludeDetailedErrors { get; set; }
 }
