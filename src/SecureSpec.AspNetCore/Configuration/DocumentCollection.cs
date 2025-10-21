@@ -1,5 +1,6 @@
 using Microsoft.OpenApi.Models;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace SecureSpec.AspNetCore.Configuration;
 
@@ -53,7 +54,7 @@ public sealed class DocumentCollection : IReadOnlyDictionary<string, OpenApiDocu
     }
 
     /// <inheritdoc />
-    public bool TryGetValue(string key, out OpenApiDocument value)
+    public bool TryGetValue(string key, [MaybeNullWhen(false)] out OpenApiDocument value)
     {
         ArgumentNullException.ThrowIfNull(key);
         return _documents.TryGetValue(key, out value);
