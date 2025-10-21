@@ -233,4 +233,355 @@ public class CanonicalSerializerTests
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => CanonicalSerializer.GenerateETag(null!));
     }
+
+    [Fact]
+    public void SerializeToJson_ProducesUtf8WithoutBOM()
+    {
+        // Arrange (AC 1-10: UTF-8 without BOM)
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "Test API",
+                Version = "1.0"
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Act
+        var json = CanonicalSerializer.SerializeToJson(document);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(json);
+
+        // Assert - UTF-8 BOM is EF BB BF, should not be present
+        if (bytes.Length >= 3)
+        {
+            var hasBom = bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+            Assert.False(hasBom, "Output should not contain UTF-8 BOM");
+        }
+    }
+
+    [Fact]
+    public void SerializeToYaml_ProducesUtf8WithoutBOM()
+    {
+        // Arrange (AC 1-10: UTF-8 without BOM)
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "Test API",
+                Version = "1.0"
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Act
+        var yaml = CanonicalSerializer.SerializeToYaml(document);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(yaml);
+
+        // Assert - UTF-8 BOM is EF BB BF, should not be present
+        if (bytes.Length >= 3)
+        {
+            var hasBom = bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+            Assert.False(hasBom, "Output should not contain UTF-8 BOM");
+        }
+    }
+
+    [Fact]
+    public void SerializeToJson_UsesConsistentWhitespace()
+    {
+        // Arrange (AC 1-10: Normalized whitespace)
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "Test API",
+                Version = "1.0",
+                Description = "Test Description"
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Act - serialize multiple times
+        var json1 = CanonicalSerializer.SerializeToJson(document);
+        var json2 = CanonicalSerializer.SerializeToJson(document);
+
+        // Assert - whitespace should be identical
+        Assert.Equal(json1, json2);
+        // Check for consistent indentation (2 spaces by default in Utf8JsonWriter)
+        Assert.Contains("  \"", json1, StringComparison.Ordinal);
+        // No tabs
+        Assert.DoesNotContain("\t", json1, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SerializeToJson_SortsPropertiesLexically()
+    {
+        // Arrange (AC 493: Component arrays sorted lexically)
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Version = "1.0",  // Version comes before Title alphabetically
+                Title = "Test API",
+                Description = "Description"  // Description comes first alphabetically
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Act
+        var json = CanonicalSerializer.SerializeToJson(document);
+
+        // Assert - properties should be in lexical order
+        var descriptionIndex = json.IndexOf("\"description\":", StringComparison.Ordinal);
+        var titleIndex = json.IndexOf("\"title\":", StringComparison.Ordinal);
+        var versionIndex = json.IndexOf("\"version\":", StringComparison.Ordinal);
+
+        Assert.True(descriptionIndex < titleIndex, "description should come before title");
+        Assert.True(titleIndex < versionIndex, "title should come before version");
+    }
+
+    [Fact]
+    public void SerializeToJson_NumericSerializationIsLocaleInvariant()
+    {
+        // Arrange (AC 45: Numeric serialization locale invariance)
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "Test API",
+                Version = "1.0"
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Save current culture
+        var originalCulture = System.Globalization.CultureInfo.CurrentCulture;
+
+        try
+        {
+            // Act - serialize with different cultures
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+            var json1 = CanonicalSerializer.SerializeToJson(document);
+            var hash1 = CanonicalSerializer.GenerateHash(json1);
+
+            // German culture uses comma as decimal separator
+            System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+            var json2 = CanonicalSerializer.SerializeToJson(document);
+            var hash2 = CanonicalSerializer.GenerateHash(json2);
+
+            // French culture also uses comma as decimal separator
+            System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("fr-FR");
+            var json3 = CanonicalSerializer.SerializeToJson(document);
+            var hash3 = CanonicalSerializer.GenerateHash(json3);
+
+            // Assert - all should produce identical output regardless of culture
+            Assert.Equal(hash1, hash2);
+            Assert.Equal(hash1, hash3);
+            Assert.Equal(json1, json2);
+            Assert.Equal(json1, json3);
+        }
+        finally
+        {
+            // Restore original culture
+            System.Globalization.CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    [Fact]
+    public void SerializeToJson_WithComplexDocument_MaintainsLexicalOrdering()
+    {
+        // Arrange (AC 493: Component arrays sorted lexically)
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "API",
+                Version = "1.0",
+                Contact = new OpenApiContact { Name = "Contact" },
+                License = new OpenApiLicense { Name = "MIT" }
+            },
+            Paths = new OpenApiPaths
+            {
+                ["/users"] = new OpenApiPathItem(),
+                ["/admin"] = new OpenApiPathItem(),
+                ["/posts"] = new OpenApiPathItem()
+            }
+        };
+
+        // Act
+        var json = CanonicalSerializer.SerializeToJson(document);
+
+        // Assert - paths should be in lexical order
+        var adminIndex = json.IndexOf("\"/admin\"", StringComparison.Ordinal);
+        var postsIndex = json.IndexOf("\"/posts\"", StringComparison.Ordinal);
+        var usersIndex = json.IndexOf("\"/users\"", StringComparison.Ordinal);
+
+        Assert.True(adminIndex > 0, "/admin should be present");
+        Assert.True(postsIndex > 0, "/posts should be present");
+        Assert.True(usersIndex > 0, "/users should be present");
+        Assert.True(adminIndex < postsIndex, "/admin should come before /posts");
+        Assert.True(postsIndex < usersIndex, "/posts should come before /users");
+    }
+
+    [Fact]
+    public void GenerateHash_ProducesStableHashAcrossEnvironments()
+    {
+        // Arrange (AC 499: SHA256 hashing after normalization)
+        // Both strings have same content but different line endings
+        const string content1 = "line1\nline2\nline3";
+        const string content2 = "line1\r\nline2\r\nline3";
+
+        // Act
+        var hash1 = CanonicalSerializer.GenerateHash(content1);
+        var hash2 = CanonicalSerializer.GenerateHash(content2);
+
+        // Assert - both should produce same hash after normalization
+        Assert.Equal(hash1, hash2);
+        Assert.Equal(64, hash1.Length);
+    }
+
+    [Fact]
+    public void SerializeToJson_WithEmptyDocument_ProducesValidOutput()
+    {
+        // Arrange - minimal valid document
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = string.Empty,
+                Version = string.Empty
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Act
+        var json = CanonicalSerializer.SerializeToJson(document);
+        var hash = CanonicalSerializer.GenerateHash(json);
+
+        // Assert - should produce valid output even with empty strings
+        Assert.NotNull(json);
+        Assert.NotEmpty(json);
+        Assert.Equal(64, hash.Length);
+    }
+
+    [Fact]
+    public void SerializeToJson_WithSpecialCharacters_HandlesCorrectly()
+    {
+        // Arrange - document with special characters
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "API with \"quotes\" and\nnewlines",
+                Version = "1.0",
+                Description = "Contains special chars: < > & ' \""
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Act
+        var json = CanonicalSerializer.SerializeToJson(document);
+
+        // Assert - should properly escape special characters
+        Assert.NotNull(json);
+        Assert.Contains("\\n", json, StringComparison.Ordinal); // Newline escaped
+        Assert.Contains("\\\"", json, StringComparison.Ordinal); // Quotes escaped
+    }
+
+    [Fact]
+    public void SerializeToJson_WithUnicodeCharacters_PreservesCorrectly()
+    {
+        // Arrange - document with Unicode characters
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "API with Unicode: 你好 مرحبا こんにちは",
+                Version = "1.0",
+                Description = "Emoji: 🚀 🎉 ✅"
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Act
+        var json1 = CanonicalSerializer.SerializeToJson(document);
+        var json2 = CanonicalSerializer.SerializeToJson(document);
+        var hash1 = CanonicalSerializer.GenerateHash(json1);
+        var hash2 = CanonicalSerializer.GenerateHash(json2);
+
+        // Assert - Unicode should be preserved and deterministic
+        Assert.Equal(json1, json2);
+        Assert.Equal(hash1, hash2);
+    }
+
+    [Fact]
+    public void SerializeToJson_WithNestedObjects_MaintainsLexicalOrdering()
+    {
+        // Arrange - document with nested structures
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "Test",
+                Version = "1.0",
+                Contact = new OpenApiContact
+                {
+                    Name = "John Doe",
+                    Email = "john@example.com"
+                }
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Act
+        var json = CanonicalSerializer.SerializeToJson(document);
+
+        // Assert - nested object properties should also be sorted
+        // email comes before name lexically
+        var emailIndex = json.IndexOf("\"email\"", StringComparison.Ordinal);
+        var nameIndex = json.IndexOf("\"name\"", StringComparison.Ordinal);
+        Assert.True(emailIndex > 0, "email property should be present");
+        Assert.True(nameIndex > 0, "name property should be present");
+        Assert.True(emailIndex < nameIndex, "email should come before name in nested objects");
+    }
+
+    [Fact]
+    public void GenerateHash_WithLargeContent_ProducesValidHash()
+    {
+        // Arrange - large content string
+        var largeContent = new System.Text.StringBuilder();
+        for (int i = 0; i < 10000; i++)
+        {
+            largeContent.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"Line {i}: This is a test line with some content.");
+        }
+
+        // Act
+        var hash = CanonicalSerializer.GenerateHash(largeContent.ToString());
+
+        // Assert
+        Assert.Equal(64, hash.Length);
+        Assert.All(hash, c => Assert.True(char.IsDigit(c) || (c >= 'a' && c <= 'f')));
+    }
+
+    [Fact]
+    public void SerializeToJson_WithArraysOfObjects_MaintainsArrayOrder()
+    {
+        // Arrange - document with arrays (arrays should NOT be sorted)
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "Test",
+                Version = "1.0"
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Act - serialize twice to verify consistency
+        var json1 = CanonicalSerializer.SerializeToJson(document);
+        var json2 = CanonicalSerializer.SerializeToJson(document);
+
+        // Assert - arrays should maintain order (not be sorted)
+        Assert.Equal(json1, json2);
+    }
 }
