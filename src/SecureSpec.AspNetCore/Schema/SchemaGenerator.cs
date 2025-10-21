@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Diagnostics;
-using System.Text;
+using System.Globalization;
 
 namespace SecureSpec.AspNetCore.Schema;
 
@@ -140,7 +140,7 @@ public class SchemaGenerator
             var enumValues = Enum.GetValues(enumType);
             foreach (var value in enumValues)
             {
-                schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiInteger(Convert.ToInt32(value)));
+                schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiInteger(Convert.ToInt32(value, CultureInfo.InvariantCulture)));
             }
         }
 
@@ -207,7 +207,7 @@ public class SchemaGenerator
 
         // Handle generic types with canonical notation: Outer«Inner» (AC 406)
         var genericTypeName = type.Name;
-        var backtickIndex = genericTypeName.IndexOf('`');
+        var backtickIndex = genericTypeName.IndexOf('`', StringComparison.Ordinal);
         if (backtickIndex > 0)
         {
             genericTypeName = genericTypeName[..backtickIndex];
@@ -250,13 +250,14 @@ public class SchemaGenerator
         string candidateId;
 
         // Deterministic suffix numbering: _schemaDup{N} starting at 1
+        List<Type>? candidateTypes;
         do
         {
             candidateId = $"{baseId}_schemaDup{suffix}";
             suffix++;
         }
-        while (_schemaIdMap.ContainsKey(candidateId) &&
-               !_schemaIdMap[candidateId].Contains(type));
+        while (_schemaIdMap.TryGetValue(candidateId, out candidateTypes) &&
+               !candidateTypes.Contains(type));
 
         // Emit diagnostic for collision (AC 405)
         _logger.LogWarning(
@@ -264,11 +265,12 @@ public class SchemaGenerator
             $"Schema ID collision detected for type '{type.FullName}'. Using '{candidateId}' instead of '{baseId}'.");
 
         // Track the collision
-        if (!_schemaIdMap.ContainsKey(candidateId))
+        if (!_schemaIdMap.TryGetValue(candidateId, out var candidates))
         {
-            _schemaIdMap[candidateId] = new List<Type>();
+            candidates = new List<Type>();
+            _schemaIdMap[candidateId] = candidates;
         }
-        _schemaIdMap[candidateId].Add(type);
+        candidates.Add(type);
 
         return candidateId;
     }

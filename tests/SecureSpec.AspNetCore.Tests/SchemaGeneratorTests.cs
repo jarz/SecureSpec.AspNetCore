@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Diagnostics;
@@ -10,10 +11,17 @@ namespace SecureSpec.AspNetCore.Tests;
 /// </summary>
 public class SchemaGeneratorTests
 {
-    private class SimpleClass { }
-    private class AnotherClass { }
-    private class GenericClass<T> { }
-    private class NestedGeneric<TOuter, TInner> { }
+    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation scenarios.")]
+    private sealed class SimpleClass { }
+
+    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation scenarios.")]
+    private sealed class AnotherClass { }
+
+    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation scenarios.")]
+    private sealed class GenericClass<T> { }
+
+    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation scenarios.")]
+    private sealed class NestedGeneric<TOuter, TInner> { }
 
     private enum TestEnum
     {

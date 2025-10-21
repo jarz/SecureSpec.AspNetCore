@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace SecureSpec.AspNetCore.Configuration;
 
 /// <summary>
@@ -37,7 +39,7 @@ public class SchemaOptions
 /// <summary>
 /// Collection of custom type mappings.
 /// </summary>
-public class TypeMappingCollection
+public sealed class TypeMappingCollection : IEnumerable<KeyValuePair<Type, TypeMapping>>
 {
     private readonly Dictionary<Type, TypeMapping> _mappings = new();
 
@@ -46,6 +48,8 @@ public class TypeMappingCollection
     /// </summary>
     public void Map<T>(Action<TypeMapping> configure)
     {
+        ArgumentNullException.ThrowIfNull(configure);
+
         var mapping = new TypeMapping();
         configure(mapping);
         _mappings[typeof(T)] = mapping;
@@ -56,8 +60,21 @@ public class TypeMappingCollection
     /// </summary>
     public bool TryGetMapping(Type type, out TypeMapping? mapping)
     {
+        ArgumentNullException.ThrowIfNull(type);
         return _mappings.TryGetValue(type, out mapping);
     }
+
+    /// <summary>
+    /// Gets the number of registered mappings.
+    /// </summary>
+    public int Count => _mappings.Count;
+
+    /// <summary>
+    /// Returns an enumerator over registered mappings.
+    /// </summary>
+    public IEnumerator<KeyValuePair<Type, TypeMapping>> GetEnumerator() => _mappings.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 /// <summary>
