@@ -6,10 +6,22 @@ This guide shows you how to get started with SecureSpec.AspNetCore in your ASP.N
 
 **Note:** The package is not yet published to NuGet. For now, you can build from source.
 
+## Development Environment
+
+### Option A: Dev Container (Recommended)
+
+1. Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+2. Clone the repository and open it in VS Code
+3. When prompted, choose **Reopen in Container**. The container image includes the pinned .NET SDK and common tooling.
+
+### Option B: Local Setup
+
 ```bash
 git clone https://github.com/jarz/SecureSpec.AspNetCore.git
 cd SecureSpec.AspNetCore
-dotnet build
+dotnet restore
+dotnet format SecureSpec.AspNetCore.sln --verify-no-changes
+dotnet test --configuration Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Threshold=70 /p:ThresholdType=line
 ```
 
 ## Quick Start
@@ -51,8 +63,8 @@ builder.Services.AddSecureSpec(options =>
     // Configure security (optional)
     options.Security.OAuth.AuthorizationCode(oauth =>
     {
-        oauth.AuthorizationUrl = "https://auth.example.com/authorize";
-        oauth.TokenUrl = "https://auth.example.com/token";
+        oauth.AuthorizationUrl = new Uri("https://auth.example.com/authorize", UriKind.Absolute);
+        oauth.TokenUrl = new Uri("https://auth.example.com/token", UriKind.Absolute);
         oauth.Scopes.Add("read", "Read access");
         oauth.Scopes.Add("write", "Write access");
         // Note: PKCE is always required and cannot be disabled
@@ -123,16 +135,16 @@ Configure OAuth flows (PKCE is always required):
 // Authorization Code flow with PKCE
 options.Security.OAuth.AuthorizationCode(oauth =>
 {
-    oauth.AuthorizationUrl = "https://auth.example.com/authorize";
-    oauth.TokenUrl = "https://auth.example.com/token";
-    oauth.RefreshUrl = "https://auth.example.com/refresh";
+    oauth.AuthorizationUrl = new Uri("https://auth.example.com/authorize", UriKind.Absolute);
+    oauth.TokenUrl = new Uri("https://auth.example.com/token", UriKind.Absolute);
+    oauth.RefreshUrl = new Uri("https://auth.example.com/refresh", UriKind.Absolute);
     oauth.Scopes.Add("api", "Full API access");
 });
 
 // Client Credentials flow
 options.Security.OAuth.ClientCredentials(oauth =>
 {
-    oauth.TokenUrl = "https://auth.example.com/token";
+    oauth.TokenUrl = new Uri("https://auth.example.com/token", UriKind.Absolute);
     oauth.Scopes.Add("api", "Full API access");
 });
 

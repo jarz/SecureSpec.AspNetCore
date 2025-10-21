@@ -132,8 +132,8 @@ builder.Services.AddSecureSpec(options =>
     // Security configuration
     options.Security.OAuth.AuthorizationCode(oauth =>
     {
-        oauth.AuthorizationUrl = "https://auth.example.com/authorize";
-        oauth.TokenUrl = "https://auth.example.com/token";
+        oauth.AuthorizationUrl = new Uri("https://auth.example.com/authorize", UriKind.Absolute);
+        oauth.TokenUrl = new Uri("https://auth.example.com/token", UriKind.Absolute);
         oauth.Scopes.Add("read", "Read access");
         oauth.Scopes.Add("write", "Write access");
         // PKCE is always required, cannot be disabled
@@ -236,7 +236,7 @@ public interface IOperationProcessor
 
 ```csharp
 // ✅ Good
-public string AuthorizationUrl { get; set; }
+public Uri AuthorizationUrl { get; set; }
 public int MaxDepth { get; set; }
 
 // ❌ Bad
@@ -451,8 +451,8 @@ builder.Services.AddSecureSpec(options =>
     // Security
     options.Security.OAuth.AuthorizationCode(oauth =>
     {
-        oauth.AuthorizationUrl = "https://auth.example.com/authorize";
-        oauth.TokenUrl = "https://auth.example.com/token";
+        oauth.AuthorizationUrl = new Uri("https://auth.example.com/authorize", UriKind.Absolute);
+        oauth.TokenUrl = new Uri("https://auth.example.com/token", UriKind.Absolute);
         oauth.Scopes.Add("api.read", "Read access");
         oauth.Scopes.Add("api.write", "Write access");
     });
