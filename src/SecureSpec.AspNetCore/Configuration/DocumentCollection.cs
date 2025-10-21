@@ -56,7 +56,7 @@ public sealed class DocumentCollection : IReadOnlyDictionary<string, OpenApiDocu
     public bool TryGetValue(string key, out OpenApiDocument value)
     {
         ArgumentNullException.ThrowIfNull(key);
-        return _documents.TryGetValue(key, out value!);
+        return _documents.TryGetValue(key, out value);
     }
 
     /// <inheritdoc />
