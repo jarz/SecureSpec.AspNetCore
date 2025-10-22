@@ -588,6 +588,24 @@ public class SchemaGeneratorTests
     }
 
     [Fact]
+    public void GenerateSchema_WithChar_ReturnsStringLengthOne()
+    {
+        // Arrange
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(char));
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+        Assert.Equal(1, schema.MinLength);
+        Assert.Equal(1, schema.MaxLength);
+        Assert.False(schema.Nullable);
+    }
+
+    [Fact]
     public void GenerateSchema_WithCustomMapping_UsesMapping()
     {
         // Arrange

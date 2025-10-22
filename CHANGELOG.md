@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive documentation suite completed
 - Target release: January 2026
 
+### Added
+- Added explicit OpenAPI schema mapping for `char` including single-character length enforcement.
+
 ### Planned for v1.0.0
 
 #### Added - Core Features

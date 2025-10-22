@@ -83,11 +83,15 @@ public class SchemaGenerator
             Type t when t == typeof(decimal) =>
                 new OpenApiSchema { Type = "number" },
 
+            // CLR primitive char maps to single-character string
+            Type t when t == typeof(char) =>
+                new OpenApiSchema { Type = "string", MinLength = 1, MaxLength = 1 },
+
             // Standard numeric types
             Type t when t == typeof(int) || t == typeof(long) ||
-                       t == typeof(short) || t == typeof(byte) ||
-                       t == typeof(sbyte) || t == typeof(uint) ||
-                       t == typeof(ulong) || t == typeof(ushort) =>
+                        t == typeof(short) || t == typeof(byte) ||
+                        t == typeof(sbyte) || t == typeof(uint) ||
+                        t == typeof(ulong) || t == typeof(ushort) =>
                 new OpenApiSchema { Type = "integer", Format = GetIntegerFormat(t) },
 
             Type t when t == typeof(float) =>
