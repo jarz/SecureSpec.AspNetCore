@@ -135,7 +135,7 @@ public class SchemaGenerator
 
             foreach (var name in processedNames)
             {
-                schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiString(name));
+                schema.Enum.Add(new OpenApiString(name));
             }
         }
         else

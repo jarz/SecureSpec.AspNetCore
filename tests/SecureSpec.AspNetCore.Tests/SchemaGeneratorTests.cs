@@ -113,6 +113,51 @@ public class SchemaGeneratorTests
     }
 
     [Fact]
+    public void GenerateSchemaId_WithNullableValueTypeGeneric_UsesCanonicalForm()
+    {
+        // Arrange (AC 407 - Nullable generic arguments canonical ordering)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var id = generator.GenerateSchemaId(typeof(GenericClass<int?>));
+
+        // Assert
+        Assert.Equal("GenericClass«Nullable«Int32»»", id);
+    }
+
+    [Fact]
+    public void GenerateSchemaId_WithNestedNullableGeneric_UsesCanonicalForm()
+    {
+        // Arrange (AC 407 - Nullable generic arguments canonical ordering)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var id = generator.GenerateSchemaId(typeof(GenericClass<GenericClass<int?>>));
+
+        // Assert
+        Assert.Equal("GenericClass«GenericClass«Nullable«Int32»»»", id);
+    }
+
+    [Fact]
+    public void GenerateSchemaId_WithMultipleGenericArgsIncludingNullable_MaintainsOrder()
+    {
+        // Arrange (AC 407 - Nullable generic arguments canonical ordering)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var id = generator.GenerateSchemaId(typeof(NestedGeneric<string, int?>));
+
+        // Assert
+        Assert.Equal("NestedGeneric«String,Nullable«Int32»»", id);
+    }
+
+    [Fact]
     public void GenerateSchemaId_WithCollision_AppliesSuffix()
     {
         // Arrange (AC 402)
