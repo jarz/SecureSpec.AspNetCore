@@ -201,7 +201,7 @@ public class SchemaGenerator
     }
 
     /// <summary>
-    /// Converts a UInt64 value to OpenApiLong. 
+    /// Converts a UInt64 value to OpenApiLong.
     /// Precondition: value must be less than or equal to long.MaxValue.
     /// </summary>
     private static OpenApiLong CreateIntegerFromUInt64(ulong value)
