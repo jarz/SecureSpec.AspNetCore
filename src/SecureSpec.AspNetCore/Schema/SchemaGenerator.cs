@@ -200,13 +200,13 @@ public class SchemaGenerator
             : new OpenApiLong(value);
     }
 
+    /// <summary>
+    /// Converts a UInt64 value to OpenApiLong. 
+    /// Precondition: value must be less than or equal to long.MaxValue.
+    /// </summary>
     private static OpenApiLong CreateIntegerFromUInt64(ulong value)
     {
-        if (value > long.MaxValue)
-        {
-            throw new ArgumentOutOfRangeException(nameof(value), "Value exceeds Int64 range.");
-        }
-
+        // Precondition: value <= long.MaxValue (checked by EvaluateEnumNumericRange)
         return new OpenApiLong((long)value);
     }
 
