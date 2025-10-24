@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using Microsoft.AspNetCore.Http;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Diagnostics;
@@ -35,6 +36,18 @@ public class SchemaGeneratorTests
         Zero = 0,
         One = 1,
         Two = 2
+    }
+
+    private enum LongBackedEnum : long
+    {
+        Small = 1,
+        Large = long.MaxValue
+    }
+
+    private enum HugeEnum : ulong
+    {
+        Small = 1,
+        Huge = ulong.MaxValue
     }
 
     #region SchemaId Tests
@@ -510,10 +523,53 @@ public class SchemaGeneratorTests
 
         // Assert
         Assert.Equal("integer", schema.Type);
+        Assert.Equal("int32", schema.Format);
         Assert.Equal(3, schema.Enum.Count);
         Assert.Equal(0, ((Microsoft.OpenApi.Any.OpenApiInteger)schema.Enum[0]).Value);
         Assert.Equal(1, ((Microsoft.OpenApi.Any.OpenApiInteger)schema.Enum[1]).Value);
         Assert.Equal(2, ((Microsoft.OpenApi.Any.OpenApiInteger)schema.Enum[2]).Value);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithEnum_IntegerMode_WithLongValues_HandlesInt64()
+    {
+        // Arrange
+        var options = new SchemaOptions { UseEnumStrings = false };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(LongBackedEnum));
+
+        // Assert
+        Assert.Equal("integer", schema.Type);
+        Assert.Equal("int64", schema.Format);
+        Assert.Equal(2, schema.Enum.Count);
+        var firstValue = Assert.IsType<Microsoft.OpenApi.Any.OpenApiLong>(schema.Enum[0]);
+        Assert.Equal(1L, firstValue.Value);
+        var longValue = Assert.IsType<Microsoft.OpenApi.Any.OpenApiLong>(schema.Enum[1]);
+        Assert.Equal(long.MaxValue, longValue.Value);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithEnum_IntegerMode_ValueExceedsInt64_FallsBackToString()
+    {
+        // Arrange
+        var options = new SchemaOptions { UseEnumStrings = false };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(HugeEnum));
+        var events = logger.GetEvents();
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+        Assert.Null(schema.Format);
+        Assert.Equal(2, schema.Enum.Count);
+        Assert.Equal("1", ((Microsoft.OpenApi.Any.OpenApiString)schema.Enum[0]).Value);
+        Assert.Equal(ulong.MaxValue.ToString(CultureInfo.InvariantCulture), ((Microsoft.OpenApi.Any.OpenApiString)schema.Enum[1]).Value);
+        Assert.Contains(events, e => e.Code == "SCH002" && e.Level == DiagnosticLevel.Warn);
     }
 
     [Fact]
@@ -630,6 +686,24 @@ public class SchemaGeneratorTests
 
         // Assert
         Assert.Equal("string", schema.Type);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithChar_ReturnsStringLengthOne()
+    {
+        // Arrange
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(char));
+
+        // Assert
+        Assert.Equal("string", schema.Type);
+        Assert.Equal(1, schema.MinLength);
+        Assert.Equal(1, schema.MaxLength);
+        Assert.False(schema.Nullable);
     }
 
     [Fact]
