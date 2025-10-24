@@ -289,9 +289,29 @@ public class SchemaGenerator
         };
     }
 
+    /// <summary>
+    /// Represents the evaluation result for how an enum's numeric values should be handled when generating OpenAPI schemas.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="RequiresStringFallback"/> is <c>true</c> when the enum's underlying type is <c>ulong</c> and at least one value exceeds <c>long.MaxValue</c>.
+    /// In this case, the numeric value cannot be represented in JSON as a number, so a string fallback is required.
+    /// </para>
+    /// <para>
+    /// <see cref="UseInt64"/> is <c>true</c> when the enum's underlying type is <c>long</c>, <c>ulong</c>, or <c>uint</c> and at least one value exceeds the range of <c>int</c>.
+    /// This indicates that the schema should use the <c>int64</c> format instead of <c>int32</c>.
+    /// </para>
+    /// </remarks>
     private readonly struct EnumNumericEvaluation
     {
+        /// <summary>
+        /// Indicates whether the enum values require a string fallback due to exceeding the numeric range supported by JSON.
+        /// </summary>
         public bool RequiresStringFallback { get; init; }
+
+        /// <summary>
+        /// Indicates whether the enum values require the use of 64-bit integers (<c>int64</c> format) in the schema.
+        /// </summary>
         public bool UseInt64 { get; init; }
     }
 
