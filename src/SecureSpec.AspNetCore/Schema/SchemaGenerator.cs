@@ -441,7 +441,7 @@ public class SchemaGenerator
                 Items = GenerateSchemaRecursive(elementType, isNullable: false, context, depth + 1)
             };
 
-            // Nullability of the array instance itself is applied by GenerateSchemaRecursive when it invokes ApplyNullability.
+            // Nullability of the array is applied by the caller via ApplyNullability.
             return true;
         }
 
