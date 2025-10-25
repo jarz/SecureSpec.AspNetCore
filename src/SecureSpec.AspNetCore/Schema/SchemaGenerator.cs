@@ -3,7 +3,9 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Diagnostics;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using System.Reflection;
 
 namespace SecureSpec.AspNetCore.Schema;
 
@@ -903,5 +905,172 @@ public class SchemaGenerator
     {
         _schemaIdMap.Clear();
         _typeToSchemaId.Clear();
+    }
+
+    /// <summary>
+    /// Applies DataAnnotations attributes to an OpenAPI schema.
+    /// </summary>
+    /// <param name="schema">The schema to modify.</param>
+    /// <param name="memberInfo">The member (property or parameter) to extract attributes from.</param>
+    /// <param name="memberName">The name of the member for diagnostic messages.</param>
+    public void ApplyDataAnnotations(OpenApiSchema schema, MemberInfo memberInfo, string? memberName = null)
+    {
+        ArgumentNullException.ThrowIfNull(schema);
+        ArgumentNullException.ThrowIfNull(memberInfo);
+
+        var attributes = memberInfo.GetCustomAttributes(true);
+        ApplyDataAnnotationsFromAttributes(schema, attributes, memberName ?? memberInfo.Name);
+    }
+
+    /// <summary>
+    /// Applies DataAnnotations attributes to an OpenAPI schema from a ParameterInfo.
+    /// </summary>
+    /// <param name="schema">The schema to modify.</param>
+    /// <param name="parameterInfo">The parameter to extract attributes from.</param>
+    /// <param name="parameterName">The name of the parameter for diagnostic messages.</param>
+    public void ApplyDataAnnotations(OpenApiSchema schema, ParameterInfo parameterInfo, string? parameterName = null)
+    {
+        ArgumentNullException.ThrowIfNull(schema);
+        ArgumentNullException.ThrowIfNull(parameterInfo);
+
+        var attributes = parameterInfo.GetCustomAttributes(true);
+        ApplyDataAnnotationsFromAttributes(schema, attributes, parameterName ?? parameterInfo.Name ?? "parameter");
+    }
+
+    /// <summary>
+    /// Applies DataAnnotations from an array of attributes.
+    /// </summary>
+    private void ApplyDataAnnotationsFromAttributes(OpenApiSchema schema, object[] attributes, string memberName)
+    {
+        foreach (var attribute in attributes)
+        {
+            switch (attribute)
+            {
+                // AC 31: Required attribute adds to required array (handled at property level)
+                // Note: The Required attribute is typically handled when building the parent schema's
+                // required array, not on the property schema itself.
+
+                // AC 32: Range attribute sets minimum and maximum
+                case RangeAttribute range:
+                    ApplyRangeAttribute(schema, range, memberName);
+                    break;
+
+                // AC 33: MinLength attribute sets minLength
+                case MinLengthAttribute minLength:
+                    ApplyMinLengthAttribute(schema, minLength, memberName);
+                    break;
+
+                // AC 34: MaxLength attribute sets maxLength
+                case MaxLengthAttribute maxLength:
+                    ApplyMaxLengthAttribute(schema, maxLength, memberName);
+                    break;
+
+                // AC 35: StringLength attribute sets minLength and maxLength
+                case StringLengthAttribute stringLength:
+                    ApplyStringLengthAttribute(schema, stringLength, memberName);
+                    break;
+
+                // AC 36: RegularExpression attribute sets pattern
+                case RegularExpressionAttribute regex:
+                    ApplyRegularExpressionAttribute(schema, regex, memberName);
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies Range attribute to schema with conflict detection.
+    /// </summary>
+    private void ApplyRangeAttribute(OpenApiSchema schema, RangeAttribute range, string memberName)
+    {
+        // Convert range values to appropriate types
+        var minimum = Convert.ToDouble(range.Minimum, CultureInfo.InvariantCulture);
+        var maximum = Convert.ToDouble(range.Maximum, CultureInfo.InvariantCulture);
+
+        // Check for conflicts (AC 434, AC 433)
+        if (schema.Minimum.HasValue || schema.Maximum.HasValue)
+        {
+            _logger.LogWarning(
+                "ANN001",
+                $"DataAnnotations conflict detected on member '{memberName}': Range attribute overrides existing minimum/maximum constraints. Last wins.");
+        }
+
+        // Apply the attribute (last wins)
+        schema.Minimum = (decimal)minimum;
+        schema.Maximum = (decimal)maximum;
+    }
+
+    /// <summary>
+    /// Applies MinLength attribute to schema with conflict detection.
+    /// </summary>
+    private void ApplyMinLengthAttribute(OpenApiSchema schema, MinLengthAttribute minLength, string memberName)
+    {
+        // Check for conflicts (AC 434, AC 433)
+        if (schema.MinLength.HasValue)
+        {
+            _logger.LogWarning(
+                "ANN001",
+                $"DataAnnotations conflict detected on member '{memberName}': MinLength attribute overrides existing minLength constraint. Last wins.");
+        }
+
+        // Apply the attribute (last wins)
+        schema.MinLength = minLength.Length;
+    }
+
+    /// <summary>
+    /// Applies MaxLength attribute to schema with conflict detection.
+    /// </summary>
+    private void ApplyMaxLengthAttribute(OpenApiSchema schema, MaxLengthAttribute maxLength, string memberName)
+    {
+        // Check for conflicts (AC 434, AC 433)
+        if (schema.MaxLength.HasValue)
+        {
+            _logger.LogWarning(
+                "ANN001",
+                $"DataAnnotations conflict detected on member '{memberName}': MaxLength attribute overrides existing maxLength constraint. Last wins.");
+        }
+
+        // Apply the attribute (last wins)
+        schema.MaxLength = maxLength.Length;
+    }
+
+    /// <summary>
+    /// Applies StringLength attribute to schema with conflict detection.
+    /// </summary>
+    private void ApplyStringLengthAttribute(OpenApiSchema schema, StringLengthAttribute stringLength, string memberName)
+    {
+        // Check for conflicts (AC 434, AC 433)
+        if (schema.MinLength.HasValue || schema.MaxLength.HasValue)
+        {
+            _logger.LogWarning(
+                "ANN001",
+                $"DataAnnotations conflict detected on member '{memberName}': StringLength attribute overrides existing minLength/maxLength constraints. Last wins.");
+        }
+
+        // Apply maxLength
+        schema.MaxLength = stringLength.MaximumLength;
+
+        // Apply minLength if specified
+        if (stringLength.MinimumLength > 0)
+        {
+            schema.MinLength = stringLength.MinimumLength;
+        }
+    }
+
+    /// <summary>
+    /// Applies RegularExpression attribute to schema with conflict detection.
+    /// </summary>
+    private void ApplyRegularExpressionAttribute(OpenApiSchema schema, RegularExpressionAttribute regex, string memberName)
+    {
+        // Check for conflicts (AC 434, AC 433)
+        if (!string.IsNullOrEmpty(schema.Pattern))
+        {
+            _logger.LogWarning(
+                "ANN001",
+                $"DataAnnotations conflict detected on member '{memberName}': RegularExpression attribute overrides existing pattern constraint. Last wins.");
+        }
+
+        // Apply the attribute (last wins)
+        schema.Pattern = regex.Pattern;
     }
 }
