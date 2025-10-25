@@ -85,14 +85,7 @@ public partial class SchemaGenerator
                     }
 
                     // AC 440, AC 441: Add virtualization metadata
-                    schema.Extensions["x-enum-virtualized"] = new Microsoft.OpenApi.Any.OpenApiBoolean(true);
-                    schema.Extensions["x-enum-total-count"] = new Microsoft.OpenApi.Any.OpenApiInteger(enumValues.Length);
-                    schema.Extensions["x-enum-truncated-count"] = new Microsoft.OpenApi.Any.OpenApiInteger(enumValues.Length - _options.EnumVirtualizationThreshold);
-
-                    _logger.LogInfo(
-                        "VIRT001",
-                        $"Enum '{enumType.FullName}' has {enumValues.Length} values, exceeding virtualization threshold of {_options.EnumVirtualizationThreshold}. Truncated to first {_options.EnumVirtualizationThreshold} values.",
-                        new { EnumType = enumType.FullName, TotalCount = enumValues.Length, Threshold = _options.EnumVirtualizationThreshold });
+                    AddVirtualizationMetadata(schema, enumValues.Length, enumType);
                 }
                 else
                 {
@@ -119,15 +112,23 @@ public partial class SchemaGenerator
         }
 
         // AC 441: Add virtualization metadata for search support
-        schema.Extensions["x-enum-virtualized"] = new Microsoft.OpenApi.Any.OpenApiBoolean(true);
-        schema.Extensions["x-enum-total-count"] = new Microsoft.OpenApi.Any.OpenApiInteger(values.Count);
-        schema.Extensions["x-enum-truncated-count"] = new Microsoft.OpenApi.Any.OpenApiInteger(values.Count - _options.EnumVirtualizationThreshold);
+        AddVirtualizationMetadata(schema, values.Count, enumType);
+    }
+
+    /// <summary>
+    /// Adds virtualization metadata to an enum schema.
+    /// </summary>
+    private void AddVirtualizationMetadata(OpenApiSchema schema, int totalCount, Type enumType)
+    {
+        schema.Extensions["x-enum-virtualized"] = new OpenApiBoolean(true);
+        schema.Extensions["x-enum-total-count"] = new OpenApiInteger(totalCount);
+        schema.Extensions["x-enum-truncated-count"] = new OpenApiInteger(totalCount - _options.EnumVirtualizationThreshold);
 
         // AC 440: Emit VIRT001 diagnostic
         _logger.LogInfo(
             "VIRT001",
-            $"Enum '{enumType.FullName}' has {values.Count} values, exceeding virtualization threshold of {_options.EnumVirtualizationThreshold}. Truncated to first {_options.EnumVirtualizationThreshold} values.",
-            new { EnumType = enumType.FullName, TotalCount = values.Count, Threshold = _options.EnumVirtualizationThreshold });
+            $"Enum '{enumType.FullName}' has {totalCount} values, exceeding virtualization threshold of {_options.EnumVirtualizationThreshold}. Truncated to first {_options.EnumVirtualizationThreshold} values.",
+            new { EnumType = enumType.FullName, TotalCount = totalCount, Threshold = _options.EnumVirtualizationThreshold });
     }
 
     /// <summary>
