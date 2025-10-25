@@ -1072,7 +1072,10 @@ public class SchemaGeneratorTests
         public int GetHashCode(OpenApiSchema obj)
         {
             if (obj is null)
+            {
                 return 0;
+            }
+
             return RuntimeHelpers.GetHashCode(obj);
         }
     }
