@@ -90,8 +90,6 @@ public class SchemaGenerator
                     Type = customMapping.Type,
                     Format = customMapping.Format
                 };
-                schema = ApplyNullability(schema, isNullable);
-                return schema;
             }
             else
             {
