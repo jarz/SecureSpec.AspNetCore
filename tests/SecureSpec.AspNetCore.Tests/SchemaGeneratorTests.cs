@@ -1069,7 +1069,12 @@ public class SchemaGeneratorTests
 
         public bool Equals(OpenApiSchema? x, OpenApiSchema? y) => ReferenceEquals(x, y);
 
-        public int GetHashCode(OpenApiSchema obj) => RuntimeHelpers.GetHashCode(obj);
+        public int GetHashCode(OpenApiSchema obj)
+        {
+            if (obj is null)
+                return 0;
+            return RuntimeHelpers.GetHashCode(obj);
+        }
     }
 }
 
