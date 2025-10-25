@@ -708,8 +708,19 @@ public class SchemaGenerator
             var popped = _typeStack.Pop();
             if (!ReferenceEquals(popped, type))
             {
+                var remainingStack = _typeStack
+                    .Select(t => t.FullName ?? t.Name)
+                    .ToArray();
+
+                // Restore the stack so downstream diagnostics see the state that triggered the failure.
+                _typeStack.Push(popped);
+
+                var remainingDescription = remainingStack.Length == 0
+                    ? "<empty>"
+                    : string.Join(" -> ", remainingStack);
+
                 throw new InvalidOperationException(
-                    $"Schema generation traversal order corrupted. Expected to exit type '{type.FullName ?? type.Name}' but found '{popped.FullName ?? popped.Name}'.");
+                    $"Schema generation traversal order corrupted. Expected to exit type '{type.FullName ?? type.Name}' but found '{popped.FullName ?? popped.Name}'. Remaining stack (top to bottom): {remainingDescription}");
             }
 
             _inProgress.Remove(type);
