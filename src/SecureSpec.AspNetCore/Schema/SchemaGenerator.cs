@@ -987,7 +987,7 @@ public class SchemaGenerator
         var minimum = Convert.ToDouble(range.Minimum, CultureInfo.InvariantCulture);
         var maximum = Convert.ToDouble(range.Maximum, CultureInfo.InvariantCulture);
 
-        // Check for conflicts (AC 434, AC 433)
+        // Check for conflicts (AC 433)
         if (schema.Minimum.HasValue || schema.Maximum.HasValue)
         {
             _logger.LogWarning(
@@ -1005,7 +1005,7 @@ public class SchemaGenerator
     /// </summary>
     private void ApplyMinLengthAttribute(OpenApiSchema schema, MinLengthAttribute minLength, string memberName)
     {
-        // Check for conflicts (AC 434, AC 433)
+        // Check for conflicts (AC 433)
         if (schema.MinLength.HasValue)
         {
             _logger.LogWarning(
@@ -1022,7 +1022,7 @@ public class SchemaGenerator
     /// </summary>
     private void ApplyMaxLengthAttribute(OpenApiSchema schema, MaxLengthAttribute maxLength, string memberName)
     {
-        // Check for conflicts (AC 434, AC 433)
+        // Check for conflicts (AC 433)
         if (schema.MaxLength.HasValue)
         {
             _logger.LogWarning(
@@ -1039,7 +1039,7 @@ public class SchemaGenerator
     /// </summary>
     private void ApplyStringLengthAttribute(OpenApiSchema schema, StringLengthAttribute stringLength, string memberName)
     {
-        // Check for conflicts (AC 434, AC 433)
+        // Check for conflicts (AC 433)
         if (schema.MinLength.HasValue || schema.MaxLength.HasValue)
         {
             _logger.LogWarning(
@@ -1062,7 +1062,7 @@ public class SchemaGenerator
     /// </summary>
     private void ApplyRegularExpressionAttribute(OpenApiSchema schema, RegularExpressionAttribute regex, string memberName)
     {
-        // Check for conflicts (AC 434, AC 433)
+        // Check for conflicts (AC 433)
         if (!string.IsNullOrEmpty(schema.Pattern))
         {
             _logger.LogWarning(

@@ -246,7 +246,6 @@ public class DataAnnotationsTests
         Assert.Equal(100, schema.MaxLength);
     }
 
-    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Helper method for testing")]
     [SuppressMessage("Style", "RCS1163:Unused parameter", Justification = "Parameter needed for attribute testing")]
     private static void TestMethodWithParameter([StringLength(100, MinimumLength = 5)] string value)
     {
@@ -275,7 +274,6 @@ public class DataAnnotationsTests
         Assert.Equal(50, schema.MaxLength);
     }
 
-    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Helper method for testing")]
     [SuppressMessage("Style", "RCS1163:Unused parameter", Justification = "Parameter needed for attribute testing")]
     private static void TestMethodWithMaxLengthOnly([StringLength(50)] string value)
     {
@@ -478,7 +476,6 @@ public class DataAnnotationsTests
         Assert.Equal(99.9m, schema.Maximum);
     }
 
-    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Helper method for testing")]
     [SuppressMessage("Style", "RCS1163:Unused parameter", Justification = "Parameter needed for attribute testing")]
     private static void TestMethodWithDecimalRange([Range(0.5, 99.9)] double value)
     {
