@@ -459,7 +459,7 @@ public class SchemaGenerator
                 AdditionalProperties = GenerateSchemaRecursive(valueType, isNullable: false, context, depth + 1)
             };
 
-            // Nullability for the dictionary itself is applied by GenerateSchemaRecursive via ApplyNullability after this helper returns.
+            // Nullability for the dictionary is applied by the caller via ApplyNullability.
             return true;
         }
         schema = null!;
