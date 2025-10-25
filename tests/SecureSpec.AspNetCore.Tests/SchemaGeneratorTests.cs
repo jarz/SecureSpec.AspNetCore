@@ -511,6 +511,44 @@ public class SchemaGeneratorTests
     }
 
     [Fact]
+    public void GenerateSchema_WithNullableReferenceType_OpenApi30_SetsNullableTrue()
+    {
+        // Arrange (AC 420)
+        var options = new SchemaOptions { SpecVersion = SchemaSpecVersion.OpenApi3_0 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(SimpleClass), isNullable: true);
+
+        // Assert
+        Assert.Equal("object", schema.Type);
+        Assert.True(schema.Nullable);
+        Assert.Empty(schema.AnyOf);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithNullableReferenceType_OpenApi31_UsesUnion()
+    {
+        // Arrange (AC 421)
+        var options = new SchemaOptions { SpecVersion = SchemaSpecVersion.OpenApi3_1 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(SimpleClass), isNullable: true);
+
+        // Assert
+        Assert.False(schema.Nullable);
+        Assert.Null(schema.Type);
+        var variants = schema.AnyOf;
+        Assert.NotNull(variants);
+        Assert.Equal(2, variants.Count);
+        Assert.Equal("object", variants[0].Type);
+        Assert.Equal("null", variants[1].Type);
+    }
+
+    [Fact]
     public void GenerateSchema_WithNullableDictionaryValue_OpenApi31_AddsNullVariant()
     {
         // Arrange (AC 424)
