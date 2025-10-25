@@ -33,29 +33,52 @@ public class SchemaGenerator
     /// <returns>The generated OpenAPI schema.</returns>
     public OpenApiSchema GenerateSchema(Type type)
     {
+        return GenerateSchema(type, isNullable: false);
+    }
+
+    /// <summary>
+    /// Generates an OpenAPI schema for the specified type with explicit nullability control.
+    /// </summary>
+    /// <param name="type">The CLR type to generate a schema for.</param>
+    /// <param name="isNullable">Whether the schema should allow null values.</param>
+    /// <returns>The generated OpenAPI schema.</returns>
+    public OpenApiSchema GenerateSchema(Type type, bool isNullable)
+    {
         ArgumentNullException.ThrowIfNull(type);
 
-        // Handle nullable value types
+        // Handle nullable value types (e.g., int?)
         var underlyingType = Nullable.GetUnderlyingType(type);
         if (underlyingType != null)
         {
-            var schema = GenerateSchema(underlyingType);
-            schema.Nullable = true; // AC 416
-            return schema;
+            return GenerateSchema(underlyingType, isNullable: true); // AC 416, AC 421
         }
 
-        // Check for custom type mappings first
+        // Handle dictionary-like types before enumerable detection (AC 424)
+        if (TryCreateDictionarySchema(type, isNullable, out var dictionarySchema))
+        {
+            return dictionarySchema;
+        }
+
+        // Handle arrays and generic enumerables (AC 422, AC 423)
+        if (TryCreateArraySchema(type, isNullable, out var arraySchema))
+        {
+            return arraySchema;
+        }
+
+        // Apply custom type mappings first
         if (_options.TypeMappings.TryGetMapping(type, out var customMapping) && customMapping != null)
         {
-            return new OpenApiSchema
+            var mappedSchema = new OpenApiSchema
             {
                 Type = customMapping.Type,
                 Format = customMapping.Format
             };
+
+            return ApplyNullability(mappedSchema, isNullable);
         }
 
         // Handle primitive types (AC 409-418)
-        return type switch
+        var schema = type switch
         {
             // AC 409: Guid → type:string format:uuid
             Type t when t == typeof(Guid) => new OpenApiSchema { Type = "string", Format = "uuid" },
@@ -113,6 +136,8 @@ public class SchemaGenerator
             // Default to object for complex types
             _ => new OpenApiSchema { Type = "object" }
         };
+
+        return ApplyNullability(schema, isNullable);
     }
 
     /// <summary>
@@ -326,6 +351,227 @@ public class SchemaGenerator
             Type t when t == typeof(int) || t == typeof(uint) => "int32",
             _ => null
         };
+    }
+
+    private OpenApiSchema ApplyNullability(OpenApiSchema schema, bool isNullable)
+    {
+        ArgumentNullException.ThrowIfNull(schema);
+
+        if (!isNullable)
+        {
+            schema.Nullable = false;
+            return schema;
+        }
+
+        if (_options.SpecVersion == SchemaSpecVersion.OpenApi3_0)
+        {
+            schema.Nullable = true;
+            return schema;
+        }
+
+        schema.Nullable = false;
+        return CreateNullUnion(schema);
+    }
+
+    private bool TryCreateArraySchema(Type type, bool isNullable, out OpenApiSchema schema)
+    {
+        if (type == typeof(byte[]))
+        {
+            schema = null!;
+            return false;
+        }
+
+        var elementType = GetEnumerableElementType(type);
+        if (elementType != null)
+        {
+            var arraySchema = new OpenApiSchema
+            {
+                Type = "array",
+                Items = GenerateSchema(elementType)
+            };
+
+            schema = ApplyNullability(arraySchema, isNullable);
+            return true;
+        }
+
+        schema = null!;
+        return false;
+    }
+
+    private bool TryCreateDictionarySchema(Type type, bool isNullable, out OpenApiSchema schema)
+    {
+        if (TryGetDictionaryValueType(type, out var valueType))
+        {
+            var dictionarySchema = new OpenApiSchema
+            {
+                Type = "object",
+                AdditionalProperties = GenerateSchema(valueType)
+            };
+
+            schema = ApplyNullability(dictionarySchema, isNullable);
+            return true;
+        }
+
+        schema = null!;
+        return false;
+    }
+
+    private static Type? GetEnumerableElementType(Type type)
+    {
+        if (type == typeof(string))
+        {
+            return null;
+        }
+
+        if (type.IsArray)
+        {
+            return type.GetElementType();
+        }
+
+        if (type.IsGenericType)
+        {
+            var genericDefinition = type.GetGenericTypeDefinition();
+            if (genericDefinition == typeof(IEnumerable<>) ||
+                genericDefinition == typeof(ICollection<>) ||
+                genericDefinition == typeof(IList<>) ||
+                genericDefinition == typeof(List<>) ||
+                genericDefinition == typeof(IReadOnlyCollection<>) ||
+                genericDefinition == typeof(IReadOnlyList<>))
+            {
+                var candidate = type.GetGenericArguments()[0];
+                return IsKeyValuePair(candidate) ? null : candidate;
+            }
+        }
+
+        foreach (var iface in type.GetInterfaces())
+        {
+            if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+            {
+                var candidate = iface.GetGenericArguments()[0];
+                if (!IsKeyValuePair(candidate))
+                {
+                    return candidate;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static bool TryGetDictionaryValueType(Type type, out Type valueType)
+    {
+        if (type.IsGenericType && TryGetDictionaryValueTypeCore(type, out valueType))
+        {
+            return true;
+        }
+
+        foreach (var iface in type.GetInterfaces())
+        {
+            if (iface.IsGenericType && TryGetDictionaryValueTypeCore(iface, out valueType))
+            {
+                return true;
+            }
+        }
+
+        valueType = null!;
+        return false;
+    }
+
+    private static bool TryGetDictionaryValueTypeCore(Type candidate, out Type valueType)
+    {
+        var definition = candidate.GetGenericTypeDefinition();
+        if (definition == typeof(Dictionary<,>) ||
+            definition == typeof(IDictionary<,>) ||
+            definition == typeof(IReadOnlyDictionary<,>))
+        {
+            var arguments = candidate.GetGenericArguments();
+            if (arguments[0] == typeof(string))
+            {
+                valueType = arguments[1];
+                return true;
+            }
+        }
+
+        valueType = null!;
+        return false;
+    }
+
+    private static bool IsKeyValuePair(Type candidate)
+    {
+        return candidate.IsGenericType && candidate.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
+    }
+
+    private static OpenApiSchema CreateNullUnion(OpenApiSchema schema)
+    {
+        if (schema.OneOf.Count > 0)
+        {
+            if (!ContainsNullSchema(schema.OneOf))
+            {
+                schema.OneOf.Add(CreateNullSchema());
+            }
+
+            return schema;
+        }
+
+        if (schema.AnyOf.Count > 0)
+        {
+            if (!ContainsNullSchema(schema.AnyOf))
+            {
+                schema.AnyOf.Add(CreateNullSchema());
+            }
+
+            return schema;
+        }
+
+        if (schema.AllOf.Count > 0)
+        {
+            return new OpenApiSchema
+            {
+                AnyOf =
+                {
+                    schema,
+                    CreateNullSchema()
+                }
+            };
+        }
+
+        return new OpenApiSchema
+        {
+            AnyOf =
+            {
+                schema,
+                CreateNullSchema()
+            }
+        };
+    }
+
+    private static bool ContainsNullSchema(IList<OpenApiSchema> candidates)
+    {
+        for (var i = 0; i < candidates.Count; i++)
+        {
+            if (IsNullSchema(candidates[i]))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsNullSchema(OpenApiSchema candidate)
+    {
+        return string.Equals(candidate.Type, "null", StringComparison.Ordinal)
+               && candidate.AnyOf.Count == 0
+               && candidate.OneOf.Count == 0
+               && candidate.AllOf.Count == 0
+               && candidate.Properties.Count == 0
+               && candidate.Items == null
+               && candidate.AdditionalProperties == null;
+    }
+
+    private static OpenApiSchema CreateNullSchema()
+    {
+        return new OpenApiSchema { Type = "null" };
     }
 
     /// <summary>

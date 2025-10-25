@@ -31,6 +31,12 @@ public class SchemaOptions
     public Func<string, string>? EnumNamingPolicy { get; set; }
 
     /// <summary>
+    /// Gets or sets the OpenAPI specification version used for schema generation.
+    /// Default is OpenAPI 3.0.
+    /// </summary>
+    public SchemaSpecVersion SpecVersion { get; set; } = SchemaSpecVersion.OpenApi3_0;
+
+    /// <summary>
     /// Gets the type mappings for custom types.
     /// </summary>
     public TypeMappingCollection TypeMappings { get; } = new();
@@ -91,4 +97,20 @@ public class TypeMapping
     /// Gets or sets the OpenAPI format (e.g., "date-time", "uuid", "byte").
     /// </summary>
     public string? Format { get; set; }
+}
+
+/// <summary>
+/// Supported OpenAPI specification versions for schema generation.
+/// </summary>
+public enum SchemaSpecVersion
+{
+    /// <summary>
+    /// OpenAPI 3.0.x (uses <c>nullable: true</c> for nullability).
+    /// </summary>
+    OpenApi3_0,
+
+    /// <summary>
+    /// OpenAPI 3.1.x (uses JSON Schema union semantics for nullability).
+    /// </summary>
+    OpenApi3_1
 }
