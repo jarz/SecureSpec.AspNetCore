@@ -31,6 +31,13 @@ public class SchemaOptions
     public Func<string, string>? EnumNamingPolicy { get; set; }
 
     /// <summary>
+    /// Gets or sets the threshold for enum virtualization.
+    /// Enums with more values than this threshold will be virtualized.
+    /// Default is 10,000.
+    /// </summary>
+    public int EnumVirtualizationThreshold { get; set; } = 10_000;
+
+    /// <summary>
     /// Gets or sets the OpenAPI specification version used for schema generation.
     /// Default is OpenAPI 3.0.
     /// </summary>

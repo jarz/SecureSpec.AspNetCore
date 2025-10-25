@@ -15,18 +15,28 @@ public partial class SchemaGenerator
 
         if (_options.UseEnumStrings)
         {
-            // AC 417: String mode preserves declaration order
+            // AC 417, AC 438: String mode preserves declaration order
             schema.Type = "string";
             var enumNames = Enum.GetNames(enumType);
 
-            // Apply naming policy if configured (AC 419)
+            // Apply naming policy if configured (AC 419, AC 442)
             var processedNames = _options.EnumNamingPolicy != null
                 ? enumNames.Select(n => _options.EnumNamingPolicy(n))
                 : enumNames;
 
-            foreach (var name in processedNames)
+            var namesList = processedNames.ToList();
+
+            // AC 440: Check for virtualization threshold
+            if (namesList.Count > _options.EnumVirtualizationThreshold)
             {
-                schema.Enum.Add(new OpenApiString(name));
+                ApplyEnumVirtualization(schema, namesList, enumType);
+            }
+            else
+            {
+                foreach (var name in namesList)
+                {
+                    schema.Enum.Add(new OpenApiString(name));
+                }
             }
         }
         else
@@ -40,9 +50,19 @@ public partial class SchemaGenerator
             if (rangeEvaluation.RequiresStringFallback)
             {
                 schema.Type = "string";
-                foreach (var value in enumValues)
+                var stringValues = enumValues.Select(v => ConvertEnumValueToString(v, underlyingType)).ToList();
+
+                // AC 440: Check for virtualization threshold
+                if (stringValues.Count > _options.EnumVirtualizationThreshold)
                 {
-                    schema.Enum.Add(new OpenApiString(ConvertEnumValueToString(value, underlyingType)));
+                    ApplyEnumVirtualization(schema, stringValues, enumType);
+                }
+                else
+                {
+                    foreach (var value in stringValues)
+                    {
+                        schema.Enum.Add(new OpenApiString(value));
+                    }
                 }
 
                 _logger.LogWarning(
@@ -51,18 +71,64 @@ public partial class SchemaGenerator
             }
             else
             {
-                // AC 418: Integer mode uses type:integer
+                // AC 418, AC 439: Integer mode uses type:integer
                 schema.Type = "integer";
                 schema.Format = rangeEvaluation.UseInt64 ? "int64" : "int32";
 
-                foreach (var value in enumValues)
+                // AC 440: Check for virtualization threshold
+                if (enumValues.Length > _options.EnumVirtualizationThreshold)
                 {
-                    schema.Enum.Add(CreateNumericEnumValue(value, underlyingType));
+                    // Truncate to threshold and add metadata
+                    for (int i = 0; i < _options.EnumVirtualizationThreshold; i++)
+                    {
+                        schema.Enum.Add(CreateNumericEnumValue(enumValues[i], underlyingType));
+                    }
+
+                    // AC 440, AC 441: Add virtualization metadata
+                    AddVirtualizationMetadata(schema, enumValues.Length, enumType);
+                }
+                else
+                {
+                    foreach (var value in enumValues)
+                    {
+                        schema.Enum.Add(CreateNumericEnumValue(value, underlyingType));
+                    }
                 }
             }
         }
 
         return schema;
+    }
+
+    /// <summary>
+    /// Applies virtualization to an enum schema with string values.
+    /// </summary>
+    private void ApplyEnumVirtualization(OpenApiSchema schema, List<string> values, Type enumType)
+    {
+        // AC 440: Truncate to threshold
+        for (int i = 0; i < _options.EnumVirtualizationThreshold; i++)
+        {
+            schema.Enum.Add(new OpenApiString(values[i]));
+        }
+
+        // AC 441: Add virtualization metadata for search support
+        AddVirtualizationMetadata(schema, values.Count, enumType);
+    }
+
+    /// <summary>
+    /// Adds virtualization metadata to an enum schema.
+    /// </summary>
+    private void AddVirtualizationMetadata(OpenApiSchema schema, int totalCount, Type enumType)
+    {
+        schema.Extensions["x-enum-virtualized"] = new OpenApiBoolean(true);
+        schema.Extensions["x-enum-total-count"] = new OpenApiInteger(totalCount);
+        schema.Extensions["x-enum-truncated-count"] = new OpenApiInteger(totalCount - _options.EnumVirtualizationThreshold);
+
+        // AC 440: Emit VIRT001 diagnostic
+        _logger.LogInfo(
+            "VIRT001",
+            $"Enum '{enumType.FullName}' has {totalCount} values, exceeding virtualization threshold of {_options.EnumVirtualizationThreshold}. Truncated to first {_options.EnumVirtualizationThreshold} values.",
+            new { EnumType = enumType.FullName, TotalCount = totalCount, Threshold = _options.EnumVirtualizationThreshold });
     }
 
     /// <summary>
