@@ -1,11 +1,14 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Http;
+using Microsoft.OpenApi.Any;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Diagnostics;
 using SecureSpec.AspNetCore.Schema;
 using Microsoft.OpenApi.Models;
+using SCG = System.Collections.Generic;
 
 namespace SecureSpec.AspNetCore.Tests;
 
@@ -25,6 +28,14 @@ public class SchemaGeneratorTests
 
     [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation scenarios.")]
     private sealed class NestedGeneric<TOuter, TInner> { }
+
+    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation scenarios.")]
+    private sealed class RecursiveEnumerable : SCG.IEnumerable<RecursiveEnumerable>
+    {
+        public SCG.IEnumerator<RecursiveEnumerable> GetEnumerator() => throw new NotSupportedException("Enumeration not required for schema generation tests.");
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
 
     private enum TestEnum
     {
@@ -906,6 +917,75 @@ public class SchemaGeneratorTests
     }
 
     [Fact]
+    public void GenerateSchema_WithRecursiveEnumerable_UsesCyclePlaceholder()
+    {
+        // Arrange (AC 429, AC 430)
+        var options = new SchemaOptions();
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(RecursiveEnumerable));
+
+        // Assert
+        Assert.Equal("array", schema.Type);
+        Assert.NotNull(schema.Items);
+        var placeholder = schema.Items!;
+        Assert.True(placeholder.Extensions.ContainsKey("x-securespec-placeholder"));
+        var metadata = Assert.IsType<OpenApiObject>(placeholder.Extensions["x-securespec-placeholder"]);
+        Assert.Equal("cycle", Assert.IsType<OpenApiString>(metadata["kind"]).Value);
+        Assert.Equal(typeof(RecursiveEnumerable).FullName ?? typeof(RecursiveEnumerable).Name, Assert.IsType<OpenApiString>(metadata["type"]).Value);
+        Assert.Empty(logger.GetEvents());
+    }
+
+    [Fact]
+    public void GenerateSchema_DepthLimitExceeded_LogsDiagnosticAndUsesPlaceholder()
+    {
+        // Arrange (AC 427, AC 428)
+        var options = new SchemaOptions { MaxDepth = 2 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+        var deepType = CreateNestedListType(typeof(int), depth: 5);
+
+        // Act
+        var schema = generator.GenerateSchema(deepType);
+
+        // Assert
+        var placeholder = FindFirstPlaceholder(schema);
+        Assert.NotNull(placeholder);
+        var metadata = Assert.IsType<OpenApiObject>(placeholder!.Extensions["x-securespec-placeholder"]);
+        Assert.Equal("depth", Assert.IsType<OpenApiString>(metadata["kind"]).Value);
+
+        var events = logger.GetEvents();
+        var depthEvent = Assert.Single(events, e => e.Code == "SCH001-DEPTH");
+        Assert.Equal(DiagnosticLevel.Warn, depthEvent.Level);
+    }
+
+    [Fact]
+    public void GenerateSchema_MaxDepthAdjustment_RecomputesTraversal()
+    {
+        // Arrange (AC 431)
+        var options = new SchemaOptions { MaxDepth = 2 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+        var deepType = CreateNestedListType(typeof(int), depth: 4);
+
+        // Act
+        var limitedSchema = generator.GenerateSchema(deepType);
+        var limitedPlaceholder = FindFirstPlaceholder(limitedSchema);
+
+        options.MaxDepth = 8;
+        logger.Clear();
+        var relaxedSchema = generator.GenerateSchema(deepType);
+        var relaxedPlaceholder = FindFirstPlaceholder(relaxedSchema);
+
+        // Assert
+        Assert.NotNull(limitedPlaceholder);
+        Assert.Null(relaxedPlaceholder);
+        Assert.DoesNotContain(logger.GetEvents(), e => e.Code == "SCH001-DEPTH");
+    }
+
+    [Fact]
     public void GenerateSchema_ThrowsOnNullType()
     {
         // Arrange
@@ -918,6 +998,87 @@ public class SchemaGeneratorTests
     }
 
     #endregion
+
+    private static Type CreateNestedListType(Type elementType, int depth)
+    {
+        var current = elementType;
+        for (var i = 0; i < depth; i++)
+        {
+            current = typeof(SCG.List<>).MakeGenericType(current);
+        }
+
+        return current;
+    }
+
+    private static OpenApiSchema? FindFirstPlaceholder(OpenApiSchema root)
+    {
+        var visited = new SCG.HashSet<OpenApiSchema>(SchemaReferenceComparer.Instance);
+        var queue = new SCG.Queue<OpenApiSchema>();
+        queue.Enqueue(root);
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            if (!visited.Add(current))
+            {
+                continue;
+            }
+
+            if (current.Extensions.TryGetValue("x-securespec-placeholder", out _))
+            {
+                return current;
+            }
+
+            if (current.Items != null)
+            {
+                queue.Enqueue(current.Items);
+            }
+
+            if (current.AdditionalProperties is OpenApiSchema additional)
+            {
+                queue.Enqueue(additional);
+            }
+
+            foreach (var property in current.Properties.Values)
+            {
+                queue.Enqueue(property);
+            }
+
+            foreach (var candidate in current.AllOf)
+            {
+                queue.Enqueue(candidate);
+            }
+
+            foreach (var candidate in current.AnyOf)
+            {
+                queue.Enqueue(candidate);
+            }
+
+            foreach (var candidate in current.OneOf)
+            {
+                queue.Enqueue(candidate);
+            }
+        }
+
+        return null;
+    }
+
+    private sealed class SchemaReferenceComparer : IEqualityComparer<OpenApiSchema>
+    {
+        public static SchemaReferenceComparer Instance { get; } = new();
+
+        public bool Equals(OpenApiSchema? x, OpenApiSchema? y) => ReferenceEquals(x, y);
+
+        public int GetHashCode(OpenApiSchema obj)
+        {
+            if (obj is null)
+            {
+                return 0;
+            }
+
+            return RuntimeHelpers.GetHashCode(obj);
+        }
+    }
 }
 
 internal static class SchemaGeneratorTestsReflection

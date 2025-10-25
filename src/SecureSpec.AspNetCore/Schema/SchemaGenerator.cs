@@ -12,6 +12,8 @@ namespace SecureSpec.AspNetCore.Schema;
 /// </summary>
 public class SchemaGenerator
 {
+    private const string PlaceholderExtensionKey = "x-securespec-placeholder";
+
     private readonly SchemaOptions _options;
     private readonly DiagnosticsLogger _logger;
     private readonly Dictionary<string, List<Type>> _schemaIdMap = [];
@@ -46,96 +48,116 @@ public class SchemaGenerator
     {
         ArgumentNullException.ThrowIfNull(type);
 
-        // Handle nullable value types (e.g., int?)
-        var underlyingType = Nullable.GetUnderlyingType(type);
-        if (underlyingType != null)
+        var context = new SchemaGenerationContext(_options.MaxDepth, _logger);
+        return GenerateSchemaRecursive(type, isNullable, context, depth: 0);
+    }
+
+    private OpenApiSchema GenerateSchemaRecursive(Type type, bool isNullable, SchemaGenerationContext context, int depth)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+
+        if (!context.TryEnter(type, depth, out var placeholder))
         {
-            return GenerateSchema(underlyingType, isNullable: true); // AC 416, AC 421
+            return ApplyNullability(placeholder, isNullable);
         }
 
-        // Handle dictionary-like types before enumerable detection (AC 424)
-        if (TryCreateDictionarySchema(type, isNullable, out var dictionarySchema))
-        {
-            return dictionarySchema;
-        }
+        OpenApiSchema schema;
 
-        // Handle arrays and generic enumerables (AC 422, AC 423)
-        if (TryCreateArraySchema(type, isNullable, out var arraySchema))
+        try
         {
-            return arraySchema;
-        }
-
-        // Apply custom type mappings first
-        if (_options.TypeMappings.TryGetMapping(type, out var customMapping) && customMapping != null)
-        {
-            var mappedSchema = new OpenApiSchema
+            // Handle nullable value types (e.g., int?)
+            var underlyingType = Nullable.GetUnderlyingType(type);
+            if (underlyingType != null)
             {
-                Type = customMapping.Type,
-                Format = customMapping.Format
-            };
+                return GenerateSchemaRecursive(underlyingType, isNullable: true, context, depth + 1); // AC 416, AC 421
+            }
 
-            return ApplyNullability(mappedSchema, isNullable);
+            // Handle dictionary-like types before enumerable detection (AC 424)
+            if (TryCreateDictionarySchema(type, context, depth, out var dictionarySchema))
+            {
+                schema = dictionarySchema;
+            }
+            // Handle arrays and generic enumerables (AC 422, AC 423)
+            else if (TryCreateArraySchema(type, context, depth, out var arraySchema))
+            {
+                schema = arraySchema;
+            }
+            else if (_options.TypeMappings.TryGetMapping(type, out var customMapping) && customMapping != null)
+            {
+                // Apply custom type mappings first
+                schema = new OpenApiSchema
+                {
+                    Type = customMapping.Type,
+                    Format = customMapping.Format
+                };
+            }
+            else
+            {
+                // Handle primitive types (AC 409-418)
+                schema = type switch
+                {
+                    // AC 409: Guid → type:string format:uuid
+                    Type t when t == typeof(Guid) => new OpenApiSchema { Type = "string", Format = "uuid" },
+
+                    // AC 410: DateTime/DateTimeOffset → type:string format:date-time
+                    Type t when t == typeof(DateTime) || t == typeof(DateTimeOffset) =>
+                        new OpenApiSchema { Type = "string", Format = "date-time" },
+
+                    // AC 411: DateOnly → type:string format:date
+                    Type t when t == typeof(DateOnly) =>
+                        new OpenApiSchema { Type = "string", Format = "date" },
+
+                    // AC 412: TimeOnly → type:string format:time
+                    Type t when t == typeof(TimeOnly) =>
+                        new OpenApiSchema { Type = "string", Format = "time" },
+
+                    // AC 413: byte[] → type:string format:byte (base64url)
+                    Type t when t == typeof(byte[]) =>
+                        new OpenApiSchema { Type = "string", Format = "byte" },
+
+                    // AC 414: IFormFile → type:string format:binary
+                    Type t when t == typeof(IFormFile) =>
+                        new OpenApiSchema { Type = "string", Format = "binary" },
+
+                    // AC 415: Decimal → type:number (no format)
+                    Type t when t == typeof(decimal) =>
+                        new OpenApiSchema { Type = "number" },
+
+                    // CLR primitive char maps to single-character string
+                    Type t when t == typeof(char) =>
+                        new OpenApiSchema { Type = "string", MinLength = 1, MaxLength = 1 },
+
+                    // Standard numeric types
+                    Type t when t == typeof(int) || t == typeof(long) ||
+                                t == typeof(short) || t == typeof(byte) ||
+                                t == typeof(sbyte) || t == typeof(uint) ||
+                                t == typeof(ulong) || t == typeof(ushort) =>
+                        new OpenApiSchema { Type = "integer", Format = GetIntegerFormat(t) },
+
+                    Type t when t == typeof(float) =>
+                        new OpenApiSchema { Type = "number", Format = "float" },
+
+                    Type t when t == typeof(double) =>
+                        new OpenApiSchema { Type = "number", Format = "double" },
+
+                    Type t when t == typeof(bool) =>
+                        new OpenApiSchema { Type = "boolean" },
+
+                    Type t when t == typeof(string) =>
+                        new OpenApiSchema { Type = "string" },
+
+                    // AC 417-419: Enum handling
+                    Type t when t.IsEnum => GenerateEnumSchema(t),
+
+                    // Default to object for complex types
+                    _ => new OpenApiSchema { Type = "object" }
+                };
+            }
         }
-
-        // Handle primitive types (AC 409-418)
-        var schema = type switch
+        finally
         {
-            // AC 409: Guid → type:string format:uuid
-            Type t when t == typeof(Guid) => new OpenApiSchema { Type = "string", Format = "uuid" },
-
-            // AC 410: DateTime/DateTimeOffset → type:string format:date-time
-            Type t when t == typeof(DateTime) || t == typeof(DateTimeOffset) =>
-                new OpenApiSchema { Type = "string", Format = "date-time" },
-
-            // AC 411: DateOnly → type:string format:date
-            Type t when t == typeof(DateOnly) =>
-                new OpenApiSchema { Type = "string", Format = "date" },
-
-            // AC 412: TimeOnly → type:string format:time
-            Type t when t == typeof(TimeOnly) =>
-                new OpenApiSchema { Type = "string", Format = "time" },
-
-            // AC 413: byte[] → type:string format:byte (base64url)
-            Type t when t == typeof(byte[]) =>
-                new OpenApiSchema { Type = "string", Format = "byte" },
-
-            // AC 414: IFormFile → type:string format:binary
-            Type t when t == typeof(IFormFile) =>
-                new OpenApiSchema { Type = "string", Format = "binary" },
-
-            // AC 415: Decimal → type:number (no format)
-            Type t when t == typeof(decimal) =>
-                new OpenApiSchema { Type = "number" },
-
-            // CLR primitive char maps to single-character string
-            Type t when t == typeof(char) =>
-                new OpenApiSchema { Type = "string", MinLength = 1, MaxLength = 1 },
-
-            // Standard numeric types
-            Type t when t == typeof(int) || t == typeof(long) ||
-                        t == typeof(short) || t == typeof(byte) ||
-                        t == typeof(sbyte) || t == typeof(uint) ||
-                        t == typeof(ulong) || t == typeof(ushort) =>
-                new OpenApiSchema { Type = "integer", Format = GetIntegerFormat(t) },
-
-            Type t when t == typeof(float) =>
-                new OpenApiSchema { Type = "number", Format = "float" },
-
-            Type t when t == typeof(double) =>
-                new OpenApiSchema { Type = "number", Format = "double" },
-
-            Type t when t == typeof(bool) =>
-                new OpenApiSchema { Type = "boolean" },
-
-            Type t when t == typeof(string) =>
-                new OpenApiSchema { Type = "string" },
-
-            // AC 417-419: Enum handling
-            Type t when t.IsEnum => GenerateEnumSchema(t),
-
-            // Default to object for complex types
-            _ => new OpenApiSchema { Type = "object" }
-        };
+            context.Exit(type);
+        }
 
         return ApplyNullability(schema, isNullable);
     }
@@ -363,6 +385,35 @@ public class SchemaGenerator
             return schema;
         }
 
+        if (IsPlaceholder(schema))
+        {
+            if (!isNullable)
+            {
+                return schema;
+            }
+
+            if (_options.SpecVersion == SchemaSpecVersion.OpenApi3_0)
+            {
+                return new OpenApiSchema
+                {
+                    Nullable = true,
+                    AllOf =
+                    {
+                        schema
+                    }
+                };
+            }
+
+            return new OpenApiSchema
+            {
+                AnyOf =
+                {
+                    schema,
+                    CreateNullSchema()
+                }
+            };
+        }
+
         if (_options.SpecVersion == SchemaSpecVersion.OpenApi3_0)
         {
             schema.Nullable = true;
@@ -373,7 +424,10 @@ public class SchemaGenerator
         return CreateNullUnion(schema);
     }
 
-    private bool TryCreateArraySchema(Type type, bool isNullable, out OpenApiSchema schema)
+    /// <summary>
+    /// Creates the structural schema for array-like types. Container nullability is applied by the caller via <see cref="ApplyNullability"/>.
+    /// </summary>
+    private bool TryCreateArraySchema(Type type, SchemaGenerationContext context, int depth, out OpenApiSchema schema)
     {
         if (type == typeof(byte[]))
         {
@@ -384,13 +438,14 @@ public class SchemaGenerator
         var elementType = GetEnumerableElementType(type);
         if (elementType != null)
         {
-            var arraySchema = new OpenApiSchema
+            schema = new OpenApiSchema
             {
                 Type = "array",
-                Items = GenerateSchema(elementType)
+                // Element nullability is determined by the recursive call based on the element type itself.
+                Items = GenerateSchemaRecursive(elementType, isNullable: false, context, depth + 1)
             };
 
-            schema = ApplyNullability(arraySchema, isNullable);
+            // Nullability of the array is applied by the caller via ApplyNullability.
             return true;
         }
 
@@ -398,20 +453,23 @@ public class SchemaGenerator
         return false;
     }
 
-    private bool TryCreateDictionarySchema(Type type, bool isNullable, out OpenApiSchema schema)
+    /// <summary>
+    /// Creates the structural schema for dictionary-like types keyed by string. Container nullability is applied by the caller via <see cref="ApplyNullability"/>.
+    /// </summary>
+    private bool TryCreateDictionarySchema(Type type, SchemaGenerationContext context, int depth, out OpenApiSchema schema)
     {
         if (TryGetDictionaryValueType(type, out var valueType))
         {
-            var dictionarySchema = new OpenApiSchema
+            schema = new OpenApiSchema
             {
                 Type = "object",
-                AdditionalProperties = GenerateSchema(valueType)
+                // Value nullability is determined by the recursive call based on the dictionary value type.
+                AdditionalProperties = GenerateSchemaRecursive(valueType, isNullable: false, context, depth + 1)
             };
 
-            schema = ApplyNullability(dictionarySchema, isNullable);
+            // Nullability for the dictionary is applied by the caller via ApplyNullability.
             return true;
         }
-
         schema = null!;
         return false;
     }
@@ -572,6 +630,130 @@ public class SchemaGenerator
     private static OpenApiSchema CreateNullSchema()
     {
         return new OpenApiSchema { Type = "null" };
+    }
+
+    private static OpenApiSchema CreatePlaceholder(Type type, string kind)
+    {
+        var typeName = type.FullName ?? type.Name;
+        var metadata = new OpenApiObject
+        {
+            ["kind"] = new OpenApiString(kind),
+            ["type"] = new OpenApiString(typeName)
+        };
+
+        var description = kind switch
+        {
+            "cycle" => $"Cycle detected for type '{typeName}'.",
+            "depth" => $"Depth limit reached for type '{typeName}'.",
+            _ => $"Schema placeholder for type '{typeName}'."
+        };
+
+        var placeholder = new OpenApiSchema
+        {
+            Type = "object",
+            Description = description
+        };
+
+        placeholder.Extensions[PlaceholderExtensionKey] = metadata;
+        return placeholder;
+    }
+
+    private static bool IsPlaceholder(OpenApiSchema schema)
+    {
+        return schema.Extensions.ContainsKey(PlaceholderExtensionKey);
+    }
+
+    private sealed class SchemaGenerationContext
+    {
+        private readonly int _maxDepth;
+        private readonly DiagnosticsLogger _logger;
+        private readonly Stack<Type> _typeStack = new();
+        private readonly HashSet<Type> _inProgress = new();
+        private readonly Dictionary<Type, OpenApiSchema> _cyclePlaceholders = new();
+        private readonly Dictionary<Type, OpenApiSchema> _depthPlaceholders = new();
+        private readonly HashSet<Type> _depthLogged = new();
+
+        private const int MinimumAllowedDepth = 1;
+
+        public SchemaGenerationContext(int maxDepth, DiagnosticsLogger logger)
+        {
+            _maxDepth = Math.Max(MinimumAllowedDepth, maxDepth);
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        public bool TryEnter(Type type, int depth, out OpenApiSchema placeholder)
+        {
+            if (depth >= _maxDepth)
+            {
+                placeholder = GetDepthPlaceholder(type);
+                return false;
+            }
+
+            if (!_inProgress.Add(type))
+            {
+                placeholder = GetCyclePlaceholder(type);
+                return false;
+            }
+
+            _typeStack.Push(type);
+            placeholder = null!;
+            return true;
+        }
+
+        public void Exit(Type type)
+        {
+            if (_typeStack.Count == 0)
+            {
+                return;
+            }
+
+            var popped = _typeStack.Pop();
+            if (!ReferenceEquals(popped, type))
+            {
+                var remainingStack = _typeStack
+                    .Select(t => t.FullName ?? t.Name)
+                    .ToArray();
+
+                // Restore the stack so downstream diagnostics see the state that triggered the failure.
+                _typeStack.Push(popped);
+
+                var remainingDescription = remainingStack.Length == 0
+                    ? "<empty>"
+                    : string.Join(" -> ", remainingStack);
+
+                throw new InvalidOperationException(
+                    $"Schema generation traversal order corrupted. Expected to exit type '{type.FullName ?? type.Name}' but found '{popped.FullName ?? popped.Name}'. Remaining stack (top to bottom): {remainingDescription}");
+            }
+
+            _inProgress.Remove(type);
+        }
+
+        private OpenApiSchema GetCyclePlaceholder(Type type)
+        {
+            if (!_cyclePlaceholders.TryGetValue(type, out var placeholder))
+            {
+                placeholder = CreatePlaceholder(type, "cycle");
+                _cyclePlaceholders[type] = placeholder;
+            }
+
+            return placeholder;
+        }
+
+        private OpenApiSchema GetDepthPlaceholder(Type type)
+        {
+            if (!_depthPlaceholders.TryGetValue(type, out var placeholder))
+            {
+                placeholder = CreatePlaceholder(type, "depth");
+                _depthPlaceholders[type] = placeholder;
+            }
+
+            if (_depthLogged.Add(type))
+            {
+                _logger.LogWarning("SCH001-DEPTH", $"Schema generation for type '{type.FullName ?? type.Name}' exceeded maximum depth of {_maxDepth}.");
+            }
+
+            return placeholder;
+        }
     }
 
     /// <summary>
