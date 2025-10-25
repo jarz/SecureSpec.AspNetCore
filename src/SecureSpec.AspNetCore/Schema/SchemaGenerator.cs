@@ -703,7 +703,8 @@ public class SchemaGenerator
             var popped = _typeStack.Pop();
             if (!ReferenceEquals(popped, type))
             {
-                throw new InvalidOperationException("Schema generation traversal order corrupted.");
+                throw new InvalidOperationException(
+                    $"Schema generation traversal order corrupted. Expected to exit type '{type.FullName ?? type.Name}' but found '{popped.FullName ?? popped.Name}'.");
             }
 
             _inProgress.Remove(type);
