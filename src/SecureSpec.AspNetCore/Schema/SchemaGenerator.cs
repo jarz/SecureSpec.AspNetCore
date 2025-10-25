@@ -435,13 +435,13 @@ public class SchemaGenerator
         var elementType = GetEnumerableElementType(type);
         if (elementType != null)
         {
-            var arraySchema = new OpenApiSchema
+            schema = new OpenApiSchema
             {
                 Type = "array",
                 Items = GenerateSchemaRecursive(elementType, isNullable: false, context, depth + 1)
             };
 
-            schema = arraySchema;
+            // Nullability of the array instance itself is applied by GenerateSchemaRecursive when it invokes ApplyNullability.
             return true;
         }
 
@@ -453,16 +453,15 @@ public class SchemaGenerator
     {
         if (TryGetDictionaryValueType(type, out var valueType))
         {
-            var dictionarySchema = new OpenApiSchema
+            schema = new OpenApiSchema
             {
                 Type = "object",
                 AdditionalProperties = GenerateSchemaRecursive(valueType, isNullable: false, context, depth + 1)
             };
 
-            schema = dictionarySchema;
+            // Nullability for the dictionary itself is applied by GenerateSchemaRecursive via ApplyNullability after this helper returns.
             return true;
         }
-
         schema = null!;
         return false;
     }
