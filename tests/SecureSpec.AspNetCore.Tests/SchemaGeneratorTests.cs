@@ -492,6 +492,101 @@ public class SchemaGeneratorTests
     }
 
     [Fact]
+    public void GenerateSchema_WithNullableInt_OpenApi31_UsesAnyOfUnion()
+    {
+        // Arrange (AC 421)
+        var options = new SchemaOptions { SpecVersion = SchemaSpecVersion.OpenApi3_1 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(int?));
+
+        // Assert
+        Assert.False(schema.Nullable);
+        Assert.NotNull(schema.AnyOf);
+        Assert.Equal(2, schema.AnyOf.Count);
+        Assert.Equal("integer", schema.AnyOf[0].Type);
+        Assert.Equal("null", schema.AnyOf[1].Type);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithNullableDictionaryValue_OpenApi31_AddsNullVariant()
+    {
+        // Arrange (AC 424)
+        var options = new SchemaOptions { SpecVersion = SchemaSpecVersion.OpenApi3_1 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(Dictionary<string, int?>));
+
+        // Assert
+        Assert.NotNull(schema.AdditionalProperties);
+        var valueSchema = schema.AdditionalProperties!;
+        Assert.Equal(2, valueSchema.AnyOf.Count);
+        Assert.Equal("integer", valueSchema.AnyOf[0].Type);
+        Assert.Equal("null", valueSchema.AnyOf[1].Type);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithNullableArray_OpenApi31_WrapsContainer()
+    {
+        // Arrange (AC 422)
+        var options = new SchemaOptions { SpecVersion = SchemaSpecVersion.OpenApi3_1 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(int[]), isNullable: true);
+
+        // Assert
+        Assert.NotNull(schema.AnyOf);
+        Assert.Equal(2, schema.AnyOf.Count);
+        var arraySchema = schema.AnyOf[0];
+        Assert.Equal("array", arraySchema.Type);
+        Assert.Equal("integer", arraySchema.Items?.Type);
+        Assert.Equal("null", schema.AnyOf[1].Type);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithNullableArrayItems_OpenApi31_DoesNotWrapContainer()
+    {
+        // Arrange (AC 423)
+        var options = new SchemaOptions { SpecVersion = SchemaSpecVersion.OpenApi3_1 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(List<int?>));
+
+        // Assert
+        Assert.Equal("array", schema.Type);
+        Assert.NotNull(schema.Items);
+        Assert.Equal(2, schema.Items.AnyOf.Count);
+        Assert.Equal("integer", schema.Items.AnyOf[0].Type);
+        Assert.Equal("null", schema.Items.AnyOf[1].Type);
+    }
+
+    [Fact]
+    public void GenerateSchema_WithNullableDictionaryValue_OpenApi30_SetsNullableFlag()
+    {
+        // Arrange (AC 424)
+        var options = new SchemaOptions { SpecVersion = SchemaSpecVersion.OpenApi3_0 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        // Act
+        var schema = generator.GenerateSchema(typeof(Dictionary<string, int?>));
+
+        // Assert
+        Assert.NotNull(schema.AdditionalProperties);
+        var valueSchema = schema.AdditionalProperties!;
+        Assert.True(valueSchema.Nullable);
+        Assert.Empty(valueSchema.AnyOf);
+    }
+
+    [Fact]
     public void GenerateSchema_WithEnum_StringMode_PreservesDeclarationOrder()
     {
         // Arrange (AC 417)
