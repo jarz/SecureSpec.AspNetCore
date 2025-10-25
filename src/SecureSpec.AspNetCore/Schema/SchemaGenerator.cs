@@ -673,9 +673,11 @@ public class SchemaGenerator
         private readonly Dictionary<Type, OpenApiSchema> _depthPlaceholders = new();
         private readonly HashSet<Type> _depthLogged = new();
 
+        private const int MinimumAllowedDepth = 1;
+
         public SchemaGenerationContext(int maxDepth, DiagnosticsLogger logger)
         {
-            _maxDepth = Math.Max(1, maxDepth);
+            _maxDepth = Math.Max(MinimumAllowedDepth, maxDepth);
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
