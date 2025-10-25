@@ -19,6 +19,11 @@ builder.Services.AddSecureSpec(options =>
     options.Schema.MaxDepth = 32;
     options.Schema.UseEnumStrings = true;
 
+    // Configure security schemes
+    options.Security.AddHttpBearer("bearerAuth", builder =>
+        builder.WithDescription("JWT Bearer token authentication")
+               .WithBearerFormat("JWT"));
+
     // Configure UI
     options.UI.DeepLinking = true;
     options.UI.DisplayOperationId = true;

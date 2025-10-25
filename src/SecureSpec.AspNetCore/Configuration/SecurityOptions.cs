@@ -1,3 +1,7 @@
+using Microsoft.OpenApi.Models;
+using SecureSpec.AspNetCore.Diagnostics;
+using SecureSpec.AspNetCore.Security;
+
 namespace SecureSpec.AspNetCore.Configuration;
 
 /// <summary>
@@ -5,6 +9,25 @@ namespace SecureSpec.AspNetCore.Configuration;
 /// </summary>
 public class SecurityOptions
 {
+    private readonly Dictionary<string, OpenApiSecurityScheme> _schemes = new(StringComparer.Ordinal);
+    private readonly DiagnosticsLogger? _logger;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityOptions"/> class.
+    /// </summary>
+    public SecurityOptions()
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityOptions"/> class with a diagnostics logger.
+    /// </summary>
+    /// <param name="logger">The diagnostics logger.</param>
+    public SecurityOptions(DiagnosticsLogger logger)
+    {
+        _logger = logger;
+    }
+
     /// <summary>
     /// Gets OAuth configuration options.
     /// </summary>
@@ -19,6 +42,44 @@ public class SecurityOptions
     /// Gets or sets the function to map a role name to an OAuth scope.
     /// </summary>
     public Func<string, string>? RoleToScope { get; set; }
+
+    /// <summary>
+    /// Adds an HTTP Bearer authentication scheme.
+    /// </summary>
+    /// <param name="name">The name of the security scheme (e.g., "bearerAuth").</param>
+    /// <param name="configure">An optional action to configure the scheme.</param>
+    public void AddHttpBearer(string name, Action<HttpBearerSchemeBuilder>? configure = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        var builder = new HttpBearerSchemeBuilder();
+        configure?.Invoke(builder);
+
+        var scheme = builder.Build();
+        _schemes[name] = scheme;
+    }
+
+    /// <summary>
+    /// Gets all registered security schemes.
+    /// </summary>
+    public IReadOnlyDictionary<string, OpenApiSecurityScheme> Schemes => _schemes;
+
+    /// <summary>
+    /// Attempts to infer Basic authentication from authorization attributes.
+    /// This method is intentionally designed to block Basic auth inference and emit the AUTH001 diagnostic.
+    /// </summary>
+    /// <remarks>
+    /// Basic auth inference is explicitly blocked as a security measure (AUTH001).
+    /// Users must explicitly define security schemes instead of relying on inference.
+    /// </remarks>
+    public void BlockBasicAuthInference()
+    {
+        // Emit AUTH001 diagnostic when Basic auth inference is attempted
+        _logger?.LogWarning(
+            "AUTH001",
+            "Basic auth inference blocked. Define security schemes explicitly using AddHttpBearer or other security scheme methods.",
+            new { Reason = "Explicit scheme definition required for security" });
+    }
 }
 
 /// <summary>
