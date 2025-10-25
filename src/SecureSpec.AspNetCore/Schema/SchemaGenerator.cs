@@ -424,6 +424,9 @@ public class SchemaGenerator
         return CreateNullUnion(schema);
     }
 
+    /// <summary>
+    /// Creates the structural schema for array-like types. Container nullability is applied by the caller via <see cref="ApplyNullability"/>.
+    /// </summary>
     private bool TryCreateArraySchema(Type type, SchemaGenerationContext context, int depth, out OpenApiSchema schema)
     {
         if (type == typeof(byte[]))
@@ -438,6 +441,7 @@ public class SchemaGenerator
             schema = new OpenApiSchema
             {
                 Type = "array",
+                // Element nullability is determined by the recursive call based on the element type itself.
                 Items = GenerateSchemaRecursive(elementType, isNullable: false, context, depth + 1)
             };
 
@@ -449,6 +453,9 @@ public class SchemaGenerator
         return false;
     }
 
+    /// <summary>
+    /// Creates the structural schema for dictionary-like types keyed by string. Container nullability is applied by the caller via <see cref="ApplyNullability"/>.
+    /// </summary>
     private bool TryCreateDictionarySchema(Type type, SchemaGenerationContext context, int depth, out OpenApiSchema schema)
     {
         if (TryGetDictionaryValueType(type, out var valueType))
@@ -456,6 +463,7 @@ public class SchemaGenerator
             schema = new OpenApiSchema
             {
                 Type = "object",
+                // Value nullability is determined by the recursive call based on the dictionary value type.
                 AdditionalProperties = GenerateSchemaRecursive(valueType, isNullable: false, context, depth + 1)
             };
 
