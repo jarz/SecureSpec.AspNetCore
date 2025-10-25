@@ -584,4 +584,102 @@ public class CanonicalSerializerTests
         // Assert - arrays should maintain order (not be sorted)
         Assert.Equal(json1, json2);
     }
+
+    [Fact]
+    public void SerializeToJson_WithDictionarySchema_ProducesDeterministicOutput()
+    {
+        // Arrange - create a document with a dictionary schema (AC 436)
+        var dictionarySchema = new OpenApiSchema
+        {
+            Type = "object",
+            AdditionalProperties = new OpenApiSchema
+            {
+                Type = "integer",
+                Format = "int32"
+            }
+        };
+
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "Dictionary Test",
+                Version = "1.0"
+            },
+            Paths = new OpenApiPaths(),
+            Components = new OpenApiComponents
+            {
+                Schemas = new Dictionary<string, OpenApiSchema>
+                {
+                    { "StringIntDict", dictionarySchema }
+                }
+            }
+        };
+
+        // Act - serialize twice to verify deterministic ordering
+        var json1 = CanonicalSerializer.SerializeToJson(document);
+        var json2 = CanonicalSerializer.SerializeToJson(document);
+
+        // Assert - both serializations should be identical (AC 436)
+        Assert.Equal(json1, json2);
+
+        // Verify hash is also deterministic
+        var hash1 = CanonicalSerializer.GenerateHash(json1);
+        var hash2 = CanonicalSerializer.GenerateHash(json2);
+        Assert.Equal(hash1, hash2);
+
+        // Verify it's valid JSON
+        Assert.NotEmpty(json1);
+        Assert.StartsWith("{", json1, StringComparison.Ordinal);
+        Assert.EndsWith("}", json1, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SerializeToJson_WithNestedDictionarySchema_ProducesDeterministicOutput()
+    {
+        // Arrange - create a document with nested dictionary schema
+        var nestedDictionarySchema = new OpenApiSchema
+        {
+            Type = "object",
+            AdditionalProperties = new OpenApiSchema
+            {
+                Type = "object",
+                AdditionalProperties = new OpenApiSchema
+                {
+                    Type = "string"
+                }
+            }
+        };
+
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "Nested Dictionary Test",
+                Version = "1.0"
+            },
+            Paths = new OpenApiPaths(),
+            Components = new OpenApiComponents
+            {
+                Schemas = new Dictionary<string, OpenApiSchema>
+                {
+                    { "NestedDict", nestedDictionarySchema }
+                }
+            }
+        };
+
+        // Act - serialize multiple times to verify consistency
+        var json1 = CanonicalSerializer.SerializeToJson(document);
+        var json2 = CanonicalSerializer.SerializeToJson(document);
+        var json3 = CanonicalSerializer.SerializeToJson(document);
+
+        // Assert - all serializations should be identical
+        Assert.Equal(json1, json2);
+        Assert.Equal(json2, json3);
+
+        // Verify hash is also deterministic
+        var hash1 = CanonicalSerializer.GenerateHash(json1);
+        var hash2 = CanonicalSerializer.GenerateHash(json2);
+        Assert.Equal(hash1, hash2);
+    }
 }
