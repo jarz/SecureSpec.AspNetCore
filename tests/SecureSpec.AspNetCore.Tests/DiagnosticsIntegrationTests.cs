@@ -44,8 +44,8 @@ public class DiagnosticsIntegrationTests
         // Arrange
         var logger = new DiagnosticsLogger();
 
-        // Act - Log schema collision
-        logger.LogWarning(
+        // Act - Log schema collision (Info level per metadata)
+        logger.LogInfo(
             DiagnosticCodes.SchemaIdCollision,
             "SchemaId collision detected, applying suffix",
             context: new
@@ -58,6 +58,7 @@ public class DiagnosticsIntegrationTests
         // Assert
         var events = logger.GetEvents();
         Assert.Single(events);
+        Assert.Equal(DiagnosticLevel.Info, events[0].Level);
         Assert.Equal(DiagnosticLevel.Info, DiagnosticCodes.GetMetadata(events[0].Code)!.Level);
         Assert.False(events[0].Sanitized);
     }
