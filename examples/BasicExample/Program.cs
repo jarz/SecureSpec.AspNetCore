@@ -42,6 +42,15 @@ builder.Services.AddSecureSpec(options =>
     // Configure UI
     options.UI.DeepLinking = true;
     options.UI.DisplayOperationId = true;
+
+    // Configure integrity enforcement (SHA256 + SRI)
+    options.Integrity.Enabled = true;
+    options.Integrity.FailClosed = true;  // Fail-closed for security
+    options.Integrity.GenerateSri = true; // Generate SRI attributes
+
+    // Configure serialization with hashing
+    options.Serialization.GenerateHashes = true;
+    options.Serialization.GenerateETags = true;
 });
 
 var app = builder.Build();

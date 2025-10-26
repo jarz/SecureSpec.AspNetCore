@@ -682,4 +682,116 @@ public class CanonicalSerializerTests
         var hash2 = CanonicalSerializer.GenerateHash(json2);
         Assert.Equal(hash1, hash2);
     }
+
+    [Fact]
+    public void GenerateSri_WithValidContent_ReturnsValidSriFormat()
+    {
+        // Arrange
+        const string content = "test content";
+
+        // Act
+        var sri = CanonicalSerializer.GenerateSri(content);
+
+        // Assert
+        Assert.NotNull(sri);
+        Assert.StartsWith("sha256-", sri, StringComparison.Ordinal);
+        var base64Part = sri.Substring(7);
+        Assert.NotEmpty(base64Part);
+        // Verify it's valid base64
+        var bytes = Convert.FromBase64String(base64Part);
+        Assert.Equal(32, bytes.Length); // SHA256 produces 32 bytes
+    }
+
+    [Fact]
+    public void SerializeWithIntegrity_Json_ReturnsContentHashAndSri()
+    {
+        // Arrange
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "Test API",
+                Version = "1.0.0"
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Act
+        var (content, hash, sri) = CanonicalSerializer.SerializeWithIntegrity(document, SerializationFormat.Json);
+
+        // Assert
+        Assert.NotNull(content);
+        Assert.NotNull(hash);
+        Assert.NotNull(sri);
+
+        // Verify hash is 64 hex characters
+        Assert.Equal(64, hash.Length);
+        Assert.All(hash, c => Assert.True(char.IsDigit(c) || (c >= 'a' && c <= 'f')));
+
+        // Verify SRI format
+        Assert.StartsWith("sha256-", sri, StringComparison.Ordinal);
+
+        // Verify hash and SRI are consistent
+        var recomputedHash = CanonicalSerializer.GenerateHash(content);
+        Assert.Equal(hash, recomputedHash);
+
+        var recomputedSri = CanonicalSerializer.GenerateSri(content);
+        Assert.Equal(sri, recomputedSri);
+    }
+
+    [Fact]
+    public void SerializeWithIntegrity_Yaml_ReturnsContentHashAndSri()
+    {
+        // Arrange
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "Test API",
+                Version = "1.0.0"
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Act
+        var (content, hash, sri) = CanonicalSerializer.SerializeWithIntegrity(document, SerializationFormat.Yaml);
+
+        // Assert
+        Assert.NotNull(content);
+        Assert.NotNull(hash);
+        Assert.NotNull(sri);
+
+        // Verify hash is 64 hex characters
+        Assert.Equal(64, hash.Length);
+        Assert.All(hash, c => Assert.True(char.IsDigit(c) || (c >= 'a' && c <= 'f')));
+
+        // Verify SRI format
+        Assert.StartsWith("sha256-", sri, StringComparison.Ordinal);
+
+        // Verify hash and SRI are consistent
+        var recomputedHash = CanonicalSerializer.GenerateHash(content);
+        Assert.Equal(hash, recomputedHash);
+    }
+
+    [Fact]
+    public void SerializeWithIntegrity_DefaultsToJson()
+    {
+        // Arrange
+        var document = new OpenApiDocument
+        {
+            Info = new OpenApiInfo
+            {
+                Title = "Test API",
+                Version = "1.0.0"
+            },
+            Paths = new OpenApiPaths()
+        };
+
+        // Act
+        var (content, _, _) = CanonicalSerializer.SerializeWithIntegrity(document);
+
+        // Assert - should be valid JSON
+        Assert.Contains("\"openapi\":", content, StringComparison.Ordinal);
+        Assert.Contains("\"info\":", content, StringComparison.Ordinal);
+    }
 }
