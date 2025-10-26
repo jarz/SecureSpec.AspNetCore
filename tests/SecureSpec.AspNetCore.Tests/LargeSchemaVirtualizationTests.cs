@@ -775,12 +775,19 @@ public class LargeSchemaVirtualizationTests
         var logger = new DiagnosticsLogger();
         var generator = new SchemaGenerator(options, logger);
 
-        // Act
+        // Act - TypeWith51NestedObjects has 51 total properties, all are nested objects
         var schema = generator.GenerateSchema(typeof(TypeWith51NestedObjects));
 
-        // Assert
+        // Assert - both thresholds should be exceeded
         Assert.True(schema.Extensions.ContainsKey("x-property-threshold-exceeded"));
+        Assert.True(((OpenApiBoolean)schema.Extensions["x-property-threshold-exceeded"]).Value);
+
         Assert.True(schema.Extensions.ContainsKey("x-nested-threshold-exceeded"));
+        Assert.True(((OpenApiBoolean)schema.Extensions["x-nested-threshold-exceeded"]).Value);
+
+        // Verify the counts
+        Assert.Equal(51, ((OpenApiInteger)schema.Extensions["x-property-total-count"]).Value);
+        Assert.Equal(51, ((OpenApiInteger)schema.Extensions["x-nested-object-count"]).Value);
 
         var description = schema.Description;
         Assert.NotNull(description);
