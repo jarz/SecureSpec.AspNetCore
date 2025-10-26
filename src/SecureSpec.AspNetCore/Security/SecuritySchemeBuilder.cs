@@ -55,7 +55,9 @@ public class HttpBearerSchemeBuilder : SecuritySchemeBuilder
     /// <returns>This builder for chaining.</returns>
     public HttpBearerSchemeBuilder WithDescription(string description)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(description);
+        ArgumentNullException.ThrowIfNull(description);
+        if (string.IsNullOrWhiteSpace(description))
+            throw new ArgumentException("Description cannot be empty or whitespace.", nameof(description));
         _description = description;
         return this;
     }
