@@ -69,7 +69,11 @@ public class HttpBearerSchemeBuilder : SecuritySchemeBuilder
     /// <returns>This builder for chaining.</returns>
     public HttpBearerSchemeBuilder WithBearerFormat(string format)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(format);
+        ArgumentNullException.ThrowIfNull(format);
+        if (string.IsNullOrWhiteSpace(format))
+        {
+            throw new ArgumentException("Format cannot be whitespace.", nameof(format));
+        }
         _bearerFormat = format;
         return this;
     }
