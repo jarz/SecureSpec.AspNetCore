@@ -53,7 +53,7 @@ public class PlainTextContentHandler
         // Check if schema has explicit example
         if (schema.Example != null)
         {
-            return schema.Example.ToString();
+            return (schema.Example as Microsoft.OpenApi.Any.OpenApiString)?.Value ?? schema.Example.ToString();
         }
 
         // Generate based on schema type
@@ -74,13 +74,13 @@ public class PlainTextContentHandler
         // Use default if provided
         if (schema.Default != null)
         {
-            return schema.Default.ToString();
+            return (schema.Default as Microsoft.OpenApi.Any.OpenApiString)?.Value ?? schema.Default.ToString();
         }
 
         // Use enum values if available
         if (schema.Enum != null && schema.Enum.Count > 0)
         {
-            return schema.Enum[0].ToString();
+            return (schema.Enum[0] as Microsoft.OpenApi.Any.OpenApiString)?.Value ?? schema.Enum[0].ToString();
         }
 
         // Use format-specific examples

@@ -169,7 +169,7 @@ public class XmlContentGenerator
 
         if (schema.Type == "object" && schema.Properties != null)
         {
-            builder.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{indentStr}<{elementName}>");
+            builder.Append(indentStr).Append('<').Append(elementName).AppendLine(">");
 
             // Sort properties for stable output
             foreach (var prop in schema.Properties.OrderBy(p => p.Key, StringComparer.Ordinal))
@@ -177,27 +177,29 @@ public class XmlContentGenerator
                 GenerateXmlElement(builder, prop.Value, prop.Key, indent + 1);
             }
 
-            builder.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{indentStr}</{elementName}>");
+            builder.Append(indentStr).Append("</").Append(elementName).AppendLine(">");
         }
         else if (schema.Type == "array" && schema.Items != null)
         {
             var itemName = GetArrayItemElementName(elementName);
-            builder.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{indentStr}<{elementName}>");
+            builder.Append(indentStr).Append('<').Append(elementName).AppendLine(">");
             GenerateXmlElement(builder, schema.Items, itemName, indent + 1);
-            builder.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{indentStr}</{elementName}>");
+            builder.Append(indentStr).Append("</").Append(elementName).AppendLine(">");
         }
         else
         {
             var value = GetExampleValue(schema);
-            builder.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"{indentStr}<{elementName}>{value}</{elementName}>");
+            builder.Append(indentStr).Append('<').Append(elementName).Append('>')
+                   .Append(value).Append("</").Append(elementName).AppendLine(">");
         }
     }
 
-    private string GetExampleValue(OpenApiSchema schema)
+    private static string GetExampleValue(OpenApiSchema schema)
     {
         if (schema.Example != null)
         {
-            return EscapeXml(schema.Example.ToString() ?? "");
+            var value = (schema.Example as Microsoft.OpenApi.Any.OpenApiString)?.Value ?? schema.Example.ToString() ?? "";
+            return EscapeXml(value);
         }
 
         return schema.Type switch

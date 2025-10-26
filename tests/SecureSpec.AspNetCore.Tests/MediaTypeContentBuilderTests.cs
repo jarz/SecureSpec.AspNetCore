@@ -1,6 +1,5 @@
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.MediaTypes;
-using Xunit;
 
 namespace SecureSpec.AspNetCore.Tests;
 
@@ -122,7 +121,7 @@ public class MediaTypeContentBuilderTests
         Assert.Single(content);
         var mediaType = content["text/plain"];
         Assert.NotNull(mediaType.Example);
-        Assert.Equal("Custom example", mediaType.Example.ToString());
+        Assert.Equal("Custom example", ((Microsoft.OpenApi.Any.OpenApiString)mediaType.Example).Value);
     }
 
     [Fact]

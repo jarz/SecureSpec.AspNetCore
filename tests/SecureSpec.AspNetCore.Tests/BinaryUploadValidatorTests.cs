@@ -1,6 +1,5 @@
 using SecureSpec.AspNetCore.Diagnostics;
 using SecureSpec.AspNetCore.MediaTypes;
-using Xunit;
 
 namespace SecureSpec.AspNetCore.Tests;
 
@@ -55,8 +54,8 @@ public class BinaryUploadValidatorTests
         // Assert
         Assert.False(result.IsAllowed);
         Assert.NotNull(result.ErrorMessage);
-        Assert.Contains("15728640", result.ErrorMessage); // 15 * 1024 * 1024
-        Assert.Contains("10485760", result.ErrorMessage); // 10 * 1024 * 1024
+        Assert.Contains("15728640", result.ErrorMessage, StringComparison.Ordinal); // 15 * 1024 * 1024
+        Assert.Contains("10485760", result.ErrorMessage, StringComparison.Ordinal); // 10 * 1024 * 1024
         Assert.Equal(15 * 1024 * 1024, result.ContentLength);
         Assert.Equal(10 * 1024 * 1024, result.MaxBinarySize);
 
@@ -65,7 +64,7 @@ public class BinaryUploadValidatorTests
         Assert.Single(events);
         Assert.Equal("BIN001", events[0].Code);
         Assert.Equal(DiagnosticLevel.Error, events[0].Level);
-        Assert.Contains("Binary upload blocked", events[0].Message);
+        Assert.Contains("Binary upload blocked", events[0].Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -86,7 +85,7 @@ public class BinaryUploadValidatorTests
 
         // Verify context contains binaryUploadBlocked event type
         var contextString = context?.ToString() ?? "";
-        Assert.Contains("binaryUploadBlocked", contextString);
+        Assert.Contains("binaryUploadBlocked", contextString, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -114,8 +113,8 @@ public class BinaryUploadValidatorTests
         var events = logger.GetEvents();
         Assert.Single(events);
         var context = events[0].Context?.ToString() ?? "";
-        Assert.Contains("largefile.bin", context);
-        Assert.Contains("application/octet-stream", context);
+        Assert.Contains("largefile.bin", context, StringComparison.Ordinal);
+        Assert.Contains("application/octet-stream", context, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -186,8 +185,8 @@ public class BinaryUploadValidatorTests
         var events = logger.GetEvents();
         Assert.Single(events);
         var contextString = events[0].Context?.ToString() ?? "";
-        Assert.Contains("FileUpload", contextString);
-        Assert.Contains("user123", contextString);
+        Assert.Contains("FileUpload", contextString, StringComparison.Ordinal);
+        Assert.Contains("user123", contextString, StringComparison.Ordinal);
     }
 
     [Fact]

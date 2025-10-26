@@ -1,6 +1,5 @@
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.MediaTypes;
-using Xunit;
 
 namespace SecureSpec.AspNetCore.Tests;
 
@@ -15,7 +14,7 @@ public class PlainTextContentHandlerTests
         // Arrange - AC 457: raw example takes precedence
         var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema { Type = "string" };
-        var rawExample = "Custom raw example text";
+        const string rawExample = "Custom raw example text";
 
         // Act
         var mediaType = handler.CreateMediaType(schema, rawExample);
@@ -24,7 +23,7 @@ public class PlainTextContentHandlerTests
         Assert.NotNull(mediaType);
         Assert.Same(schema, mediaType.Schema);
         Assert.NotNull(mediaType.Example);
-        Assert.Equal(rawExample, mediaType.Example.ToString());
+        Assert.Equal(rawExample, ((Microsoft.OpenApi.Any.OpenApiString)mediaType.Example).Value);
     }
 
     [Fact]
@@ -54,7 +53,7 @@ public class PlainTextContentHandlerTests
         var mediaType = handler.CreateMediaType(schema);
 
         // Assert
-        Assert.Equal("example string", mediaType.Example?.ToString());
+        Assert.Equal("example string", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
     }
 
     [Fact]
@@ -72,7 +71,7 @@ public class PlainTextContentHandlerTests
         var mediaType = handler.CreateMediaType(schema);
 
         // Assert
-        Assert.Equal("2025-01-01", mediaType.Example?.ToString());
+        Assert.Equal("2025-01-01", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
     }
 
     [Fact]
@@ -90,7 +89,7 @@ public class PlainTextContentHandlerTests
         var mediaType = handler.CreateMediaType(schema);
 
         // Assert
-        Assert.Equal("2025-01-01T00:00:00Z", mediaType.Example?.ToString());
+        Assert.Equal("2025-01-01T00:00:00Z", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
     }
 
     [Fact]
@@ -108,7 +107,7 @@ public class PlainTextContentHandlerTests
         var mediaType = handler.CreateMediaType(schema);
 
         // Assert
-        Assert.Equal("00000000-0000-0000-0000-000000000000", mediaType.Example?.ToString());
+        Assert.Equal("00000000-0000-0000-0000-000000000000", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
     }
 
     [Fact]
@@ -122,7 +121,7 @@ public class PlainTextContentHandlerTests
         var mediaType = handler.CreateMediaType(schema);
 
         // Assert
-        Assert.Equal("0", mediaType.Example?.ToString());
+        Assert.Equal("0", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
     }
 
     [Fact]
@@ -136,7 +135,7 @@ public class PlainTextContentHandlerTests
         var mediaType = handler.CreateMediaType(schema);
 
         // Assert
-        Assert.Equal("0.0", mediaType.Example?.ToString());
+        Assert.Equal("0.0", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
     }
 
     [Fact]
@@ -150,7 +149,7 @@ public class PlainTextContentHandlerTests
         var mediaType = handler.CreateMediaType(schema);
 
         // Assert
-        Assert.Equal("true", mediaType.Example?.ToString());
+        Assert.Equal("true", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
     }
 
     [Fact]
@@ -169,8 +168,8 @@ public class PlainTextContentHandlerTests
 
         // Assert
         Assert.NotNull(mediaType.Example);
-        Assert.Contains("[", mediaType.Example?.ToString());
-        Assert.Contains("]", mediaType.Example?.ToString());
+        Assert.Contains("[", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value, StringComparison.Ordinal);
+        Assert.Contains("]", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -193,9 +192,9 @@ public class PlainTextContentHandlerTests
 
         // Assert
         Assert.NotNull(mediaType.Example);
-        var example = mediaType.Example?.ToString() ?? "";
-        Assert.Contains("name", example);
-        Assert.Contains("age", example);
+        var example = ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value ?? "";
+        Assert.Contains("name", example, StringComparison.Ordinal);
+        Assert.Contains("age", example, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -213,7 +212,7 @@ public class PlainTextContentHandlerTests
         var mediaType = handler.CreateMediaType(schema);
 
         // Assert
-        Assert.Equal("schema example", mediaType.Example?.ToString());
+        Assert.Equal("schema example", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
     }
 
     [Fact]
@@ -235,7 +234,7 @@ public class PlainTextContentHandlerTests
         var mediaType = handler.CreateMediaType(schema);
 
         // Assert
-        Assert.Equal("option1", mediaType.Example?.ToString());
+        Assert.Equal("option1", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
     }
 
     [Fact]
@@ -253,7 +252,7 @@ public class PlainTextContentHandlerTests
         var mediaType = handler.CreateMediaType(schema);
 
         // Assert
-        Assert.Equal("10", mediaType.Example?.ToString());
+        Assert.Equal("10", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
     }
 
     [Fact]
@@ -271,7 +270,7 @@ public class PlainTextContentHandlerTests
         var mediaType = handler.CreateMediaType(schema);
 
         // Assert
-        Assert.Equal("5.5", mediaType.Example?.ToString());
+        Assert.Equal("5.5", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
     }
 
     [Fact]

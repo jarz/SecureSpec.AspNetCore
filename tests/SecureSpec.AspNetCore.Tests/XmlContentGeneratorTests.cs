@@ -1,6 +1,5 @@
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.MediaTypes;
-using Xunit;
 
 namespace SecureSpec.AspNetCore.Tests;
 
@@ -139,9 +138,9 @@ public class XmlContentGeneratorTests
 
         // Assert - AC 458: stable ordering
         Assert.Equal(3, mediaType.Schema.Enum.Count);
-        Assert.Equal("option1", mediaType.Schema.Enum[0].ToString());
-        Assert.Equal("option2", mediaType.Schema.Enum[1].ToString());
-        Assert.Equal("option3", mediaType.Schema.Enum[2].ToString());
+        Assert.Equal("option1", ((Microsoft.OpenApi.Any.OpenApiString)mediaType.Schema.Enum[0]).Value);
+        Assert.Equal("option2", ((Microsoft.OpenApi.Any.OpenApiString)mediaType.Schema.Enum[1]).Value);
+        Assert.Equal("option3", ((Microsoft.OpenApi.Any.OpenApiString)mediaType.Schema.Enum[2]).Value);
     }
 
     [Fact]
@@ -235,10 +234,10 @@ public class XmlContentGeneratorTests
 
         // Assert - special characters should be escaped
         Assert.NotNull(xml);
-        Assert.Contains("&lt;tag&gt;", xml);
-        Assert.Contains("&amp;", xml);
-        Assert.Contains("&quot;", xml);
-        Assert.Contains("&apos;", xml);
+        Assert.Contains("&lt;tag&gt;", xml, StringComparison.Ordinal);
+        Assert.Contains("&amp;", xml, StringComparison.Ordinal);
+        Assert.Contains("&quot;", xml, StringComparison.Ordinal);
+        Assert.Contains("&apos;", xml, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -257,10 +256,10 @@ public class XmlContentGeneratorTests
 
         // Assert - "users" should become "user" for items
         Assert.NotNull(xml);
-        Assert.Contains("<users>", xml);
-        Assert.Contains("<user>", xml);
-        Assert.Contains("</user>", xml);
-        Assert.Contains("</users>", xml);
+        Assert.Contains("<users>", xml, StringComparison.Ordinal);
+        Assert.Contains("<user>", xml, StringComparison.Ordinal);
+        Assert.Contains("</user>", xml, StringComparison.Ordinal);
+        Assert.Contains("</users>", xml, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -279,8 +278,8 @@ public class XmlContentGeneratorTests
 
         // Assert
         Assert.NotNull(xml);
-        Assert.Contains("<categories>", xml);
-        Assert.Contains("<category>", xml);
+        Assert.Contains("<categories>", xml, StringComparison.Ordinal);
+        Assert.Contains("<category>", xml, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -1,6 +1,5 @@
 using SecureSpec.AspNetCore.Diagnostics;
 using SecureSpec.AspNetCore.MediaTypes;
-using Xunit;
 
 namespace SecureSpec.AspNetCore.Tests;
 
@@ -56,8 +55,8 @@ public class MultipartValidatorTests
         // Assert - AC 454: Multipart validator enforces field count limit (diagnostic BND001)
         Assert.False(result.IsValid);
         Assert.NotNull(result.ErrorMessage);
-        Assert.Contains("201", result.ErrorMessage);
-        Assert.Contains("200", result.ErrorMessage);
+        Assert.Contains("201", result.ErrorMessage, StringComparison.Ordinal);
+        Assert.Contains("200", result.ErrorMessage, StringComparison.Ordinal);
         Assert.Equal(201, result.FieldCount);
         Assert.Equal(200, result.MaxFieldCount);
 
