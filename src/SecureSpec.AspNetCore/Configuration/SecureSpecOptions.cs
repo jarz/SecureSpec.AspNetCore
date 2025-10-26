@@ -34,4 +34,9 @@ public class SecureSpecOptions
     /// Gets diagnostics options.
     /// </summary>
     public DiagnosticsOptions Diagnostics { get; } = new();
+
+    /// <summary>
+    /// Gets integrity enforcement options.
+    /// </summary>
+    public IntegrityOptions Integrity { get; } = new();
 }
