@@ -116,14 +116,15 @@ dotnet run
 ```
 
 Then access:
-- API: https://localhost:5001/weatherforecast
-- OpenAPI spec will be available with integrity hashes
+- OpenAPI specification: https://localhost:5001/openapi/v1
+- Swagger UI: https://localhost:5001/swagger
+- Weather forecast API: https://localhost:5001/weatherforecast
 
 ## Testing Integrity
 
 ```bash
-# Get the document with hash
-curl -v https://localhost:5001/api/openapi/v1 | tee openapi.json
+# Get the OpenAPI document with hash
+curl -v https://localhost:5001/openapi/v1 | tee openapi.json
 
 # Compute hash
 cat openapi.json | openssl dgst -sha256
