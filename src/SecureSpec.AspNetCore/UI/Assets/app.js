@@ -21,22 +21,17 @@ class SecureSpecApp {
       try {
         return JSON.parse(configElement.textContent);
       } catch (e) {
-        console.error('Failed to parse UI configuration:', e);
+        // Configuration parsing failed - use defaults
       }
     }
     return {};
   }
   
   async initialize() {
-    console.log('Initializing SecureSpec UI...');
-    console.log('Configuration:', this.config);
-    
     // Initialize components
     await this.loadOpenAPIDocument();
     this.setupEventListeners();
     this.router.initialize();
-    
-    console.log('SecureSpec UI initialized successfully');
   }
   
   async loadOpenAPIDocument() {

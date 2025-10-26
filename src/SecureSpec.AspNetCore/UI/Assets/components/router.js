@@ -26,8 +26,6 @@ export class Router {
   }
   
   navigate(path) {
-    console.log('Navigating to:', path);
-    
     // Find matching route
     for (const [pattern, handler] of this.routes) {
       const params = this.matchRoute(pattern, path);

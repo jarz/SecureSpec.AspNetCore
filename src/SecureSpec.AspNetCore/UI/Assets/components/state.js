@@ -13,7 +13,10 @@ export class StateManager {
   }
   
   getState() {
-    return { ...this.state };
+    return { 
+      ...this.state, 
+      expandedOperations: new Set(this.state.expandedOperations)
+    };
   }
   
   setState(updates) {
