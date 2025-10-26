@@ -24,6 +24,21 @@ builder.Services.AddSecureSpec(options =>
         builder.WithDescription("JWT Bearer token authentication")
                .WithBearerFormat("JWT"));
 
+    options.Security.AddApiKeyHeader("apiKeyHeader", builder =>
+        builder.WithName("X-API-Key")
+               .WithDescription("API Key authentication via header"));
+
+    options.Security.AddApiKeyQuery("apiKeyQuery", builder =>
+        builder.WithName("api_key")
+               .WithDescription("API Key authentication via query parameter"));
+
+    // Configure OAuth2 Client Credentials flow
+    options.Security.AddOAuth2ClientCredentials("oauth2", builder => builder
+        .WithTokenUrl(new Uri("https://auth.example.com/token", UriKind.Absolute))
+        .WithDescription("OAuth2 Client Credentials authentication")
+        .AddScope("api", "Full API access")
+        .AddScope("read", "Read access to weather data"));
+
     // Add Mutual TLS for service-to-service authentication
     options.Security.AddMutualTls("mutualTLS", builder =>
         builder.WithDescription("Mutual TLS authentication for secure service-to-service communication. " +

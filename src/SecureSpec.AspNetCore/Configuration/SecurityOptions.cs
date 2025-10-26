@@ -60,6 +60,55 @@ public class SecurityOptions
     }
 
     /// <summary>
+    /// Adds an API Key authentication scheme using a header parameter.
+    /// </summary>
+    /// <param name="name">The name of the security scheme (e.g., "apiKeyHeader").</param>
+    /// <param name="configure">An optional action to configure the scheme.</param>
+    public void AddApiKeyHeader(string name, Action<ApiKeyHeaderSchemeBuilder>? configure = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        var builder = new ApiKeyHeaderSchemeBuilder();
+        configure?.Invoke(builder);
+
+        var scheme = builder.Build();
+        _schemes[name] = scheme;
+    }
+
+    /// <summary>
+    /// Adds an API Key authentication scheme using a query parameter.
+    /// </summary>
+    /// <param name="name">The name of the security scheme (e.g., "apiKeyQuery").</param>
+    /// <param name="configure">An optional action to configure the scheme.</param>
+    public void AddApiKeyQuery(string name, Action<ApiKeyQuerySchemeBuilder>? configure = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        var builder = new ApiKeyQuerySchemeBuilder();
+        configure?.Invoke(builder);
+
+        var scheme = builder.Build();
+        _schemes[name] = scheme;
+    }
+
+    /// <summary>
+    /// Adds an OAuth2 Client Credentials flow authentication scheme.
+    /// </summary>
+    /// <param name="name">The name of the security scheme (e.g., "oauth2").</param>
+    /// <param name="configure">An action to configure the scheme.</param>
+    public void AddOAuth2ClientCredentials(string name, Action<OAuth2ClientCredentialsSchemeBuilder> configure)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(configure);
+
+        var builder = new OAuth2ClientCredentialsSchemeBuilder();
+        configure(builder);
+
+        var scheme = builder.Build();
+        _schemes[name] = scheme;
+    }
+
+    /// <summary>
     /// Adds a Mutual TLS authentication scheme (display only).
     /// </summary>
     /// <param name="name">The name of the security scheme (e.g., "mutualTLS").</param>
@@ -80,8 +129,6 @@ public class SecurityOptions
         var scheme = builder.Build();
         _schemes[name] = scheme;
     }
-
-    /// <summary>
     /// Gets all registered security schemes.
     /// </summary>
     public IReadOnlyDictionary<string, OpenApiSecurityScheme> Schemes => _schemes;
