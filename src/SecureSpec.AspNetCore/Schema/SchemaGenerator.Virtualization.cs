@@ -13,7 +13,8 @@ public partial class SchemaGenerator
     /// <returns>Virtualization analysis result.</returns>
     private VirtualizationAnalysis AnalyzeSchemaForVirtualization(Type type)
     {
-        if (!type.IsClass && !type.IsValueType)
+        // Only analyze classes and structs that can have properties
+        if (type.IsInterface || type.IsArray || type.IsPointer)
         {
             return new VirtualizationAnalysis { RequiresVirtualization = false };
         }
@@ -57,7 +58,7 @@ public partial class SchemaGenerator
     /// <summary>
     /// Determines if a type is a complex object type (not primitive, enum, string, or collection).
     /// </summary>
-    private bool IsComplexObjectType(Type type)
+    private static bool IsComplexObjectType(Type type)
     {
         // Not a complex object if it's a primitive type
         if (type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(decimal))
@@ -72,8 +73,8 @@ public partial class SchemaGenerator
             return false;
         }
 
-        // Not a complex object if it's a collection
-        if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type) && type != typeof(string))
+        // Not a complex object if it's a collection (but check this after primitives for efficiency)
+        if (type != typeof(string) && typeof(System.Collections.IEnumerable).IsAssignableFrom(type))
         {
             return false;
         }
