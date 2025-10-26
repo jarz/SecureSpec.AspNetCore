@@ -34,4 +34,9 @@ public class SecureSpecOptions
     /// Gets diagnostics options.
     /// </summary>
     public DiagnosticsOptions Diagnostics { get; } = new();
+
+    /// <summary>
+    /// Gets media type handling and content negotiation options.
+    /// </summary>
+    public MediaTypeOptions MediaTypes { get; } = new();
 }
