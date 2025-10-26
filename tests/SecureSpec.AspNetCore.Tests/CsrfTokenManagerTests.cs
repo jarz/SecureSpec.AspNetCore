@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Time.Testing;
 using SecureSpec.AspNetCore.Security;
 
 namespace SecureSpec.AspNetCore.Tests;
@@ -359,13 +360,17 @@ public class CsrfTokenManagerTests
     public void CleanupExpiredTokens_RemovesOnlyExpiredTokens()
     {
         // Arrange
-        // Use very generous timeouts to avoid timing issues on different platforms (especially macOS)
-        // where thread scheduling and timer precision can vary significantly
-        var manager = new CsrfTokenManager(tokenLifetime: TimeSpan.FromSeconds(10));
-        var token1 = manager.GenerateToken("state1");  // Will expire at 10s
-        Thread.Sleep(2000);  // Wait 2 seconds
-        var token2 = manager.GenerateToken("state2");  // Will expire at 12s (created at 2s + 10s lifetime)
-        Thread.Sleep(9000);  // Wait 9 more seconds - total 11s elapsed, token1 expired (created at 0s, expires at 10s), token2 still valid (created at 2s, expires at 12s)
+        var fakeTime = new FakeTimeProvider();
+        var manager = new CsrfTokenManager(
+            tokenLifetime: TimeSpan.FromMinutes(10),
+            timeProvider: fakeTime);
+
+        var token1 = manager.GenerateToken("state1");  // Created at T+0
+        fakeTime.Advance(TimeSpan.FromMinutes(5));     // Advance to T+5
+        var token2 = manager.GenerateToken("state2");  // Created at T+5
+        fakeTime.Advance(TimeSpan.FromMinutes(6));     // Advance to T+11
+
+        // At T+11: token1 expired (created T+0, expires T+10), token2 valid (created T+5, expires T+15)
 
         // Act
         manager.CleanupExpiredTokens();
