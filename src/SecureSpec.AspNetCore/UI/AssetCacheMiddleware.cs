@@ -108,20 +108,20 @@ public class AssetCacheMiddleware
         // Only match UI assets, not OpenAPI spec files
         // UI assets are typically served from /securespec-ui/, /swagger-ui/, /assets/, etc.
         // Exclude swagger.json and openapi.json files
-        if (pathValue.Contains("/SWAGGER.JSON", StringComparison.OrdinalIgnoreCase) ||
-            pathValue.Contains("/OPENAPI.JSON", StringComparison.OrdinalIgnoreCase))
+        if (pathValue.Contains("/SWAGGER.JSON", StringComparison.Ordinal) ||
+            pathValue.Contains("/OPENAPI.JSON", StringComparison.Ordinal))
         {
             return false;
         }
 
         // Match common UI asset extensions
-        return pathValue.EndsWith(".JS", StringComparison.OrdinalIgnoreCase) ||
-               pathValue.EndsWith(".CSS", StringComparison.OrdinalIgnoreCase) ||
-               pathValue.EndsWith(".HTML", StringComparison.OrdinalIgnoreCase) ||
-               pathValue.EndsWith(".SVG", StringComparison.OrdinalIgnoreCase) ||
-               pathValue.EndsWith(".PNG", StringComparison.OrdinalIgnoreCase) ||
-               pathValue.EndsWith(".WOFF", StringComparison.OrdinalIgnoreCase) ||
-               pathValue.EndsWith(".WOFF2", StringComparison.OrdinalIgnoreCase);
+        return pathValue.EndsWith(".JS", StringComparison.Ordinal) ||
+               pathValue.EndsWith(".CSS", StringComparison.Ordinal) ||
+               pathValue.EndsWith(".HTML", StringComparison.Ordinal) ||
+               pathValue.EndsWith(".SVG", StringComparison.Ordinal) ||
+               pathValue.EndsWith(".PNG", StringComparison.Ordinal) ||
+               pathValue.EndsWith(".WOFF", StringComparison.Ordinal) ||
+               pathValue.EndsWith(".WOFF2", StringComparison.Ordinal);
     }
 
     /// <summary>
