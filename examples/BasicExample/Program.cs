@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using SecureSpec.AspNetCore;
+using SecureSpec.AspNetCore.UI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,11 +43,19 @@ builder.Services.AddSecureSpec(options =>
     // Configure UI
     options.UI.DeepLinking = true;
     options.UI.DisplayOperationId = true;
+
+    // Configure asset caching with integrity revalidation
+    options.UI.Assets.CacheLifetimeSeconds = 3600; // 1 hour
+    options.UI.Assets.EnableIntegrityRevalidation = true;
+    options.UI.Assets.AllowPublicCache = true;
 });
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+
+// Enable asset caching middleware for UI assets
+app.UseSecureSpecAssetCache();
 
 app.UseHttpsRedirection();
 
