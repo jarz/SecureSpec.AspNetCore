@@ -24,6 +24,14 @@ builder.Services.AddSecureSpec(options =>
         builder.WithDescription("JWT Bearer token authentication")
                .WithBearerFormat("JWT"));
 
+    options.Security.AddApiKeyHeader("apiKeyHeader", builder =>
+        builder.WithName("X-API-Key")
+               .WithDescription("API Key authentication via header"));
+
+    options.Security.AddApiKeyQuery("apiKeyQuery", builder =>
+        builder.WithName("api_key")
+               .WithDescription("API Key authentication via query parameter"));
+
     // Configure UI
     options.UI.DeepLinking = true;
     options.UI.DisplayOperationId = true;
