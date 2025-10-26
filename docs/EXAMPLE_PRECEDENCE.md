@@ -48,7 +48,8 @@ services.AddSecureSpec(options =>
     // Enable/disable example generation (default: true)
     options.Schema.GenerateExamples = true;
     
-    // Set time budget for example generation (default: 25ms per PRD)
+    // Set time budget for example generation in milliseconds (default: 25ms per PRD)
+    // When exceeded, generation is truncated and EXM001 diagnostic is emitted
     options.Schema.ExampleGenerationTimeoutMs = 25;
 });
 ```
@@ -173,16 +174,31 @@ All tests validate:
 
 ### Precedence Resolution Algorithm
 
+The precedence engine resolves examples by checking sources in order and returning the first available:
+
 ```csharp
 IOpenApiAny? Resolve(ExampleContext ctx)
 {
+    // Blocked has highest priority - overrides everything
     if (ctx.IsBlocked) return null;
+    
+    // Named examples - returns first named example's value
+    // When multiple named examples exist, all are preserved in the collection
+    // but for single example resolution, the first is used
     if (ctx.NamedExamples.Any()) return ctx.NamedExamples.First().Value;
+    
+    // Single example - from property or attribute
     if (ctx.SingleExample != null) return ctx.SingleExample;
-    if (ctx.ComponentExample != null) return null; // Handled separately
+    
+    // Component reference - handled separately during serialization
+    if (ctx.ComponentExample != null) return null;
+    
+    // Generated fallback - deterministic generation from schema
     return GenerateDeterministicFallback(ctx.Schema);
 }
 ```
+
+**Note**: When multiple named examples exist, they are all preserved in the `NamedExamples` dictionary. The `ResolveExample()` method returns the first for single example scenarios, while `ResolveNamedExamples()` returns the complete dictionary for operations that support multiple examples.
 
 ### Thread Safety
 - All components are thread-safe
@@ -200,7 +216,8 @@ Potential future improvements:
 1. Support for `examples` (plural) at operation level
 2. Custom example generators via extensibility hooks
 3. Example validation against schema
-4. Time budget enforcement with EXM001 diagnostic
+4. Time budget enforcement with EXM001 diagnostic emission
+   - **EXM001**: "Example generation throttled" - Emitted when example synthesis exceeds the configured time budget (ExampleGenerationTimeoutMs). Provides warning that example was truncated or simplified.
 5. Attribute-based example specification
 
 ## Related Components
