@@ -109,7 +109,7 @@ SecuritySchemeBuilder (abstract)
 - `BlockBasicAuthInference()`: Emit AUTH001 diagnostic
 
 ## Testing
-Comprehensive test coverage across 33 tests:
+Comprehensive test coverage includes:
 - Unit tests for builder functionality
 - Header sanitization tests
 - AUTH001 diagnostic tests
