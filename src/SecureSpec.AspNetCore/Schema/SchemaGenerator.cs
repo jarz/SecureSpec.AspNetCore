@@ -117,8 +117,24 @@ public partial class SchemaGenerator
             Type t when t == typeof(bool) => new OpenApiSchema { Type = "boolean" },
             Type t when t == typeof(string) => new OpenApiSchema { Type = "string" },
             Type t when t.IsEnum => GenerateEnumSchema(t),
-            _ => new OpenApiSchema { Type = "object" }
+            _ => CreateObjectSchema(type)
         };
+    }
+
+    /// <summary>
+    /// Creates a schema for an object type, applying virtualization if necessary.
+    /// </summary>
+    private OpenApiSchema CreateObjectSchema(Type type)
+    {
+        var schema = new OpenApiSchema { Type = "object" };
+
+        // Check if virtualization should be applied (AC 301-303)
+        if (ShouldVirtualizeSchema(type, out var propertyCount, out var nestedObjectCount))
+        {
+            ApplySchemaVirtualization(schema, type, propertyCount, nestedObjectCount);
+        }
+
+        return schema;
     }
 
     /// <summary>
