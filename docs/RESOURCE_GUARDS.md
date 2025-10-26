@@ -149,8 +149,11 @@ PERF001 events include rich context:
 
 ### 1. Set Realistic Limits
 
+Choose limits based on your environment and requirements:
+
 - **Development**: Use generous limits (5-10 seconds, 50+ MB) for easier debugging
-- **Production**: Use strict limits (1-2 seconds, 10-20 MB) for better protection
+- **Production (Standard)**: Use default limits (2 seconds, 10 MB) for good balance
+- **Production (Strict)**: Use tight limits (500-1000ms, 5 MB) for maximum protection
 - **Testing**: Test with actual API size to find appropriate limits
 
 ### 2. Optimize Schema Generation
@@ -191,7 +194,7 @@ SecureSpec.AspNetCore is designed to meet these performance targets:
 | Recursive schema traversal | <100ms | 100–500ms | >500ms |
 | Hash computation | <50ms | 50–200ms | >200ms |
 
-Resource guards help ensure these targets are met by preventing runaway generation.
+**Note:** The default `MaxGenerationTimeMs` of 2000ms is set at the "degraded" threshold to allow reasonable generation time for most APIs while still providing protection against runaway generation. For optimal performance, APIs should target the <500ms range, but the guard provides a safety net at 2000ms. Adjust based on your API complexity and performance requirements.
 
 ## Troubleshooting
 
@@ -217,7 +220,7 @@ Resource guards help ensure these targets are met by preventing runaway generati
 
 **Possible Causes:**
 - Very large schemas (>200 properties)
-- Large enums (>10K values)
+- Large enums (>10,000 values)
 - Many duplicate schema registrations
 - Memory leaks in custom filters
 
