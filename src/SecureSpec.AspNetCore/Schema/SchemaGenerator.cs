@@ -17,6 +17,8 @@ public partial class SchemaGenerator
     private readonly DiagnosticsLogger _logger;
     private readonly Dictionary<string, List<Type>> _schemaIdMap = [];
     private readonly Dictionary<Type, string> _typeToSchemaId = [];
+    private readonly ExampleGenerator _exampleGenerator;
+    private readonly ExamplePrecedenceEngine _precedenceEngine;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SchemaGenerator"/> class.
@@ -25,6 +27,8 @@ public partial class SchemaGenerator
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _exampleGenerator = new ExampleGenerator(options);
+        _precedenceEngine = new ExamplePrecedenceEngine(_exampleGenerator);
     }
 
     /// <summary>
