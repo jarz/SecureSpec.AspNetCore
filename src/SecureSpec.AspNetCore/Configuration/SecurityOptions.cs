@@ -129,6 +129,8 @@ public class SecurityOptions
         var scheme = builder.Build();
         _schemes[name] = scheme;
     }
+
+    /// <summary>
     /// Gets all registered security schemes.
     /// </summary>
     public IReadOnlyDictionary<string, OpenApiSecurityScheme> Schemes => _schemes;
