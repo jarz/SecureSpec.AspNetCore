@@ -34,4 +34,9 @@ public class SecureSpecOptions
     /// Gets diagnostics options.
     /// </summary>
     public DiagnosticsOptions Diagnostics { get; } = new();
+
+    /// <summary>
+    /// Gets cache configuration options.
+    /// </summary>
+    public CacheOptions Cache { get; } = new();
 }
