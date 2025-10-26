@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using SecureSpec.AspNetCore;
+using SecureSpec.AspNetCore.UI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,8 +46,12 @@ builder.Services.AddSecureSpec(options =>
                               "Client certificates must be configured at the infrastructure level (API Gateway, Load Balancer, or web server)."));
 
     // Configure UI
+    options.UI.DocumentTitle = "Weather API Documentation";
     options.UI.DeepLinking = true;
     options.UI.DisplayOperationId = true;
+    options.UI.DefaultModelsExpandDepth = 2;
+    options.UI.EnableFiltering = true;
+    options.UI.EnableTryItOut = true;
 });
 
 var app = builder.Build();
@@ -54,6 +59,9 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 
 app.UseHttpsRedirection();
+
+// Enable SecureSpec UI at /securespec
+app.UseSecureSpecUI();
 
 var summaries = new[]
 {
