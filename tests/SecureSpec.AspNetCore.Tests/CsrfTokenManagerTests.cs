@@ -359,11 +359,13 @@ public class CsrfTokenManagerTests
     public void CleanupExpiredTokens_RemovesOnlyExpiredTokens()
     {
         // Arrange
-        var manager = new CsrfTokenManager(tokenLifetime: TimeSpan.FromMilliseconds(100));
+        // Use very generous timeouts to avoid timing issues on different platforms (especially macOS)
+        // where thread scheduling and timer precision can vary significantly
+        var manager = new CsrfTokenManager(tokenLifetime: TimeSpan.FromMilliseconds(500));
         var token1 = manager.GenerateToken("state1");  // Will expire
-        Thread.Sleep(50);
+        Thread.Sleep(200);
         var token2 = manager.GenerateToken("state2");  // Will not expire yet
-        Thread.Sleep(60);  // Total 110ms, token1 expired, token2 has 40ms left
+        Thread.Sleep(400);  // Total 600ms, token1 expired (created at 0ms, expires at 500ms), token2 has 100ms left (created at 200ms, expires at 700ms)
 
         // Act
         manager.CleanupExpiredTokens();

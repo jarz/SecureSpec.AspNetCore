@@ -39,6 +39,11 @@ builder.Services.AddSecureSpec(options =>
         .AddScope("api", "Full API access")
         .AddScope("read", "Read access to weather data"));
 
+    // Add Mutual TLS for service-to-service authentication
+    options.Security.AddMutualTls("mutualTLS", builder =>
+        builder.WithDescription("Mutual TLS authentication for secure service-to-service communication. " +
+                              "Client certificates must be configured at the infrastructure level (API Gateway, Load Balancer, or web server)."));
+
     // Configure UI
     options.UI.DeepLinking = true;
     options.UI.DisplayOperationId = true;
