@@ -97,8 +97,8 @@ This ensures clean, readable descriptions in the OpenAPI output.
 
 ## Best Practices
 
-1. **Generate XML docs in Release builds**: Add XML generation only for Release configuration to avoid debug overhead
-2. **Deploy XML files with your application**: Ensure XML files are copied to the output directory
+1. **Enable XML documentation generation**: Add `<GenerateDocumentationFile>true</GenerateDocumentationFile>` to your project file to generate XML docs
+2. **Deploy XML files with your application**: Ensure XML files are copied to the output directory and deployed with your application
 3. **Use consistent member names**: XML member names must match exactly (e.g., `T:Namespace.Type`)
 4. **Handle missing files gracefully**: The provider logs warnings but continues if files are not found
 5. **Order matters**: Place most specific/override files last in the collection
