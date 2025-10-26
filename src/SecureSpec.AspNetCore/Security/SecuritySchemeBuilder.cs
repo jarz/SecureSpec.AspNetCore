@@ -57,7 +57,10 @@ public class HttpBearerSchemeBuilder : SecuritySchemeBuilder
     {
         ArgumentNullException.ThrowIfNull(description);
         if (string.IsNullOrWhiteSpace(description))
+        {
             throw new ArgumentException("Description cannot be empty or whitespace.", nameof(description));
+        }
+
         _description = description;
         return this;
     }
