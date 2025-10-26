@@ -42,6 +42,11 @@ builder.Services.AddSecureSpec(options =>
     // Configure UI
     options.UI.DeepLinking = true;
     options.UI.DisplayOperationId = true;
+
+    // Configure performance and resource guards (AC 319-324)
+    options.Performance.EnableResourceGuards = true;
+    options.Performance.MaxGenerationTimeMs = 2000; // 2 seconds
+    options.Performance.MaxMemoryBytes = 10 * 1024 * 1024; // 10 MB
 });
 
 var app = builder.Build();

@@ -34,4 +34,9 @@ public class SecureSpecOptions
     /// Gets diagnostics options.
     /// </summary>
     public DiagnosticsOptions Diagnostics { get; } = new();
+
+    /// <summary>
+    /// Gets performance and resource guard options.
+    /// </summary>
+    public PerformanceOptions Performance { get; } = new();
 }
