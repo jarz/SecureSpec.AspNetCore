@@ -61,10 +61,7 @@ public static class PkceGenerator
         }
 
         var randomBytes = new byte[length];
-        using (var rng = RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(randomBytes);
-        }
+        RandomNumberGenerator.Fill(randomBytes);
 
         var verifier = new StringBuilder(length);
         for (int i = 0; i < length; i++)

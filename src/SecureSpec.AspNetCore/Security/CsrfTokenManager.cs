@@ -88,10 +88,7 @@ public class CsrfTokenManager
         ArgumentException.ThrowIfNullOrWhiteSpace(state, nameof(state));
 
         var tokenBytes = new byte[_tokenLength];
-        using (var rng = RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(tokenBytes);
-        }
+        RandomNumberGenerator.Fill(tokenBytes);
 
         var token = Convert.ToBase64String(tokenBytes);
 

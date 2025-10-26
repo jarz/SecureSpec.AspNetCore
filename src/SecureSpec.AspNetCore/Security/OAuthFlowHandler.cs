@@ -257,10 +257,7 @@ public class OAuthFlowHandler
     private static string GenerateStateParameter()
     {
         var stateBytes = new byte[32];
-        using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(stateBytes);
-        }
+        System.Security.Cryptography.RandomNumberGenerator.Fill(stateBytes);
 
         return Convert.ToBase64String(stateBytes)
             .Replace('+', '-')
