@@ -24,6 +24,13 @@ builder.Services.AddSecureSpec(options =>
         builder.WithDescription("JWT Bearer token authentication")
                .WithBearerFormat("JWT"));
 
+    // Configure OAuth2 Client Credentials flow
+    options.Security.AddOAuth2ClientCredentials("oauth2", builder => builder
+        .WithTokenUrl(new Uri("https://auth.example.com/token", UriKind.Absolute))
+        .WithDescription("OAuth2 Client Credentials authentication")
+        .AddScope("api", "Full API access")
+        .AddScope("read", "Read access to weather data"));
+
     // Configure UI
     options.UI.DeepLinking = true;
     options.UI.DisplayOperationId = true;
