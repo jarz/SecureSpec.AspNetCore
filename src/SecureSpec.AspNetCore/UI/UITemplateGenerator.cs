@@ -72,7 +72,9 @@ public static class UITemplateGenerator
     private static string EscapeHtml(string text)
     {
         if (string.IsNullOrEmpty(text))
+        {
             return text;
+        }
 
         return text
             .Replace("&", "&amp;", StringComparison.Ordinal)
