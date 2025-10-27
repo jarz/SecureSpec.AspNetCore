@@ -1,0 +1,284 @@
+namespace SecureSpec.AspNetCore.Diagnostics;
+
+/// <summary>
+/// Defines all diagnostic error codes used throughout SecureSpec.
+/// Each code has a specific meaning, severity level, and recommended action.
+/// </summary>
+public static class DiagnosticCodes
+{
+    // ============================================
+    // Security Codes (SEC)
+    // ============================================
+
+    /// <summary>
+    /// Integrity check failed.
+    /// Severity: Critical
+    /// Action: Abort load
+    /// </summary>
+    public const string IntegrityCheckFailed = "SEC001";
+
+    // ============================================
+    // CSP Codes (CSP)
+    // ============================================
+
+    /// <summary>
+    /// CSP mismatch or missing directives.
+    /// Severity: Error
+    /// Action: Review policy
+    /// </summary>
+    public const string CspMismatch = "CSP001";
+
+    // ============================================
+    // Schema Codes (SCH)
+    // ============================================
+
+    /// <summary>
+    /// SchemaId collision suffix applied.
+    /// Severity: Info
+    /// Action: Confirm stability
+    /// </summary>
+    public const string SchemaIdCollision = "SCH001";
+
+    /// <summary>
+    /// Schema generation exceeded maximum depth.
+    /// Severity: Warn
+    /// Action: Review schema structure
+    /// </summary>
+    public const string SchemaDepthExceeded = "SCH001-DEPTH";
+
+    // ============================================
+    // Annotation Codes (ANN)
+    // ============================================
+
+    /// <summary>
+    /// DataAnnotations conflict (last wins).
+    /// Severity: Warn
+    /// Action: Harmonize constraints
+    /// </summary>
+    public const string DataAnnotationsConflict = "ANN001";
+
+    // ============================================
+    // Rate Limit Codes (LIM)
+    // ============================================
+
+    /// <summary>
+    /// Rate limit bucket enforced.
+    /// Severity: Info
+    /// Action: Evaluate thresholds
+    /// </summary>
+    public const string RateLimitEnforced = "LIM001";
+
+    /// <summary>
+    /// Rate limit reset anomaly.
+    /// Severity: Warn
+    /// Action: Check time source
+    /// </summary>
+    public const string RateLimitResetAnomaly = "LIM002";
+
+    // ============================================
+    // Type Mapping Codes (MAP)
+    // ============================================
+
+    /// <summary>
+    /// MapType override applied.
+    /// Severity: Info
+    /// Action: Validate mapping correctness
+    /// </summary>
+    public const string MapTypeOverride = "MAP001";
+
+    // ============================================
+    // Nullability Codes (NRT)
+    // ============================================
+
+    /// <summary>
+    /// Nullability mismatch.
+    /// Severity: Error
+    /// Action: Adjust NRT config
+    /// </summary>
+    public const string NullabilityMismatch = "NRT001";
+
+    // ============================================
+    // Example Generation Codes (EXM)
+    // ============================================
+
+    /// <summary>
+    /// Example generation throttled.
+    /// Severity: Warn
+    /// Action: Provide explicit example
+    /// </summary>
+    public const string ExampleGenerationThrottled = "EXM001";
+
+    // ============================================
+    // Virtualization Codes (VIRT)
+    // ============================================
+
+    /// <summary>
+    /// Virtualization threshold triggered.
+    /// Severity: Info
+    /// Action: Performance expectation
+    /// </summary>
+    public const string VirtualizationThresholdTriggered = "VIRT001";
+
+    // ============================================
+    // Retention Codes (RET)
+    // ============================================
+
+    /// <summary>
+    /// Retention size purge executed.
+    /// Severity: Info
+    /// Action: Monitor volume
+    /// </summary>
+    public const string RetentionSizePurge = "RET001";
+
+    /// <summary>
+    /// Retention age purge executed.
+    /// Severity: Info
+    /// Action: Confirm retentionDays
+    /// </summary>
+    public const string RetentionAgePurge = "RET002";
+
+    // ============================================
+    // Policy Codes (POL)
+    // ============================================
+
+    /// <summary>
+    /// PolicyToScope mapping applied.
+    /// Severity: Info
+    /// Action: Validate scopes
+    /// </summary>
+    public const string PolicyToScopeMapping = "POL001";
+
+    // ============================================
+    // Configuration Codes (CFG)
+    // ============================================
+
+    /// <summary>
+    /// Invalid per-doc route template attempt.
+    /// Severity: Info
+    /// Action: Use global template
+    /// </summary>
+    public const string InvalidPerDocRouteTemplate = "CFG001";
+
+    // ============================================
+    // Sanitization Codes (SAN)
+    // ============================================
+
+    /// <summary>
+    /// Disallowed head injection.
+    /// Severity: Warn
+    /// Action: Restrict to meta/link
+    /// </summary>
+    public const string DisallowedHeadInjection = "SAN001";
+
+    /// <summary>
+    /// Disallowed head injection attempt.
+    /// Severity: Warn
+    /// Action: Use local meta/link
+    /// </summary>
+    public const string DisallowedHeadInjectionAttempt = "HD001";
+
+    // ============================================
+    // Boundary Codes (BND)
+    // ============================================
+
+    /// <summary>
+    /// Multipart field count limit exceeded.
+    /// Severity: Warn
+    /// Action: Review field count limits
+    /// </summary>
+    public const string MultipartFieldCountExceeded = "BND001";
+
+    // ============================================
+    // Link Codes (LNK)
+    // ============================================
+
+    /// <summary>
+    /// Circular link detection.
+    /// Severity: Warn
+    /// Action: Review link structure
+    /// </summary>
+    public const string CircularLinkDetected = "LNK001";
+
+    /// <summary>
+    /// Gets metadata for a diagnostic code.
+    /// </summary>
+    /// <param name="code">The diagnostic code.</param>
+    /// <returns>Metadata for the code, or null if not found.</returns>
+    public static DiagnosticCodeMetadata? GetMetadata(string code)
+    {
+        return code switch
+        {
+            IntegrityCheckFailed => new("Integrity check failed", DiagnosticLevel.Critical, "Abort load"),
+            CspMismatch => new("CSP mismatch or missing directives", DiagnosticLevel.Error, "Review policy"),
+            SchemaIdCollision => new("SchemaId collision suffix applied", DiagnosticLevel.Info, "Confirm stability"),
+            SchemaDepthExceeded => new("Schema generation exceeded maximum depth", DiagnosticLevel.Warn, "Review schema structure"),
+            DataAnnotationsConflict => new("DataAnnotations conflict (last wins)", DiagnosticLevel.Warn, "Harmonize constraints"),
+            RateLimitEnforced => new("Rate limit bucket enforced", DiagnosticLevel.Info, "Evaluate thresholds"),
+            RateLimitResetAnomaly => new("Rate limit reset anomaly", DiagnosticLevel.Warn, "Check time source"),
+            MapTypeOverride => new("MapType override applied", DiagnosticLevel.Info, "Validate mapping correctness"),
+            NullabilityMismatch => new("Nullability mismatch", DiagnosticLevel.Error, "Adjust NRT config"),
+            ExampleGenerationThrottled => new("Example generation throttled", DiagnosticLevel.Warn, "Provide explicit example"),
+            VirtualizationThresholdTriggered => new("Virtualization threshold triggered", DiagnosticLevel.Info, "Performance expectation"),
+            RetentionSizePurge => new("Retention size purge executed", DiagnosticLevel.Info, "Monitor volume"),
+            RetentionAgePurge => new("Retention age purge executed", DiagnosticLevel.Info, "Confirm retentionDays"),
+            PolicyToScopeMapping => new("PolicyToScope mapping applied", DiagnosticLevel.Info, "Validate scopes"),
+            InvalidPerDocRouteTemplate => new("Invalid per-doc route template attempt", DiagnosticLevel.Info, "Use global template"),
+            DisallowedHeadInjection => new("Disallowed head injection", DiagnosticLevel.Warn, "Restrict to meta/link"),
+            DisallowedHeadInjectionAttempt => new("Disallowed head injection attempt", DiagnosticLevel.Warn, "Use local meta/link"),
+            MultipartFieldCountExceeded => new("Multipart field count limit exceeded", DiagnosticLevel.Warn, "Review field count limits"),
+            CircularLinkDetected => new("Circular link detection", DiagnosticLevel.Warn, "Review link structure"),
+            _ => null
+        };
+    }
+
+    /// <summary>
+    /// Validates that a diagnostic code is recognized.
+    /// </summary>
+    /// <param name="code">The code to validate.</param>
+    /// <returns>True if the code is recognized, false otherwise.</returns>
+    public static bool IsValidCode(string code)
+    {
+        return GetMetadata(code) != null;
+    }
+
+    /// <summary>
+    /// Gets all defined diagnostic codes.
+    /// </summary>
+    /// <returns>An array of all defined diagnostic codes.</returns>
+    public static string[] GetAllCodes()
+    {
+        return new[]
+        {
+            IntegrityCheckFailed,
+            CspMismatch,
+            SchemaIdCollision,
+            SchemaDepthExceeded,
+            DataAnnotationsConflict,
+            RateLimitEnforced,
+            RateLimitResetAnomaly,
+            MapTypeOverride,
+            NullabilityMismatch,
+            ExampleGenerationThrottled,
+            VirtualizationThresholdTriggered,
+            RetentionSizePurge,
+            RetentionAgePurge,
+            PolicyToScopeMapping,
+            InvalidPerDocRouteTemplate,
+            DisallowedHeadInjection,
+            DisallowedHeadInjectionAttempt,
+            MultipartFieldCountExceeded,
+            CircularLinkDetected
+        };
+    }
+}
+
+/// <summary>
+/// Metadata for a diagnostic code.
+/// </summary>
+/// <param name="Description">Human-readable description of the diagnostic.</param>
+/// <param name="Level">Severity level of the diagnostic.</param>
+/// <param name="RecommendedAction">Recommended action to address the diagnostic.</param>
+public record DiagnosticCodeMetadata(
+    string Description,
+    DiagnosticLevel Level,
+    string RecommendedAction);
