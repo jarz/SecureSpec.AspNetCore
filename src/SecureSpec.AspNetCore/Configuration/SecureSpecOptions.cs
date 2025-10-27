@@ -39,4 +39,14 @@ public class SecureSpecOptions
     /// Gets cache configuration options.
     /// </summary>
     public CacheOptions Cache { get; } = new();
+
+    /// <summary>
+    /// Gets performance and resource guard options.
+    /// </summary>
+    public PerformanceOptions Performance { get; } = new();
+
+    /// <summary>
+    /// Gets media type handling and content negotiation options.
+    /// </summary>
+    public MediaTypeOptions MediaTypes { get; } = new();
 }
