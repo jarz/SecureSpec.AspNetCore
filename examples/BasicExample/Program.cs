@@ -57,6 +57,11 @@ builder.Services.AddSecureSpec(options =>
     options.UI.Assets.CacheLifetimeSeconds = 3600; // 1 hour
     options.UI.Assets.EnableIntegrityRevalidation = true;
     options.UI.Assets.AllowPublicCache = true;
+
+    // Configure performance and resource guards (AC 319-324)
+    options.Performance.EnableResourceGuards = true;
+    options.Performance.MaxGenerationTimeMs = 2000; // 2 seconds
+    options.Performance.MaxMemoryBytes = 10 * 1024 * 1024; // 10 MB
 });
 
 var app = builder.Build();
@@ -95,3 +100,4 @@ sealed record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
+
