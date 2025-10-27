@@ -1,884 +1,568 @@
-#pragma warning disable IDE0005 // Using directive is unnecessary - false positive for OpenApi types and Xunit
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Diagnostics;
 using SecureSpec.AspNetCore.Schema;
-using Xunit;
-#pragma warning restore IDE0005
+using System.Diagnostics.CodeAnalysis;
 
 namespace SecureSpec.AspNetCore.Tests;
 
 /// <summary>
-/// Tests for Phase 4: Large Schema Virtualization (AC 301-303).
+/// Tests for large schema virtualization (AC 301-303).
 /// </summary>
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "Test types are internal and used only for schema generation testing.")]
 public class LargeSchemaVirtualizationTests
 {
-    #region Test Types
-
-    // Type with exactly 200 properties (at threshold)
-    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation scenarios.")]
-    internal sealed class TypeWith200Properties
+    private static SchemaGenerator CreateGenerator(SchemaOptions? options = null, DiagnosticsLogger? logger = null)
     {
-        public string Property1 { get; set; } = string.Empty;
-        public string Property2 { get; set; } = string.Empty;
-        public string Property3 { get; set; } = string.Empty;
-        public string Property4 { get; set; } = string.Empty;
-        public string Property5 { get; set; } = string.Empty;
-        public string Property6 { get; set; } = string.Empty;
-        public string Property7 { get; set; } = string.Empty;
-        public string Property8 { get; set; } = string.Empty;
-        public string Property9 { get; set; } = string.Empty;
-        public string Property10 { get; set; } = string.Empty;
-        public string Property11 { get; set; } = string.Empty;
-        public string Property12 { get; set; } = string.Empty;
-        public string Property13 { get; set; } = string.Empty;
-        public string Property14 { get; set; } = string.Empty;
-        public string Property15 { get; set; } = string.Empty;
-        public string Property16 { get; set; } = string.Empty;
-        public string Property17 { get; set; } = string.Empty;
-        public string Property18 { get; set; } = string.Empty;
-        public string Property19 { get; set; } = string.Empty;
-        public string Property20 { get; set; } = string.Empty;
-        public string Property21 { get; set; } = string.Empty;
-        public string Property22 { get; set; } = string.Empty;
-        public string Property23 { get; set; } = string.Empty;
-        public string Property24 { get; set; } = string.Empty;
-        public string Property25 { get; set; } = string.Empty;
-        public string Property26 { get; set; } = string.Empty;
-        public string Property27 { get; set; } = string.Empty;
-        public string Property28 { get; set; } = string.Empty;
-        public string Property29 { get; set; } = string.Empty;
-        public string Property30 { get; set; } = string.Empty;
-        public string Property31 { get; set; } = string.Empty;
-        public string Property32 { get; set; } = string.Empty;
-        public string Property33 { get; set; } = string.Empty;
-        public string Property34 { get; set; } = string.Empty;
-        public string Property35 { get; set; } = string.Empty;
-        public string Property36 { get; set; } = string.Empty;
-        public string Property37 { get; set; } = string.Empty;
-        public string Property38 { get; set; } = string.Empty;
-        public string Property39 { get; set; } = string.Empty;
-        public string Property40 { get; set; } = string.Empty;
-        public string Property41 { get; set; } = string.Empty;
-        public string Property42 { get; set; } = string.Empty;
-        public string Property43 { get; set; } = string.Empty;
-        public string Property44 { get; set; } = string.Empty;
-        public string Property45 { get; set; } = string.Empty;
-        public string Property46 { get; set; } = string.Empty;
-        public string Property47 { get; set; } = string.Empty;
-        public string Property48 { get; set; } = string.Empty;
-        public string Property49 { get; set; } = string.Empty;
-        public string Property50 { get; set; } = string.Empty;
-        public string Property51 { get; set; } = string.Empty;
-        public string Property52 { get; set; } = string.Empty;
-        public string Property53 { get; set; } = string.Empty;
-        public string Property54 { get; set; } = string.Empty;
-        public string Property55 { get; set; } = string.Empty;
-        public string Property56 { get; set; } = string.Empty;
-        public string Property57 { get; set; } = string.Empty;
-        public string Property58 { get; set; } = string.Empty;
-        public string Property59 { get; set; } = string.Empty;
-        public string Property60 { get; set; } = string.Empty;
-        public string Property61 { get; set; } = string.Empty;
-        public string Property62 { get; set; } = string.Empty;
-        public string Property63 { get; set; } = string.Empty;
-        public string Property64 { get; set; } = string.Empty;
-        public string Property65 { get; set; } = string.Empty;
-        public string Property66 { get; set; } = string.Empty;
-        public string Property67 { get; set; } = string.Empty;
-        public string Property68 { get; set; } = string.Empty;
-        public string Property69 { get; set; } = string.Empty;
-        public string Property70 { get; set; } = string.Empty;
-        public string Property71 { get; set; } = string.Empty;
-        public string Property72 { get; set; } = string.Empty;
-        public string Property73 { get; set; } = string.Empty;
-        public string Property74 { get; set; } = string.Empty;
-        public string Property75 { get; set; } = string.Empty;
-        public string Property76 { get; set; } = string.Empty;
-        public string Property77 { get; set; } = string.Empty;
-        public string Property78 { get; set; } = string.Empty;
-        public string Property79 { get; set; } = string.Empty;
-        public string Property80 { get; set; } = string.Empty;
-        public string Property81 { get; set; } = string.Empty;
-        public string Property82 { get; set; } = string.Empty;
-        public string Property83 { get; set; } = string.Empty;
-        public string Property84 { get; set; } = string.Empty;
-        public string Property85 { get; set; } = string.Empty;
-        public string Property86 { get; set; } = string.Empty;
-        public string Property87 { get; set; } = string.Empty;
-        public string Property88 { get; set; } = string.Empty;
-        public string Property89 { get; set; } = string.Empty;
-        public string Property90 { get; set; } = string.Empty;
-        public string Property91 { get; set; } = string.Empty;
-        public string Property92 { get; set; } = string.Empty;
-        public string Property93 { get; set; } = string.Empty;
-        public string Property94 { get; set; } = string.Empty;
-        public string Property95 { get; set; } = string.Empty;
-        public string Property96 { get; set; } = string.Empty;
-        public string Property97 { get; set; } = string.Empty;
-        public string Property98 { get; set; } = string.Empty;
-        public string Property99 { get; set; } = string.Empty;
-        public string Property100 { get; set; } = string.Empty;
-        public string Property101 { get; set; } = string.Empty;
-        public string Property102 { get; set; } = string.Empty;
-        public string Property103 { get; set; } = string.Empty;
-        public string Property104 { get; set; } = string.Empty;
-        public string Property105 { get; set; } = string.Empty;
-        public string Property106 { get; set; } = string.Empty;
-        public string Property107 { get; set; } = string.Empty;
-        public string Property108 { get; set; } = string.Empty;
-        public string Property109 { get; set; } = string.Empty;
-        public string Property110 { get; set; } = string.Empty;
-        public string Property111 { get; set; } = string.Empty;
-        public string Property112 { get; set; } = string.Empty;
-        public string Property113 { get; set; } = string.Empty;
-        public string Property114 { get; set; } = string.Empty;
-        public string Property115 { get; set; } = string.Empty;
-        public string Property116 { get; set; } = string.Empty;
-        public string Property117 { get; set; } = string.Empty;
-        public string Property118 { get; set; } = string.Empty;
-        public string Property119 { get; set; } = string.Empty;
-        public string Property120 { get; set; } = string.Empty;
-        public string Property121 { get; set; } = string.Empty;
-        public string Property122 { get; set; } = string.Empty;
-        public string Property123 { get; set; } = string.Empty;
-        public string Property124 { get; set; } = string.Empty;
-        public string Property125 { get; set; } = string.Empty;
-        public string Property126 { get; set; } = string.Empty;
-        public string Property127 { get; set; } = string.Empty;
-        public string Property128 { get; set; } = string.Empty;
-        public string Property129 { get; set; } = string.Empty;
-        public string Property130 { get; set; } = string.Empty;
-        public string Property131 { get; set; } = string.Empty;
-        public string Property132 { get; set; } = string.Empty;
-        public string Property133 { get; set; } = string.Empty;
-        public string Property134 { get; set; } = string.Empty;
-        public string Property135 { get; set; } = string.Empty;
-        public string Property136 { get; set; } = string.Empty;
-        public string Property137 { get; set; } = string.Empty;
-        public string Property138 { get; set; } = string.Empty;
-        public string Property139 { get; set; } = string.Empty;
-        public string Property140 { get; set; } = string.Empty;
-        public string Property141 { get; set; } = string.Empty;
-        public string Property142 { get; set; } = string.Empty;
-        public string Property143 { get; set; } = string.Empty;
-        public string Property144 { get; set; } = string.Empty;
-        public string Property145 { get; set; } = string.Empty;
-        public string Property146 { get; set; } = string.Empty;
-        public string Property147 { get; set; } = string.Empty;
-        public string Property148 { get; set; } = string.Empty;
-        public string Property149 { get; set; } = string.Empty;
-        public string Property150 { get; set; } = string.Empty;
-        public string Property151 { get; set; } = string.Empty;
-        public string Property152 { get; set; } = string.Empty;
-        public string Property153 { get; set; } = string.Empty;
-        public string Property154 { get; set; } = string.Empty;
-        public string Property155 { get; set; } = string.Empty;
-        public string Property156 { get; set; } = string.Empty;
-        public string Property157 { get; set; } = string.Empty;
-        public string Property158 { get; set; } = string.Empty;
-        public string Property159 { get; set; } = string.Empty;
-        public string Property160 { get; set; } = string.Empty;
-        public string Property161 { get; set; } = string.Empty;
-        public string Property162 { get; set; } = string.Empty;
-        public string Property163 { get; set; } = string.Empty;
-        public string Property164 { get; set; } = string.Empty;
-        public string Property165 { get; set; } = string.Empty;
-        public string Property166 { get; set; } = string.Empty;
-        public string Property167 { get; set; } = string.Empty;
-        public string Property168 { get; set; } = string.Empty;
-        public string Property169 { get; set; } = string.Empty;
-        public string Property170 { get; set; } = string.Empty;
-        public string Property171 { get; set; } = string.Empty;
-        public string Property172 { get; set; } = string.Empty;
-        public string Property173 { get; set; } = string.Empty;
-        public string Property174 { get; set; } = string.Empty;
-        public string Property175 { get; set; } = string.Empty;
-        public string Property176 { get; set; } = string.Empty;
-        public string Property177 { get; set; } = string.Empty;
-        public string Property178 { get; set; } = string.Empty;
-        public string Property179 { get; set; } = string.Empty;
-        public string Property180 { get; set; } = string.Empty;
-        public string Property181 { get; set; } = string.Empty;
-        public string Property182 { get; set; } = string.Empty;
-        public string Property183 { get; set; } = string.Empty;
-        public string Property184 { get; set; } = string.Empty;
-        public string Property185 { get; set; } = string.Empty;
-        public string Property186 { get; set; } = string.Empty;
-        public string Property187 { get; set; } = string.Empty;
-        public string Property188 { get; set; } = string.Empty;
-        public string Property189 { get; set; } = string.Empty;
-        public string Property190 { get; set; } = string.Empty;
-        public string Property191 { get; set; } = string.Empty;
-        public string Property192 { get; set; } = string.Empty;
-        public string Property193 { get; set; } = string.Empty;
-        public string Property194 { get; set; } = string.Empty;
-        public string Property195 { get; set; } = string.Empty;
-        public string Property196 { get; set; } = string.Empty;
-        public string Property197 { get; set; } = string.Empty;
-        public string Property198 { get; set; } = string.Empty;
-        public string Property199 { get; set; } = string.Empty;
-        public string Property200 { get; set; } = string.Empty;
+        return new SchemaGenerator(options ?? new SchemaOptions(), logger ?? new DiagnosticsLogger());
     }
 
-    // Type with 201 properties (exceeds threshold)
-    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation scenarios.")]
-    internal sealed class TypeWith201Properties
-    {
-        public string Property1 { get; set; } = string.Empty;
-        public string Property2 { get; set; } = string.Empty;
-        public string Property3 { get; set; } = string.Empty;
-        public string Property4 { get; set; } = string.Empty;
-        public string Property5 { get; set; } = string.Empty;
-        public string Property6 { get; set; } = string.Empty;
-        public string Property7 { get; set; } = string.Empty;
-        public string Property8 { get; set; } = string.Empty;
-        public string Property9 { get; set; } = string.Empty;
-        public string Property10 { get; set; } = string.Empty;
-        public string Property11 { get; set; } = string.Empty;
-        public string Property12 { get; set; } = string.Empty;
-        public string Property13 { get; set; } = string.Empty;
-        public string Property14 { get; set; } = string.Empty;
-        public string Property15 { get; set; } = string.Empty;
-        public string Property16 { get; set; } = string.Empty;
-        public string Property17 { get; set; } = string.Empty;
-        public string Property18 { get; set; } = string.Empty;
-        public string Property19 { get; set; } = string.Empty;
-        public string Property20 { get; set; } = string.Empty;
-        public string Property21 { get; set; } = string.Empty;
-        public string Property22 { get; set; } = string.Empty;
-        public string Property23 { get; set; } = string.Empty;
-        public string Property24 { get; set; } = string.Empty;
-        public string Property25 { get; set; } = string.Empty;
-        public string Property26 { get; set; } = string.Empty;
-        public string Property27 { get; set; } = string.Empty;
-        public string Property28 { get; set; } = string.Empty;
-        public string Property29 { get; set; } = string.Empty;
-        public string Property30 { get; set; } = string.Empty;
-        public string Property31 { get; set; } = string.Empty;
-        public string Property32 { get; set; } = string.Empty;
-        public string Property33 { get; set; } = string.Empty;
-        public string Property34 { get; set; } = string.Empty;
-        public string Property35 { get; set; } = string.Empty;
-        public string Property36 { get; set; } = string.Empty;
-        public string Property37 { get; set; } = string.Empty;
-        public string Property38 { get; set; } = string.Empty;
-        public string Property39 { get; set; } = string.Empty;
-        public string Property40 { get; set; } = string.Empty;
-        public string Property41 { get; set; } = string.Empty;
-        public string Property42 { get; set; } = string.Empty;
-        public string Property43 { get; set; } = string.Empty;
-        public string Property44 { get; set; } = string.Empty;
-        public string Property45 { get; set; } = string.Empty;
-        public string Property46 { get; set; } = string.Empty;
-        public string Property47 { get; set; } = string.Empty;
-        public string Property48 { get; set; } = string.Empty;
-        public string Property49 { get; set; } = string.Empty;
-        public string Property50 { get; set; } = string.Empty;
-        public string Property51 { get; set; } = string.Empty;
-        public string Property52 { get; set; } = string.Empty;
-        public string Property53 { get; set; } = string.Empty;
-        public string Property54 { get; set; } = string.Empty;
-        public string Property55 { get; set; } = string.Empty;
-        public string Property56 { get; set; } = string.Empty;
-        public string Property57 { get; set; } = string.Empty;
-        public string Property58 { get; set; } = string.Empty;
-        public string Property59 { get; set; } = string.Empty;
-        public string Property60 { get; set; } = string.Empty;
-        public string Property61 { get; set; } = string.Empty;
-        public string Property62 { get; set; } = string.Empty;
-        public string Property63 { get; set; } = string.Empty;
-        public string Property64 { get; set; } = string.Empty;
-        public string Property65 { get; set; } = string.Empty;
-        public string Property66 { get; set; } = string.Empty;
-        public string Property67 { get; set; } = string.Empty;
-        public string Property68 { get; set; } = string.Empty;
-        public string Property69 { get; set; } = string.Empty;
-        public string Property70 { get; set; } = string.Empty;
-        public string Property71 { get; set; } = string.Empty;
-        public string Property72 { get; set; } = string.Empty;
-        public string Property73 { get; set; } = string.Empty;
-        public string Property74 { get; set; } = string.Empty;
-        public string Property75 { get; set; } = string.Empty;
-        public string Property76 { get; set; } = string.Empty;
-        public string Property77 { get; set; } = string.Empty;
-        public string Property78 { get; set; } = string.Empty;
-        public string Property79 { get; set; } = string.Empty;
-        public string Property80 { get; set; } = string.Empty;
-        public string Property81 { get; set; } = string.Empty;
-        public string Property82 { get; set; } = string.Empty;
-        public string Property83 { get; set; } = string.Empty;
-        public string Property84 { get; set; } = string.Empty;
-        public string Property85 { get; set; } = string.Empty;
-        public string Property86 { get; set; } = string.Empty;
-        public string Property87 { get; set; } = string.Empty;
-        public string Property88 { get; set; } = string.Empty;
-        public string Property89 { get; set; } = string.Empty;
-        public string Property90 { get; set; } = string.Empty;
-        public string Property91 { get; set; } = string.Empty;
-        public string Property92 { get; set; } = string.Empty;
-        public string Property93 { get; set; } = string.Empty;
-        public string Property94 { get; set; } = string.Empty;
-        public string Property95 { get; set; } = string.Empty;
-        public string Property96 { get; set; } = string.Empty;
-        public string Property97 { get; set; } = string.Empty;
-        public string Property98 { get; set; } = string.Empty;
-        public string Property99 { get; set; } = string.Empty;
-        public string Property100 { get; set; } = string.Empty;
-        public string Property101 { get; set; } = string.Empty;
-        public string Property102 { get; set; } = string.Empty;
-        public string Property103 { get; set; } = string.Empty;
-        public string Property104 { get; set; } = string.Empty;
-        public string Property105 { get; set; } = string.Empty;
-        public string Property106 { get; set; } = string.Empty;
-        public string Property107 { get; set; } = string.Empty;
-        public string Property108 { get; set; } = string.Empty;
-        public string Property109 { get; set; } = string.Empty;
-        public string Property110 { get; set; } = string.Empty;
-        public string Property111 { get; set; } = string.Empty;
-        public string Property112 { get; set; } = string.Empty;
-        public string Property113 { get; set; } = string.Empty;
-        public string Property114 { get; set; } = string.Empty;
-        public string Property115 { get; set; } = string.Empty;
-        public string Property116 { get; set; } = string.Empty;
-        public string Property117 { get; set; } = string.Empty;
-        public string Property118 { get; set; } = string.Empty;
-        public string Property119 { get; set; } = string.Empty;
-        public string Property120 { get; set; } = string.Empty;
-        public string Property121 { get; set; } = string.Empty;
-        public string Property122 { get; set; } = string.Empty;
-        public string Property123 { get; set; } = string.Empty;
-        public string Property124 { get; set; } = string.Empty;
-        public string Property125 { get; set; } = string.Empty;
-        public string Property126 { get; set; } = string.Empty;
-        public string Property127 { get; set; } = string.Empty;
-        public string Property128 { get; set; } = string.Empty;
-        public string Property129 { get; set; } = string.Empty;
-        public string Property130 { get; set; } = string.Empty;
-        public string Property131 { get; set; } = string.Empty;
-        public string Property132 { get; set; } = string.Empty;
-        public string Property133 { get; set; } = string.Empty;
-        public string Property134 { get; set; } = string.Empty;
-        public string Property135 { get; set; } = string.Empty;
-        public string Property136 { get; set; } = string.Empty;
-        public string Property137 { get; set; } = string.Empty;
-        public string Property138 { get; set; } = string.Empty;
-        public string Property139 { get; set; } = string.Empty;
-        public string Property140 { get; set; } = string.Empty;
-        public string Property141 { get; set; } = string.Empty;
-        public string Property142 { get; set; } = string.Empty;
-        public string Property143 { get; set; } = string.Empty;
-        public string Property144 { get; set; } = string.Empty;
-        public string Property145 { get; set; } = string.Empty;
-        public string Property146 { get; set; } = string.Empty;
-        public string Property147 { get; set; } = string.Empty;
-        public string Property148 { get; set; } = string.Empty;
-        public string Property149 { get; set; } = string.Empty;
-        public string Property150 { get; set; } = string.Empty;
-        public string Property151 { get; set; } = string.Empty;
-        public string Property152 { get; set; } = string.Empty;
-        public string Property153 { get; set; } = string.Empty;
-        public string Property154 { get; set; } = string.Empty;
-        public string Property155 { get; set; } = string.Empty;
-        public string Property156 { get; set; } = string.Empty;
-        public string Property157 { get; set; } = string.Empty;
-        public string Property158 { get; set; } = string.Empty;
-        public string Property159 { get; set; } = string.Empty;
-        public string Property160 { get; set; } = string.Empty;
-        public string Property161 { get; set; } = string.Empty;
-        public string Property162 { get; set; } = string.Empty;
-        public string Property163 { get; set; } = string.Empty;
-        public string Property164 { get; set; } = string.Empty;
-        public string Property165 { get; set; } = string.Empty;
-        public string Property166 { get; set; } = string.Empty;
-        public string Property167 { get; set; } = string.Empty;
-        public string Property168 { get; set; } = string.Empty;
-        public string Property169 { get; set; } = string.Empty;
-        public string Property170 { get; set; } = string.Empty;
-        public string Property171 { get; set; } = string.Empty;
-        public string Property172 { get; set; } = string.Empty;
-        public string Property173 { get; set; } = string.Empty;
-        public string Property174 { get; set; } = string.Empty;
-        public string Property175 { get; set; } = string.Empty;
-        public string Property176 { get; set; } = string.Empty;
-        public string Property177 { get; set; } = string.Empty;
-        public string Property178 { get; set; } = string.Empty;
-        public string Property179 { get; set; } = string.Empty;
-        public string Property180 { get; set; } = string.Empty;
-        public string Property181 { get; set; } = string.Empty;
-        public string Property182 { get; set; } = string.Empty;
-        public string Property183 { get; set; } = string.Empty;
-        public string Property184 { get; set; } = string.Empty;
-        public string Property185 { get; set; } = string.Empty;
-        public string Property186 { get; set; } = string.Empty;
-        public string Property187 { get; set; } = string.Empty;
-        public string Property188 { get; set; } = string.Empty;
-        public string Property189 { get; set; } = string.Empty;
-        public string Property190 { get; set; } = string.Empty;
-        public string Property191 { get; set; } = string.Empty;
-        public string Property192 { get; set; } = string.Empty;
-        public string Property193 { get; set; } = string.Empty;
-        public string Property194 { get; set; } = string.Empty;
-        public string Property195 { get; set; } = string.Empty;
-        public string Property196 { get; set; } = string.Empty;
-        public string Property197 { get; set; } = string.Empty;
-        public string Property198 { get; set; } = string.Empty;
-        public string Property199 { get; set; } = string.Empty;
-        public string Property200 { get; set; } = string.Empty;
-        public string Property201 { get; set; } = string.Empty;
-    }
-
-    // Type with few properties but all primitive
-    public class SimpleType
-    {
-        public string Name { get; set; } = string.Empty;
-        public int Age { get; set; }
-        public bool Active { get; set; }
-    }
-
-    // Complex nested object type
-    public class NestedObject
-    {
-        public string Value { get; set; } = string.Empty;
-    }
-
-    #endregion
-
-    #region AC 301: Property Count Threshold Tests
+    #region AC 301: Schema with >200 properties triggers virtualization
 
     [Fact]
-    public void AC301_TypeWith200Properties_DoesNotTriggerVirtualization()
+    public void GenerateSchema_SchemaWith201Properties_TriggersVirtualization()
     {
-        // Arrange
-        var options = new SchemaOptions
-        {
-            SchemaPropertyVirtualizationThreshold = 200
-        };
+        // AC 301: Schemas with >200 properties should trigger virtualization
+        var options = new SchemaOptions { SchemaPropertyVirtualizationThreshold = 200 };
         var logger = new DiagnosticsLogger();
         var generator = new SchemaGenerator(options, logger);
 
-        // Act
-        var schema = generator.GenerateSchema(typeof(TypeWith200Properties));
-
-        // Assert
-        Assert.NotNull(schema);
-        Assert.Equal("object", schema.Type);
-        Assert.False(schema.Extensions.ContainsKey("x-schema-virtualized"));
-
+        var schema = generator.GenerateSchema(typeof(TestTypes.TypeWith201Properties));
         var events = logger.GetEvents();
-        Assert.DoesNotContain(events, e => e.Code == "VIRT001");
-    }
 
-    [Fact]
-    public void AC301_TypeWith201Properties_TriggersVirtualization()
-    {
-        // Arrange
-        var options = new SchemaOptions
-        {
-            SchemaPropertyVirtualizationThreshold = 200
-        };
-        var logger = new DiagnosticsLogger();
-        var generator = new SchemaGenerator(options, logger);
-
-        // Act
-        var schema = generator.GenerateSchema(typeof(TypeWith201Properties));
-
-        // Assert
-        Assert.NotNull(schema);
         Assert.Equal("object", schema.Type);
+
+        // Check virtualization metadata
         Assert.True(schema.Extensions.ContainsKey("x-schema-virtualized"));
-        Assert.IsType<OpenApiBoolean>(schema.Extensions["x-schema-virtualized"]);
-        Assert.True(((OpenApiBoolean)schema.Extensions["x-schema-virtualized"]).Value);
+        Assert.True(Assert.IsType<OpenApiBoolean>(schema.Extensions["x-schema-virtualized"]).Value);
+        Assert.Equal(201, Assert.IsType<OpenApiInteger>(schema.Extensions["x-schema-total-properties"]).Value);
 
-        // Verify metadata
-        Assert.True(schema.Extensions.ContainsKey("x-property-total-count"));
-        var totalCount = (OpenApiInteger)schema.Extensions["x-property-total-count"];
-        Assert.Equal(201, totalCount.Value);
-
-        // Verify VIRT001 diagnostic was emitted
-        var events = logger.GetEvents();
+        // Check VIRT001 diagnostic
         var virt001Event = Assert.Single(events, e => e.Code == "VIRT001");
         Assert.Equal(DiagnosticLevel.Info, virt001Event.Level);
-        Assert.Contains("201 properties", virt001Event.Message, StringComparison.Ordinal);
         Assert.Contains("TypeWith201Properties", virt001Event.Message, StringComparison.Ordinal);
+        Assert.Contains("201", virt001Event.Message, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void AC301_CustomThreshold_RespectedCorrectly()
+    public void GenerateSchema_SchemaWith200Properties_DoesNotTriggerVirtualization()
     {
-        // Arrange - set threshold to 5
-        var options = new SchemaOptions
-        {
-            SchemaPropertyVirtualizationThreshold = 5
-        };
+        // Exactly at threshold should NOT trigger virtualization
+        var options = new SchemaOptions { SchemaPropertyVirtualizationThreshold = 200 };
         var logger = new DiagnosticsLogger();
         var generator = new SchemaGenerator(options, logger);
 
-        // Act - SimpleType has 3 properties, should not virtualize
-        var schema = generator.GenerateSchema(typeof(SimpleType));
+        var schema = generator.GenerateSchema(typeof(TestTypes.TypeWith200Properties));
+        var events = logger.GetEvents();
 
-        // Assert
-        Assert.False(schema.Extensions.ContainsKey("x-schema-virtualized"));
-        Assert.DoesNotContain(logger.GetEvents(), e => e.Code == "VIRT001");
-    }
-
-    #endregion
-
-    #region AC 302: Nested Object Threshold Tests
-
-    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation scenarios.")]
-    internal sealed class TypeWith50NestedObjects
-    {
-        public NestedObject Nested1 { get; set; } = new();
-        public NestedObject Nested2 { get; set; } = new();
-        public NestedObject Nested3 { get; set; } = new();
-        public NestedObject Nested4 { get; set; } = new();
-        public NestedObject Nested5 { get; set; } = new();
-        public NestedObject Nested6 { get; set; } = new();
-        public NestedObject Nested7 { get; set; } = new();
-        public NestedObject Nested8 { get; set; } = new();
-        public NestedObject Nested9 { get; set; } = new();
-        public NestedObject Nested10 { get; set; } = new();
-        public NestedObject Nested11 { get; set; } = new();
-        public NestedObject Nested12 { get; set; } = new();
-        public NestedObject Nested13 { get; set; } = new();
-        public NestedObject Nested14 { get; set; } = new();
-        public NestedObject Nested15 { get; set; } = new();
-        public NestedObject Nested16 { get; set; } = new();
-        public NestedObject Nested17 { get; set; } = new();
-        public NestedObject Nested18 { get; set; } = new();
-        public NestedObject Nested19 { get; set; } = new();
-        public NestedObject Nested20 { get; set; } = new();
-        public NestedObject Nested21 { get; set; } = new();
-        public NestedObject Nested22 { get; set; } = new();
-        public NestedObject Nested23 { get; set; } = new();
-        public NestedObject Nested24 { get; set; } = new();
-        public NestedObject Nested25 { get; set; } = new();
-        public NestedObject Nested26 { get; set; } = new();
-        public NestedObject Nested27 { get; set; } = new();
-        public NestedObject Nested28 { get; set; } = new();
-        public NestedObject Nested29 { get; set; } = new();
-        public NestedObject Nested30 { get; set; } = new();
-        public NestedObject Nested31 { get; set; } = new();
-        public NestedObject Nested32 { get; set; } = new();
-        public NestedObject Nested33 { get; set; } = new();
-        public NestedObject Nested34 { get; set; } = new();
-        public NestedObject Nested35 { get; set; } = new();
-        public NestedObject Nested36 { get; set; } = new();
-        public NestedObject Nested37 { get; set; } = new();
-        public NestedObject Nested38 { get; set; } = new();
-        public NestedObject Nested39 { get; set; } = new();
-        public NestedObject Nested40 { get; set; } = new();
-        public NestedObject Nested41 { get; set; } = new();
-        public NestedObject Nested42 { get; set; } = new();
-        public NestedObject Nested43 { get; set; } = new();
-        public NestedObject Nested44 { get; set; } = new();
-        public NestedObject Nested45 { get; set; } = new();
-        public NestedObject Nested46 { get; set; } = new();
-        public NestedObject Nested47 { get; set; } = new();
-        public NestedObject Nested48 { get; set; } = new();
-        public NestedObject Nested49 { get; set; } = new();
-        public NestedObject Nested50 { get; set; } = new();
-    }
-
-    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation scenarios.")]
-    internal sealed class TypeWith51NestedObjects
-    {
-        public NestedObject Nested1 { get; set; } = new();
-        public NestedObject Nested2 { get; set; } = new();
-        public NestedObject Nested3 { get; set; } = new();
-        public NestedObject Nested4 { get; set; } = new();
-        public NestedObject Nested5 { get; set; } = new();
-        public NestedObject Nested6 { get; set; } = new();
-        public NestedObject Nested7 { get; set; } = new();
-        public NestedObject Nested8 { get; set; } = new();
-        public NestedObject Nested9 { get; set; } = new();
-        public NestedObject Nested10 { get; set; } = new();
-        public NestedObject Nested11 { get; set; } = new();
-        public NestedObject Nested12 { get; set; } = new();
-        public NestedObject Nested13 { get; set; } = new();
-        public NestedObject Nested14 { get; set; } = new();
-        public NestedObject Nested15 { get; set; } = new();
-        public NestedObject Nested16 { get; set; } = new();
-        public NestedObject Nested17 { get; set; } = new();
-        public NestedObject Nested18 { get; set; } = new();
-        public NestedObject Nested19 { get; set; } = new();
-        public NestedObject Nested20 { get; set; } = new();
-        public NestedObject Nested21 { get; set; } = new();
-        public NestedObject Nested22 { get; set; } = new();
-        public NestedObject Nested23 { get; set; } = new();
-        public NestedObject Nested24 { get; set; } = new();
-        public NestedObject Nested25 { get; set; } = new();
-        public NestedObject Nested26 { get; set; } = new();
-        public NestedObject Nested27 { get; set; } = new();
-        public NestedObject Nested28 { get; set; } = new();
-        public NestedObject Nested29 { get; set; } = new();
-        public NestedObject Nested30 { get; set; } = new();
-        public NestedObject Nested31 { get; set; } = new();
-        public NestedObject Nested32 { get; set; } = new();
-        public NestedObject Nested33 { get; set; } = new();
-        public NestedObject Nested34 { get; set; } = new();
-        public NestedObject Nested35 { get; set; } = new();
-        public NestedObject Nested36 { get; set; } = new();
-        public NestedObject Nested37 { get; set; } = new();
-        public NestedObject Nested38 { get; set; } = new();
-        public NestedObject Nested39 { get; set; } = new();
-        public NestedObject Nested40 { get; set; } = new();
-        public NestedObject Nested41 { get; set; } = new();
-        public NestedObject Nested42 { get; set; } = new();
-        public NestedObject Nested43 { get; set; } = new();
-        public NestedObject Nested44 { get; set; } = new();
-        public NestedObject Nested45 { get; set; } = new();
-        public NestedObject Nested46 { get; set; } = new();
-        public NestedObject Nested47 { get; set; } = new();
-        public NestedObject Nested48 { get; set; } = new();
-        public NestedObject Nested49 { get; set; } = new();
-        public NestedObject Nested50 { get; set; } = new();
-        public NestedObject Nested51 { get; set; } = new();
-    }
-
-    [Fact]
-    public void AC302_TypeWith50NestedObjects_DoesNotTriggerVirtualization()
-    {
-        // Arrange
-        var options = new SchemaOptions
-        {
-            NestedObjectVirtualizationThreshold = 50,
-            SchemaPropertyVirtualizationThreshold = 1000 // Set high to isolate nested test
-        };
-        var logger = new DiagnosticsLogger();
-        var generator = new SchemaGenerator(options, logger);
-
-        // Act
-        var schema = generator.GenerateSchema(typeof(TypeWith50NestedObjects));
-
-        // Assert
-        Assert.NotNull(schema);
         Assert.Equal("object", schema.Type);
         Assert.False(schema.Extensions.ContainsKey("x-schema-virtualized"));
 
-        var events = logger.GetEvents();
+        // No VIRT001 diagnostic should be emitted
         Assert.DoesNotContain(events, e => e.Code == "VIRT001");
     }
 
+    #endregion
+
+    #region AC 302: Schema with >50 nested objects triggers virtualization
+
     [Fact]
-    public void AC302_TypeWith51NestedObjects_TriggersVirtualization()
+    public void GenerateSchema_SchemaWith51NestedObjects_TriggersVirtualization()
     {
-        // Arrange
-        var options = new SchemaOptions
-        {
-            NestedObjectVirtualizationThreshold = 50,
-            SchemaPropertyVirtualizationThreshold = 1000 // Set high to isolate nested test
-        };
+        // AC 302: Schemas with >50 nested object properties should trigger virtualization
+        var options = new SchemaOptions { NestedObjectVirtualizationThreshold = 50 };
         var logger = new DiagnosticsLogger();
         var generator = new SchemaGenerator(options, logger);
 
-        // Act
-        var schema = generator.GenerateSchema(typeof(TypeWith51NestedObjects));
-
-        // Assert
-        Assert.NotNull(schema);
-        Assert.Equal("object", schema.Type);
-        Assert.True(schema.Extensions.ContainsKey("x-schema-virtualized"));
-
-        // Verify nested object count
-        Assert.True(schema.Extensions.ContainsKey("x-nested-object-count"));
-        var nestedCount = (OpenApiInteger)schema.Extensions["x-nested-object-count"];
-        Assert.Equal(51, nestedCount.Value);
-
-        // Verify VIRT001 diagnostic
+        var schema = generator.GenerateSchema(typeof(TestTypes.TypeWith51NestedObjects));
         var events = logger.GetEvents();
+
+        Assert.Equal("object", schema.Type);
+
+        // Check virtualization metadata
+        Assert.True(schema.Extensions.ContainsKey("x-schema-virtualized"));
+        Assert.True(Assert.IsType<OpenApiBoolean>(schema.Extensions["x-schema-virtualized"]).Value);
+        Assert.Equal(51, Assert.IsType<OpenApiInteger>(schema.Extensions["x-schema-nested-objects"]).Value);
+
+        // Check VIRT001 diagnostic
         var virt001Event = Assert.Single(events, e => e.Code == "VIRT001");
-        Assert.Contains("51 nested objects", virt001Event.Message, StringComparison.Ordinal);
+        Assert.Equal(DiagnosticLevel.Info, virt001Event.Level);
+        Assert.Contains("TypeWith51NestedObjects", virt001Event.Message, StringComparison.Ordinal);
+        Assert.Contains("nested object", virt001Event.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void GenerateSchema_SchemaWith50NestedObjects_DoesNotTriggerVirtualization()
+    {
+        // Exactly at threshold should NOT trigger virtualization
+        var options = new SchemaOptions { NestedObjectVirtualizationThreshold = 50 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        var schema = generator.GenerateSchema(typeof(TestTypes.TypeWith50NestedObjects));
+        var events = logger.GetEvents();
+
+        Assert.Equal("object", schema.Type);
+        Assert.False(schema.Extensions.ContainsKey("x-schema-virtualized"));
+
+        // No VIRT001 diagnostic should be emitted
+        Assert.DoesNotContain(events, e => e.Code == "VIRT001");
     }
 
     #endregion
 
-    #region AC 303: Virtualization Metadata Tests
+    #region AC 303: Placeholder token and lazy loading metadata
 
     [Fact]
-    public void AC303_VirtualizedSchema_ContainsRequiredMetadata()
+    public void GenerateSchema_VirtualizedSchema_ContainsPlaceholderToken()
     {
-        // Arrange
-        var options = new SchemaOptions
-        {
-            SchemaPropertyVirtualizationThreshold = 200
-        };
+        // AC 303: Virtualized schemas should include placeholder token
+        var options = new SchemaOptions { SchemaPropertyVirtualizationThreshold = 10 };
         var logger = new DiagnosticsLogger();
         var generator = new SchemaGenerator(options, logger);
 
-        // Act
-        var schema = generator.GenerateSchema(typeof(TypeWith201Properties));
+        var schema = generator.GenerateSchema(typeof(TestTypes.TypeWith20Properties));
 
-        // Assert - verify all required extension metadata
-        Assert.True(schema.Extensions.ContainsKey("x-schema-virtualized"));
-        Assert.True(((OpenApiBoolean)schema.Extensions["x-schema-virtualized"]).Value);
-
-        Assert.True(schema.Extensions.ContainsKey("x-property-total-count"));
-        Assert.Equal(201, ((OpenApiInteger)schema.Extensions["x-property-total-count"]).Value);
-
-        Assert.True(schema.Extensions.ContainsKey("x-nested-object-count"));
-        Assert.Equal(0, ((OpenApiInteger)schema.Extensions["x-nested-object-count"]).Value);
-
-        Assert.True(schema.Extensions.ContainsKey("x-property-threshold-exceeded"));
-        Assert.True(((OpenApiBoolean)schema.Extensions["x-property-threshold-exceeded"]).Value);
-
-        Assert.True(schema.Extensions.ContainsKey("x-property-threshold"));
-        Assert.Equal(200, ((OpenApiInteger)schema.Extensions["x-property-threshold"]).Value);
-
-        // Description should mention virtualization
         Assert.NotNull(schema.Description);
-        Assert.Contains("virtualized", schema.Description, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("201", schema.Description, StringComparison.Ordinal);
+        Assert.Contains("<virtualized…>", schema.Description, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void AC303_VIRT001Diagnostic_ContainsCorrectInformation()
+    public void GenerateSchema_VirtualizedSchema_ContainsLazyLoadingMetadata()
     {
-        // Arrange
+        // AC 303: Virtualized schemas should include lazy loading metadata
+        var options = new SchemaOptions { SchemaPropertyVirtualizationThreshold = 10 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        var schema = generator.GenerateSchema(typeof(TestTypes.TypeWith20Properties));
+
+        Assert.True(schema.Extensions.ContainsKey("x-schema-virtualized"));
+        Assert.True(schema.Extensions.ContainsKey("x-schema-total-properties"));
+        Assert.True(schema.Extensions.ContainsKey("x-schema-nested-objects"));
+    }
+
+    #endregion
+
+    #region Edge cases and thresholds
+
+    [Fact]
+    public void GenerateSchema_CustomThresholds_RespectedCorrectly()
+    {
+        // Test that custom thresholds work correctly
         var options = new SchemaOptions
         {
-            SchemaPropertyVirtualizationThreshold = 200,
-            NestedObjectVirtualizationThreshold = 50
+            SchemaPropertyVirtualizationThreshold = 5,
+            NestedObjectVirtualizationThreshold = 2
         };
         var logger = new DiagnosticsLogger();
         var generator = new SchemaGenerator(options, logger);
 
-        // Act
-        var schema = generator.GenerateSchema(typeof(TypeWith201Properties));
-
-        // Assert
+        var schema = generator.GenerateSchema(typeof(TestTypes.TypeWith10Properties));
         var events = logger.GetEvents();
+
+        Assert.True(schema.Extensions.ContainsKey("x-schema-virtualized"));
+        Assert.Single(events, e => e.Code == "VIRT001");
+    }
+
+    [Fact]
+    public void GenerateSchema_VirtualizationContext_IncludesCorrectCounts()
+    {
+        // Verify that diagnostic context includes all required information
+        var options = new SchemaOptions { SchemaPropertyVirtualizationThreshold = 10 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        _ = generator.GenerateSchema(typeof(TestTypes.TypeWith20Properties));
+        var events = logger.GetEvents();
+
         var virt001Event = Assert.Single(events, e => e.Code == "VIRT001");
-
-        Assert.Equal(DiagnosticLevel.Info, virt001Event.Level);
-        Assert.Contains("TypeWith201Properties", virt001Event.Message, StringComparison.Ordinal);
-        Assert.Contains("201 properties", virt001Event.Message, StringComparison.Ordinal);
-        Assert.Contains("threshold", virt001Event.Message, StringComparison.OrdinalIgnoreCase);
-
-        // Context should contain detailed information
         Assert.NotNull(virt001Event.Context);
     }
 
     [Fact]
-    public void AC303_BothThresholdsExceeded_IndicatedInMetadata()
+    public void GenerateSchema_PrimitiveTypes_NeverVirtualized()
     {
-        // Arrange - create type that exceeds both thresholds
+        // Primitive types should never be virtualized regardless of threshold
+        var options = new SchemaOptions { SchemaPropertyVirtualizationThreshold = 0 };
+        var logger = new DiagnosticsLogger();
+        var generator = new SchemaGenerator(options, logger);
+
+        var types = new[]
+        {
+            typeof(int), typeof(string), typeof(bool), typeof(DateTime),
+            typeof(Guid), typeof(decimal), typeof(double)
+        };
+
+        foreach (var type in types)
+        {
+            var schema = generator.GenerateSchema(type);
+            Assert.False(schema.Extensions.ContainsKey("x-schema-virtualized"),
+                $"Type {type.Name} should not be virtualized");
+        }
+
+        var events = logger.GetEvents();
+        Assert.DoesNotContain(events, e => e.Code == "VIRT001");
+    }
+
+    [Fact]
+    public void GenerateSchema_NestedObjectCount_ExcludesPrimitives()
+    {
+        // Nested object count should only count complex types, not primitives
         var options = new SchemaOptions
         {
-            SchemaPropertyVirtualizationThreshold = 50,
-            NestedObjectVirtualizationThreshold = 50
+            SchemaPropertyVirtualizationThreshold = 1000,
+            NestedObjectVirtualizationThreshold = 5
         };
         var logger = new DiagnosticsLogger();
         var generator = new SchemaGenerator(options, logger);
 
-        // Act - TypeWith51NestedObjects has 51 total properties, all are nested objects
-        var schema = generator.GenerateSchema(typeof(TypeWith51NestedObjects));
+        // This type has 10 properties but only 3 are nested objects
+        var schema = generator.GenerateSchema(typeof(TestTypes.TypeWithMixedProperties));
 
-        // Assert - both thresholds should be exceeded
-        Assert.True(schema.Extensions.ContainsKey("x-property-threshold-exceeded"));
-        Assert.True(((OpenApiBoolean)schema.Extensions["x-property-threshold-exceeded"]).Value);
-
-        Assert.True(schema.Extensions.ContainsKey("x-nested-threshold-exceeded"));
-        Assert.True(((OpenApiBoolean)schema.Extensions["x-nested-threshold-exceeded"]).Value);
-
-        // Verify the counts
-        Assert.Equal(51, ((OpenApiInteger)schema.Extensions["x-property-total-count"]).Value);
-        Assert.Equal(51, ((OpenApiInteger)schema.Extensions["x-nested-object-count"]).Value);
-
-        var description = schema.Description;
-        Assert.NotNull(description);
-        Assert.Contains("both", description, StringComparison.OrdinalIgnoreCase);
+        // Should not trigger virtualization because only 3 nested objects (< 5)
+        Assert.False(schema.Extensions.ContainsKey("x-schema-virtualized"));
     }
 
     #endregion
 
-    #region Edge Case Tests
+    #region Test Types
 
-    [Fact]
-    public void PrimitiveTypes_NeverVirtualized()
+    private static class TestTypes
     {
-        // Arrange
-        var options = new SchemaOptions
+        [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation tests.")]
+        public class TypeWith200Properties
         {
-            SchemaPropertyVirtualizationThreshold = 0,
-            NestedObjectVirtualizationThreshold = 0
-        };
-        var logger = new DiagnosticsLogger();
-        var generator = new SchemaGenerator(options, logger);
+            // Generate 200 properties
+            public int Prop001 { get; set; }
+            public int Prop002 { get; set; }
+            public int Prop003 { get; set; }
+            public int Prop004 { get; set; }
+            public int Prop005 { get; set; }
+            public int Prop006 { get; set; }
+            public int Prop007 { get; set; }
+            public int Prop008 { get; set; }
+            public int Prop009 { get; set; }
+            public int Prop010 { get; set; }
+            public int Prop011 { get; set; }
+            public int Prop012 { get; set; }
+            public int Prop013 { get; set; }
+            public int Prop014 { get; set; }
+            public int Prop015 { get; set; }
+            public int Prop016 { get; set; }
+            public int Prop017 { get; set; }
+            public int Prop018 { get; set; }
+            public int Prop019 { get; set; }
+            public int Prop020 { get; set; }
+            public int Prop021 { get; set; }
+            public int Prop022 { get; set; }
+            public int Prop023 { get; set; }
+            public int Prop024 { get; set; }
+            public int Prop025 { get; set; }
+            public int Prop026 { get; set; }
+            public int Prop027 { get; set; }
+            public int Prop028 { get; set; }
+            public int Prop029 { get; set; }
+            public int Prop030 { get; set; }
+            public int Prop031 { get; set; }
+            public int Prop032 { get; set; }
+            public int Prop033 { get; set; }
+            public int Prop034 { get; set; }
+            public int Prop035 { get; set; }
+            public int Prop036 { get; set; }
+            public int Prop037 { get; set; }
+            public int Prop038 { get; set; }
+            public int Prop039 { get; set; }
+            public int Prop040 { get; set; }
+            public int Prop041 { get; set; }
+            public int Prop042 { get; set; }
+            public int Prop043 { get; set; }
+            public int Prop044 { get; set; }
+            public int Prop045 { get; set; }
+            public int Prop046 { get; set; }
+            public int Prop047 { get; set; }
+            public int Prop048 { get; set; }
+            public int Prop049 { get; set; }
+            public int Prop050 { get; set; }
+            public int Prop051 { get; set; }
+            public int Prop052 { get; set; }
+            public int Prop053 { get; set; }
+            public int Prop054 { get; set; }
+            public int Prop055 { get; set; }
+            public int Prop056 { get; set; }
+            public int Prop057 { get; set; }
+            public int Prop058 { get; set; }
+            public int Prop059 { get; set; }
+            public int Prop060 { get; set; }
+            public int Prop061 { get; set; }
+            public int Prop062 { get; set; }
+            public int Prop063 { get; set; }
+            public int Prop064 { get; set; }
+            public int Prop065 { get; set; }
+            public int Prop066 { get; set; }
+            public int Prop067 { get; set; }
+            public int Prop068 { get; set; }
+            public int Prop069 { get; set; }
+            public int Prop070 { get; set; }
+            public int Prop071 { get; set; }
+            public int Prop072 { get; set; }
+            public int Prop073 { get; set; }
+            public int Prop074 { get; set; }
+            public int Prop075 { get; set; }
+            public int Prop076 { get; set; }
+            public int Prop077 { get; set; }
+            public int Prop078 { get; set; }
+            public int Prop079 { get; set; }
+            public int Prop080 { get; set; }
+            public int Prop081 { get; set; }
+            public int Prop082 { get; set; }
+            public int Prop083 { get; set; }
+            public int Prop084 { get; set; }
+            public int Prop085 { get; set; }
+            public int Prop086 { get; set; }
+            public int Prop087 { get; set; }
+            public int Prop088 { get; set; }
+            public int Prop089 { get; set; }
+            public int Prop090 { get; set; }
+            public int Prop091 { get; set; }
+            public int Prop092 { get; set; }
+            public int Prop093 { get; set; }
+            public int Prop094 { get; set; }
+            public int Prop095 { get; set; }
+            public int Prop096 { get; set; }
+            public int Prop097 { get; set; }
+            public int Prop098 { get; set; }
+            public int Prop099 { get; set; }
+            public int Prop100 { get; set; }
+            public int Prop101 { get; set; }
+            public int Prop102 { get; set; }
+            public int Prop103 { get; set; }
+            public int Prop104 { get; set; }
+            public int Prop105 { get; set; }
+            public int Prop106 { get; set; }
+            public int Prop107 { get; set; }
+            public int Prop108 { get; set; }
+            public int Prop109 { get; set; }
+            public int Prop110 { get; set; }
+            public int Prop111 { get; set; }
+            public int Prop112 { get; set; }
+            public int Prop113 { get; set; }
+            public int Prop114 { get; set; }
+            public int Prop115 { get; set; }
+            public int Prop116 { get; set; }
+            public int Prop117 { get; set; }
+            public int Prop118 { get; set; }
+            public int Prop119 { get; set; }
+            public int Prop120 { get; set; }
+            public int Prop121 { get; set; }
+            public int Prop122 { get; set; }
+            public int Prop123 { get; set; }
+            public int Prop124 { get; set; }
+            public int Prop125 { get; set; }
+            public int Prop126 { get; set; }
+            public int Prop127 { get; set; }
+            public int Prop128 { get; set; }
+            public int Prop129 { get; set; }
+            public int Prop130 { get; set; }
+            public int Prop131 { get; set; }
+            public int Prop132 { get; set; }
+            public int Prop133 { get; set; }
+            public int Prop134 { get; set; }
+            public int Prop135 { get; set; }
+            public int Prop136 { get; set; }
+            public int Prop137 { get; set; }
+            public int Prop138 { get; set; }
+            public int Prop139 { get; set; }
+            public int Prop140 { get; set; }
+            public int Prop141 { get; set; }
+            public int Prop142 { get; set; }
+            public int Prop143 { get; set; }
+            public int Prop144 { get; set; }
+            public int Prop145 { get; set; }
+            public int Prop146 { get; set; }
+            public int Prop147 { get; set; }
+            public int Prop148 { get; set; }
+            public int Prop149 { get; set; }
+            public int Prop150 { get; set; }
+            public int Prop151 { get; set; }
+            public int Prop152 { get; set; }
+            public int Prop153 { get; set; }
+            public int Prop154 { get; set; }
+            public int Prop155 { get; set; }
+            public int Prop156 { get; set; }
+            public int Prop157 { get; set; }
+            public int Prop158 { get; set; }
+            public int Prop159 { get; set; }
+            public int Prop160 { get; set; }
+            public int Prop161 { get; set; }
+            public int Prop162 { get; set; }
+            public int Prop163 { get; set; }
+            public int Prop164 { get; set; }
+            public int Prop165 { get; set; }
+            public int Prop166 { get; set; }
+            public int Prop167 { get; set; }
+            public int Prop168 { get; set; }
+            public int Prop169 { get; set; }
+            public int Prop170 { get; set; }
+            public int Prop171 { get; set; }
+            public int Prop172 { get; set; }
+            public int Prop173 { get; set; }
+            public int Prop174 { get; set; }
+            public int Prop175 { get; set; }
+            public int Prop176 { get; set; }
+            public int Prop177 { get; set; }
+            public int Prop178 { get; set; }
+            public int Prop179 { get; set; }
+            public int Prop180 { get; set; }
+            public int Prop181 { get; set; }
+            public int Prop182 { get; set; }
+            public int Prop183 { get; set; }
+            public int Prop184 { get; set; }
+            public int Prop185 { get; set; }
+            public int Prop186 { get; set; }
+            public int Prop187 { get; set; }
+            public int Prop188 { get; set; }
+            public int Prop189 { get; set; }
+            public int Prop190 { get; set; }
+            public int Prop191 { get; set; }
+            public int Prop192 { get; set; }
+            public int Prop193 { get; set; }
+            public int Prop194 { get; set; }
+            public int Prop195 { get; set; }
+            public int Prop196 { get; set; }
+            public int Prop197 { get; set; }
+            public int Prop198 { get; set; }
+            public int Prop199 { get; set; }
+            public int Prop200 { get; set; }
+        }
 
-        // Act & Assert - primitives should never be virtualized
-        var stringSchema = generator.GenerateSchema(typeof(string));
-        Assert.False(stringSchema.Extensions.ContainsKey("x-schema-virtualized"));
-
-        var intSchema = generator.GenerateSchema(typeof(int));
-        Assert.False(intSchema.Extensions.ContainsKey("x-schema-virtualized"));
-
-        var guidSchema = generator.GenerateSchema(typeof(Guid));
-        Assert.False(guidSchema.Extensions.ContainsKey("x-schema-virtualized"));
-    }
-
-    public enum TestEnum
-    {
-        Value1,
-        Value2,
-        Value3
-    }
-
-    [Fact]
-    public void EnumTypes_NeverVirtualizedBySchemaVirtualization()
-    {
-        // Arrange
-        var options = new SchemaOptions
+        [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation tests.")]
+        public sealed class TypeWith201Properties : TypeWith200Properties
         {
-            SchemaPropertyVirtualizationThreshold = 0,
-            NestedObjectVirtualizationThreshold = 0
-        };
-        var logger = new DiagnosticsLogger();
-        var generator = new SchemaGenerator(options, logger);
+            public int Prop201 { get; set; }
+        }
 
-        // Act
-        var schema = generator.GenerateSchema(typeof(TestEnum));
-
-        // Assert - enums have their own virtualization (AC 440), not schema virtualization
-        Assert.False(schema.Extensions.ContainsKey("x-schema-virtualized"));
-    }
-
-    [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation scenarios.")]
-    internal sealed class TypeWithMixedProperties
-    {
-        public string String1 { get; set; } = string.Empty;
-        public string String2 { get; set; } = string.Empty;
-        public string String3 { get; set; } = string.Empty;
-        public NestedObject Object1 { get; set; } = new();
-        public NestedObject Object2 { get; set; } = new();
-        public int Int1 { get; set; }
-        public IList<string> List1 { get; set; } = new List<string>();
-        public Dictionary<string, int> Dict1 { get; set; } = new();
-    }
-
-    [Fact]
-    public void MixedPropertyTypes_CountedCorrectly()
-    {
-        // Arrange
-        var options = new SchemaOptions
+        [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation tests.")]
+        public sealed class TypeWith20Properties
         {
-            SchemaPropertyVirtualizationThreshold = 7,
-            NestedObjectVirtualizationThreshold = 1
-        };
-        var logger = new DiagnosticsLogger();
-        var generator = new SchemaGenerator(options, logger);
+            public int Prop01 { get; set; }
+            public int Prop02 { get; set; }
+            public int Prop03 { get; set; }
+            public int Prop04 { get; set; }
+            public int Prop05 { get; set; }
+            public int Prop06 { get; set; }
+            public int Prop07 { get; set; }
+            public int Prop08 { get; set; }
+            public int Prop09 { get; set; }
+            public int Prop10 { get; set; }
+            public int Prop11 { get; set; }
+            public int Prop12 { get; set; }
+            public int Prop13 { get; set; }
+            public int Prop14 { get; set; }
+            public int Prop15 { get; set; }
+            public int Prop16 { get; set; }
+            public int Prop17 { get; set; }
+            public int Prop18 { get; set; }
+            public int Prop19 { get; set; }
+            public int Prop20 { get; set; }
+        }
 
-        // Act - type has 8 total properties, 2 nested objects
-        var schema = generator.GenerateSchema(typeof(TypeWithMixedProperties));
+        [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation tests.")]
+        public sealed class TypeWith10Properties
+        {
+            public int Prop01 { get; set; }
+            public int Prop02 { get; set; }
+            public int Prop03 { get; set; }
+            public int Prop04 { get; set; }
+            public int Prop05 { get; set; }
+            public int Prop06 { get; set; }
+            public int Prop07 { get; set; }
+            public int Prop08 { get; set; }
+            public int Prop09 { get; set; }
+            public int Prop10 { get; set; }
+        }
 
-        // Assert
-        Assert.True(schema.Extensions.ContainsKey("x-schema-virtualized"));
-        Assert.Equal(8, ((OpenApiInteger)schema.Extensions["x-property-total-count"]).Value);
-        Assert.Equal(2, ((OpenApiInteger)schema.Extensions["x-nested-object-count"]).Value);
+        public sealed class NestedComplexType
+        {
+            public int Value { get; set; }
+        }
+
+        public class TypeWith50NestedObjects
+        {
+            public NestedComplexType Obj01 { get; set; } = new();
+            public NestedComplexType Obj02 { get; set; } = new();
+            public NestedComplexType Obj03 { get; set; } = new();
+            public NestedComplexType Obj04 { get; set; } = new();
+            public NestedComplexType Obj05 { get; set; } = new();
+            public NestedComplexType Obj06 { get; set; } = new();
+            public NestedComplexType Obj07 { get; set; } = new();
+            public NestedComplexType Obj08 { get; set; } = new();
+            public NestedComplexType Obj09 { get; set; } = new();
+            public NestedComplexType Obj10 { get; set; } = new();
+            public NestedComplexType Obj11 { get; set; } = new();
+            public NestedComplexType Obj12 { get; set; } = new();
+            public NestedComplexType Obj13 { get; set; } = new();
+            public NestedComplexType Obj14 { get; set; } = new();
+            public NestedComplexType Obj15 { get; set; } = new();
+            public NestedComplexType Obj16 { get; set; } = new();
+            public NestedComplexType Obj17 { get; set; } = new();
+            public NestedComplexType Obj18 { get; set; } = new();
+            public NestedComplexType Obj19 { get; set; } = new();
+            public NestedComplexType Obj20 { get; set; } = new();
+            public NestedComplexType Obj21 { get; set; } = new();
+            public NestedComplexType Obj22 { get; set; } = new();
+            public NestedComplexType Obj23 { get; set; } = new();
+            public NestedComplexType Obj24 { get; set; } = new();
+            public NestedComplexType Obj25 { get; set; } = new();
+            public NestedComplexType Obj26 { get; set; } = new();
+            public NestedComplexType Obj27 { get; set; } = new();
+            public NestedComplexType Obj28 { get; set; } = new();
+            public NestedComplexType Obj29 { get; set; } = new();
+            public NestedComplexType Obj30 { get; set; } = new();
+            public NestedComplexType Obj31 { get; set; } = new();
+            public NestedComplexType Obj32 { get; set; } = new();
+            public NestedComplexType Obj33 { get; set; } = new();
+            public NestedComplexType Obj34 { get; set; } = new();
+            public NestedComplexType Obj35 { get; set; } = new();
+            public NestedComplexType Obj36 { get; set; } = new();
+            public NestedComplexType Obj37 { get; set; } = new();
+            public NestedComplexType Obj38 { get; set; } = new();
+            public NestedComplexType Obj39 { get; set; } = new();
+            public NestedComplexType Obj40 { get; set; } = new();
+            public NestedComplexType Obj41 { get; set; } = new();
+            public NestedComplexType Obj42 { get; set; } = new();
+            public NestedComplexType Obj43 { get; set; } = new();
+            public NestedComplexType Obj44 { get; set; } = new();
+            public NestedComplexType Obj45 { get; set; } = new();
+            public NestedComplexType Obj46 { get; set; } = new();
+            public NestedComplexType Obj47 { get; set; } = new();
+            public NestedComplexType Obj48 { get; set; } = new();
+            public NestedComplexType Obj49 { get; set; } = new();
+            public NestedComplexType Obj50 { get; set; } = new();
+        }
+
+        [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation tests.")]
+        public sealed class TypeWith51NestedObjects : TypeWith50NestedObjects
+        {
+            public NestedComplexType Obj51 { get; set; } = new();
+        }
+
+        [SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Types are used via typeof for schema generation tests.")]
+        public sealed class TypeWithMixedProperties
+        {
+            // 7 primitive properties
+            public int IntProp { get; set; }
+            public string StringProp { get; set; } = string.Empty;
+            public bool BoolProp { get; set; }
+            public DateTime DateProp { get; set; }
+            public Guid GuidProp { get; set; }
+            public decimal DecimalProp { get; set; }
+            public double DoubleProp { get; set; }
+
+            // 3 complex object properties
+            public NestedComplexType Obj1 { get; set; } = new();
+            public NestedComplexType Obj2 { get; set; } = new();
+            public NestedComplexType Obj3 { get; set; } = new();
+        }
     }
 
     #endregion

@@ -122,16 +122,17 @@ public partial class SchemaGenerator
     }
 
     /// <summary>
-    /// Creates a schema for an object type, applying virtualization if necessary.
+    /// Creates an object schema with virtualization support.
     /// </summary>
     private OpenApiSchema CreateObjectSchema(Type type)
     {
         var schema = new OpenApiSchema { Type = "object" };
 
-        // Check if virtualization should be applied (AC 301-303)
-        if (ShouldVirtualizeSchema(type, out var propertyCount, out var nestedObjectCount))
+        // AC 301-303: Check if schema requires virtualization
+        var analysis = AnalyzeSchemaForVirtualization(type);
+        if (analysis.RequiresVirtualization)
         {
-            ApplySchemaVirtualization(schema, type, propertyCount, nestedObjectCount);
+            ApplySchemaVirtualization(schema, type, analysis);
         }
 
         return schema;

@@ -38,16 +38,16 @@ public class SchemaOptions
     public int EnumVirtualizationThreshold { get; set; } = 10_000;
 
     /// <summary>
-    /// Gets or sets the threshold for schema property count virtualization.
+    /// Gets or sets the threshold for schema property virtualization.
     /// Schemas with more properties than this threshold will be virtualized.
-    /// Default is 200 (AC 301).
+    /// Default is 200.
     /// </summary>
     public int SchemaPropertyVirtualizationThreshold { get; set; } = 200;
 
     /// <summary>
     /// Gets or sets the threshold for nested object property virtualization.
     /// Schemas with more nested object properties than this threshold will be virtualized.
-    /// Default is 50 (AC 302).
+    /// Default is 50.
     /// </summary>
     public int NestedObjectVirtualizationThreshold { get; set; } = 50;
 
