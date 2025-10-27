@@ -39,4 +39,8 @@ public class SecureSpecOptions
     /// Gets performance and resource guard options.
     /// </summary>
     public PerformanceOptions Performance { get; } = new();
+
+    /// Gets media type handling and content negotiation options.
+    /// </summary>
+    public MediaTypeOptions MediaTypes { get; } = new();
 }
