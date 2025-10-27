@@ -1,5 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using SecureSpec.AspNetCore.Configuration;
+using SecureSpec.AspNetCore.Core;
+using SecureSpec.AspNetCore.Diagnostics;
 
 namespace SecureSpec.AspNetCore;
 
@@ -24,8 +27,19 @@ public static class SecureSpecServiceCollectionExtensions
         // Configure options
         services.Configure(configure);
 
+        // Register diagnostics logger as singleton
+        services.AddSingleton<DiagnosticsLogger>();
+
+        // Register document cache as singleton
+        services.AddSingleton<DocumentCache>(sp =>
+        {
+            var logger = sp.GetRequiredService<DiagnosticsLogger>();
+            var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
+            return new DocumentCache(logger, options.Cache.DefaultExpiration);
+        });
+
         // Register core services
-        // TODO: Register services as they are implemented
+        // TODO: Register additional services as they are implemented
 
         return services;
     }
