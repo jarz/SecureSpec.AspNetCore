@@ -52,11 +52,19 @@ builder.Services.AddSecureSpec(options =>
     options.UI.DefaultModelsExpandDepth = 2;
     options.UI.EnableFiltering = true;
     options.UI.EnableTryItOut = true;
+
+    // Configure asset caching with integrity revalidation
+    options.UI.Assets.CacheLifetimeSeconds = 3600; // 1 hour
+    options.UI.Assets.EnableIntegrityRevalidation = true;
+    options.UI.Assets.AllowPublicCache = true;
 });
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+
+// Enable asset caching middleware for UI assets
+app.UseSecureSpecAssetCache();
 
 app.UseHttpsRedirection();
 
