@@ -52,9 +52,20 @@ public static class MediaTypeOrdering
     /// </returns>
     public static int Compare(string? x, string? y)
     {
-        if (x == y) return 0;
-        if (x is null) return -1;
-        if (y is null) return 1;
+        if (x == y)
+        {
+            return 0;
+        }
+
+        if (x is null)
+        {
+            return -1;
+        }
+
+        if (y is null)
+        {
+            return 1;
+        }
 
         // Normalize to lowercase for comparison
         // CA1308: Using ToLowerInvariant is appropriate for case-insensitive media type comparison
@@ -73,8 +84,15 @@ public static class MediaTypeOrdering
         }
 
         // If one has priority and other doesn't
-        if (xPriority >= 0) return -1;
-        if (yPriority >= 0) return 1;
+        if (xPriority >= 0)
+        {
+            return -1;
+        }
+
+        if (yPriority >= 0)
+        {
+            return 1;
+        }
 
         // Both are in the middle section - use lexical ordering
         // unless one or both are in trailing section
@@ -88,8 +106,15 @@ public static class MediaTypeOrdering
         }
 
         // If one is trailing and other is not
-        if (xTrailing >= 0) return 1;  // x goes after
-        if (yTrailing >= 0) return -1; // y goes after
+        if (xTrailing >= 0)
+        {
+            return 1;  // x goes after
+        }
+
+        if (yTrailing >= 0)
+        {
+            return -1; // y goes after
+        }
 
         // Both are in middle section - lexical ordering
         return string.CompareOrdinal(xNorm, yNorm);
