@@ -109,6 +109,28 @@ public class SecurityOptions
     }
 
     /// <summary>
+    /// Adds a Mutual TLS authentication scheme (display only).
+    /// </summary>
+    /// <param name="name">The name of the security scheme (e.g., "mutualTLS").</param>
+    /// <param name="configure">An optional action to configure the scheme.</param>
+    /// <remarks>
+    /// Mutual TLS (mTLS) requires client certificates to be configured at the TLS/SSL layer.
+    /// This method registers the scheme for OpenAPI documentation purposes only.
+    /// Certificate upload functionality is not supported; certificates must be managed
+    /// externally through infrastructure configuration (e.g., API Gateway, Load Balancer, or web server).
+    /// </remarks>
+    public void AddMutualTls(string name, Action<MutualTlsSchemeBuilder>? configure = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        var builder = new MutualTlsSchemeBuilder();
+        configure?.Invoke(builder);
+
+        var scheme = builder.Build();
+        _schemes[name] = scheme;
+    }
+
+    /// <summary>
     /// Gets all registered security schemes.
     /// </summary>
     public IReadOnlyDictionary<string, OpenApiSecurityScheme> Schemes => _schemes;
