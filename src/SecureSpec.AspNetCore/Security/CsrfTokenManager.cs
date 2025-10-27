@@ -39,6 +39,7 @@ public class CsrfTokenManager
     private readonly TimeSpan _tokenLifetime;
     private readonly Dictionary<string, CsrfTokenEntry> _tokens;
     private readonly object _lock = new();
+    private readonly TimeProvider _timeProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CsrfTokenManager"/> class.
@@ -50,12 +51,16 @@ public class CsrfTokenManager
     /// <param name="tokenLifetime">
     /// Lifetime of CSRF tokens. Defaults to 15 minutes.
     /// </param>
+    /// <param name="timeProvider">
+    /// Time provider for getting current time. If null, uses TimeProvider.System.
+    /// </param>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when tokenLength is outside the valid range (16-64 bytes).
     /// </exception>
     public CsrfTokenManager(
         int tokenLength = DefaultTokenLength,
-        TimeSpan? tokenLifetime = null)
+        TimeSpan? tokenLifetime = null,
+        TimeProvider? timeProvider = null)
     {
         if (tokenLength < MinTokenLength || tokenLength > MaxTokenLength)
         {
@@ -68,6 +73,7 @@ public class CsrfTokenManager
         _tokenLength = tokenLength;
         _tokenLifetime = tokenLifetime ?? DefaultTokenLifetime;
         _tokens = new Dictionary<string, CsrfTokenEntry>(StringComparer.Ordinal);
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     /// <summary>
@@ -100,8 +106,8 @@ public class CsrfTokenManager
             _tokens[token] = new CsrfTokenEntry
             {
                 State = state,
-                CreatedAt = DateTimeOffset.UtcNow,
-                ExpiresAt = DateTimeOffset.UtcNow.Add(_tokenLifetime)
+                CreatedAt = _timeProvider.GetUtcNow(),
+                ExpiresAt = _timeProvider.GetUtcNow().Add(_tokenLifetime)
             };
         }
 
@@ -143,7 +149,7 @@ public class CsrfTokenManager
             }
 
             // Check if token has expired
-            if (entry.ExpiresAt <= DateTimeOffset.UtcNow)
+            if (entry.ExpiresAt <= _timeProvider.GetUtcNow())
             {
                 _tokens.Remove(token);
                 return false;
@@ -188,7 +194,7 @@ public class CsrfTokenManager
             }
 
             // Check if token has expired
-            if (entry.ExpiresAt <= DateTimeOffset.UtcNow)
+            if (entry.ExpiresAt <= _timeProvider.GetUtcNow())
             {
                 return false;
             }
@@ -255,7 +261,7 @@ public class CsrfTokenManager
     {
         lock (_lock)
         {
-            var now = DateTimeOffset.UtcNow;
+            var now = _timeProvider.GetUtcNow();
             var expiredTokens = _tokens
                 .Where(kvp => kvp.Value.ExpiresAt <= now)
                 .Select(kvp => kvp.Key)

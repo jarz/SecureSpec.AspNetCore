@@ -31,4 +31,8 @@
     <PackageReference Include="Roslynator.Formatting.Analyzers" PrivateAssets="All" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="UI\Assets\**\*" />
+  </ItemGroup>
+
 </Project>
