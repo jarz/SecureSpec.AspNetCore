@@ -77,7 +77,9 @@ public class DiagnosticsLogger
     public static string SanitizeHash(string value)
     {
         if (string.IsNullOrEmpty(value))
+        {
             return string.Empty;
+        }
 
         return value.Length <= 8 ? value : string.Concat(value.AsSpan(0, 8), "...");
     }
@@ -91,7 +93,9 @@ public class DiagnosticsLogger
     public static string SanitizePath(string path)
     {
         if (string.IsNullOrEmpty(path))
+        {
             return string.Empty;
+        }
 
         // Handle both Windows and Unix path separators
         var lastBackslash = path.LastIndexOf('\\');
