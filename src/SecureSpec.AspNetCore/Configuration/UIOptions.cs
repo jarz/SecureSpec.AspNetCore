@@ -39,4 +39,9 @@ public class UIOptions
     /// Gets or sets the document title.
     /// </summary>
     public string? DocumentTitle { get; set; }
+
+    /// <summary>
+    /// Gets the asset cache configuration options.
+    /// </summary>
+    public AssetCacheOptions Assets { get; } = new();
 }
