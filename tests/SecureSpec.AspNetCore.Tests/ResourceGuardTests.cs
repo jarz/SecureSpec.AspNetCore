@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Time.Testing;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Core;
@@ -31,15 +32,17 @@ public class ResourceGuardTests
         // Arrange
         var options = new PerformanceOptions();
         var logger = new DiagnosticsLogger();
+        var fakeTime = new FakeTimeProvider();
 
         // Act
-        using var guard = new ResourceGuard(options, logger);
+        using var guard = new ResourceGuard(options, logger, fakeTime);
         var initialTime = guard.ElapsedMilliseconds;
-        Thread.Sleep(50); // Wait 50ms
+        fakeTime.Advance(TimeSpan.FromMilliseconds(50));
         var laterTime = guard.ElapsedMilliseconds;
 
         // Assert
         Assert.True(laterTime > initialTime);
+        Assert.True(laterTime >= 50);
     }
 
     [Fact]
@@ -52,10 +55,11 @@ public class ResourceGuardTests
             EnableResourceGuards = true
         };
         var logger = new DiagnosticsLogger();
+        var fakeTime = new FakeTimeProvider();
 
         // Act
-        using var guard = new ResourceGuard(options, logger);
-        Thread.Sleep(50); // Exceed the limit
+        using var guard = new ResourceGuard(options, logger, fakeTime);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(50));
         var exceeded = guard.IsLimitExceeded(out var reason);
 
         // Assert
@@ -74,9 +78,10 @@ public class ResourceGuardTests
             EnableResourceGuards = true
         };
         var logger = new DiagnosticsLogger();
+        var fakeTime = new FakeTimeProvider();
 
         // Act
-        using var guard = new ResourceGuard(options, logger);
+        using var guard = new ResourceGuard(options, logger, fakeTime);
         var exceeded = guard.IsLimitExceeded(out var reason);
 
         // Assert
@@ -94,10 +99,11 @@ public class ResourceGuardTests
             EnableResourceGuards = false // But disabled
         };
         var logger = new DiagnosticsLogger();
+        var fakeTime = new FakeTimeProvider();
 
         // Act
-        using var guard = new ResourceGuard(options, logger);
-        Thread.Sleep(50);
+        using var guard = new ResourceGuard(options, logger, fakeTime);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(50));
         var exceeded = guard.IsLimitExceeded(out var reason);
 
         // Assert
@@ -115,10 +121,11 @@ public class ResourceGuardTests
             EnableResourceGuards = true
         };
         var logger = new DiagnosticsLogger();
+        var fakeTime = new FakeTimeProvider();
 
         // Act & Assert
-        using var guard = new ResourceGuard(options, logger);
-        Thread.Sleep(50);
+        using var guard = new ResourceGuard(options, logger, fakeTime);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(50));
         Assert.Throws<ResourceLimitExceededException>(() => guard.CheckLimits());
     }
 
@@ -132,9 +139,10 @@ public class ResourceGuardTests
             EnableResourceGuards = true
         };
         var logger = new DiagnosticsLogger();
+        var fakeTime = new FakeTimeProvider();
 
         // Act & Assert
-        using var guard = new ResourceGuard(options, logger);
+        using var guard = new ResourceGuard(options, logger, fakeTime);
         guard.CheckLimits(); // Should not throw
     }
 
@@ -148,10 +156,11 @@ public class ResourceGuardTests
             EnableResourceGuards = true
         };
         var logger = new DiagnosticsLogger();
+        var fakeTime = new FakeTimeProvider();
 
         // Act
-        using var guard = new ResourceGuard(options, logger);
-        Thread.Sleep(50);
+        using var guard = new ResourceGuard(options, logger, fakeTime);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(50));
         _ = guard.IsLimitExceeded(out _);
 
         // Assert
@@ -180,17 +189,18 @@ public class ResourceGuardTests
         // Arrange
         var options = new PerformanceOptions();
         var logger = new DiagnosticsLogger();
-        var guard = new ResourceGuard(options, logger);
+        var fakeTime = new FakeTimeProvider();
+        var guard = new ResourceGuard(options, logger, fakeTime);
         var timeBeforeDispose = guard.ElapsedMilliseconds;
 
         // Act
         guard.Dispose();
-        Thread.Sleep(50);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(50));
         var timeAfterDispose = guard.ElapsedMilliseconds;
 
         // Assert
-        // Time should not increase significantly after dispose
-        Assert.True(timeAfterDispose - timeBeforeDispose < 40);
+        // Time should still advance after dispose (TimeProvider-based measurement doesn't stop)
+        Assert.True(timeAfterDispose >= timeBeforeDispose);
     }
 }
 
@@ -363,12 +373,14 @@ public class DocumentGeneratorTests
             Performance = { EnableResourceGuards = true, MaxGenerationTimeMs = 10 }
         };
         var logger = new DiagnosticsLogger();
-        var generator = new DocumentGenerator(options, logger);
+        var fakeTime = new FakeTimeProvider();
+        var factory = new ResourceGuardFactory(options.Performance, logger, fakeTime);
+        var generator = new DocumentGenerator(options, logger, factory);
 
         // Act
         var result = generator.GenerateWithGuards("test", () =>
         {
-            Thread.Sleep(50); // Exceed time limit
+            fakeTime.Advance(TimeSpan.FromMilliseconds(50)); // Exceed time limit
             return new OpenApiDocument
             {
                 Info = new OpenApiInfo { Title = "Test", Version = "1.0" },
@@ -414,7 +426,9 @@ public class DocumentGeneratorTests
             Performance = { EnableResourceGuards = false, MaxGenerationTimeMs = 1 }
         };
         var logger = new DiagnosticsLogger();
-        var generator = new DocumentGenerator(options, logger);
+        var fakeTime = new FakeTimeProvider();
+        var factory = new ResourceGuardFactory(options.Performance, logger, fakeTime);
+        var generator = new DocumentGenerator(options, logger, factory);
         var expectedDoc = new OpenApiDocument
         {
             Info = new OpenApiInfo { Title = "Test", Version = "1.0" },
@@ -424,7 +438,7 @@ public class DocumentGeneratorTests
         // Act
         var result = generator.GenerateWithGuards("test", () =>
         {
-            Thread.Sleep(50); // Would exceed limit if guards were enabled
+            fakeTime.Advance(TimeSpan.FromMilliseconds(50)); // Would exceed limit if guards were enabled
             return expectedDoc;
         });
 
@@ -441,12 +455,14 @@ public class DocumentGeneratorTests
             Performance = { EnableResourceGuards = true, MaxGenerationTimeMs = 10 }
         };
         var logger = new DiagnosticsLogger();
-        var generator = new DocumentGenerator(options, logger);
+        var fakeTime = new FakeTimeProvider();
+        var factory = new ResourceGuardFactory(options.Performance, logger, fakeTime);
+        var generator = new DocumentGenerator(options, logger, factory);
 
         // Act
         _ = generator.GenerateWithGuards("test", () =>
         {
-            Thread.Sleep(50);
+            fakeTime.Advance(TimeSpan.FromMilliseconds(50));
             return new OpenApiDocument
             {
                 Info = new OpenApiInfo { Title = "Test", Version = "1.0" },

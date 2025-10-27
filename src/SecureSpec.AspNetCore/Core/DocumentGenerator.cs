@@ -11,19 +11,25 @@ public class DocumentGenerator
 {
     private readonly SecureSpecOptions _options;
     private readonly DiagnosticsLogger _logger;
+    private readonly IResourceGuardFactory _guardFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DocumentGenerator"/> class.
     /// </summary>
     /// <param name="options">Configuration options.</param>
     /// <param name="logger">Diagnostics logger.</param>
-    public DocumentGenerator(SecureSpecOptions options, DiagnosticsLogger logger)
+    /// <param name="guardFactory">Factory for creating resource guards. If null, creates a default factory.</param>
+    public DocumentGenerator(
+        SecureSpecOptions options,
+        DiagnosticsLogger logger,
+        IResourceGuardFactory? guardFactory = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(logger);
 
         _options = options;
         _logger = logger;
+        _guardFactory = guardFactory ?? new ResourceGuardFactory(options.Performance, logger);
     }
 
     /// <summary>
@@ -46,7 +52,7 @@ public class DocumentGenerator
             return generationFunc();
         }
 
-        using var guard = new ResourceGuard(_options.Performance, _logger);
+        using var guard = _guardFactory.Create();
 
         try
         {
@@ -88,7 +94,7 @@ public class DocumentGenerator
 #pragma warning restore CA1031 // Do not catch general exception types
         {
             // Other generation errors - also return fallback
-            _logger.LogError("PERF001", $"Document '{documentName}' generation failed", new
+            _logger.LogWarning("PERF001", $"Document '{documentName}' generation failed", new
             {
                 DocumentName = documentName,
                 Error = ex.Message,

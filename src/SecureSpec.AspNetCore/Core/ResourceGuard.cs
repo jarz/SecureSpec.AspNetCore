@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Diagnostics;
 
@@ -11,7 +10,8 @@ public sealed class ResourceGuard : IDisposable
 {
     private readonly PerformanceOptions _options;
     private readonly DiagnosticsLogger _logger;
-    private readonly Stopwatch _stopwatch;
+    private readonly TimeProvider _timeProvider;
+    private readonly long _startTimestamp;
     private readonly long _initialMemory;
     private bool _disposed;
 
@@ -20,26 +20,32 @@ public sealed class ResourceGuard : IDisposable
     /// </summary>
     /// <param name="options">Performance configuration options.</param>
     /// <param name="logger">Diagnostics logger for emitting warnings.</param>
-    public ResourceGuard(PerformanceOptions options, DiagnosticsLogger logger)
+    /// <param name="timeProvider">Time provider for getting current time. If null, uses TimeProvider.System.</param>
+    public ResourceGuard(PerformanceOptions options, DiagnosticsLogger logger, TimeProvider? timeProvider = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(logger);
 
         _options = options;
         _logger = logger;
-        _stopwatch = Stopwatch.StartNew();
+        _timeProvider = timeProvider ?? TimeProvider.System;
+        _startTimestamp = _timeProvider.GetTimestamp();
 
-        // Capture initial memory baseline
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
+        // Capture initial memory baseline (note: memory measurements may have some variance)
         _initialMemory = GC.GetTotalMemory(forceFullCollection: false);
     }
 
     /// <summary>
     /// Gets the elapsed time in milliseconds since the guard was created.
     /// </summary>
-    public long ElapsedMilliseconds => _stopwatch.ElapsedMilliseconds;
+    public long ElapsedMilliseconds
+    {
+        get
+        {
+            var elapsed = _timeProvider.GetElapsedTime(_startTimestamp);
+            return (long)elapsed.TotalMilliseconds;
+        }
+    }
 
     /// <summary>
     /// Gets the estimated memory usage in bytes since the guard was created.
@@ -116,7 +122,6 @@ public sealed class ResourceGuard : IDisposable
     {
         if (!_disposed)
         {
-            _stopwatch.Stop();
             _disposed = true;
         }
     }

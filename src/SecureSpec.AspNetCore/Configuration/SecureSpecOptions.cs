@@ -40,6 +40,7 @@ public class SecureSpecOptions
     /// </summary>
     public PerformanceOptions Performance { get; } = new();
 
+    /// <summary>
     /// Gets media type handling and content negotiation options.
     /// </summary>
     public MediaTypeOptions MediaTypes { get; } = new();
