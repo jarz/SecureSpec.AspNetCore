@@ -98,7 +98,7 @@ public class DiagnosticsLogger
         var lastForwardslash = path.LastIndexOf('/');
         var lastSeparator = Math.Max(lastBackslash, lastForwardslash);
 
-        return lastSeparator >= 0 ? path.Substring(lastSeparator + 1) : path;
+        return lastSeparator >= 0 ? path[(lastSeparator + 1)..] : path;
     }
 
     /// <summary>
