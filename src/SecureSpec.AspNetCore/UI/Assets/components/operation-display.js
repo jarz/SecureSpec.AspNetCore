@@ -7,7 +7,7 @@ export class OperationDisplay {
     this.linksCallbacksDisplay = new LinksCallbacksDisplay(state);
   }
   
-  render(operation, document) {
+  render(operation, document = null) {
     const method = operation.method.toLowerCase();
     const methodClass = `method-${method}`;
     
@@ -27,8 +27,8 @@ export class OperationDisplay {
           <p>${operation.description || ''}</p>
           ${this.renderParameters(operation.parameters)}
           ${this.renderRequestBody(operation.requestBody)}
-          ${this.renderCallbacks(operation.callbacks, document)}
-          ${this.renderResponses(operation.responses, document)}
+          ${document ? this.renderCallbacks(operation.callbacks, document) : ''}
+          ${document ? this.renderResponses(operation.responses, document) : this.renderResponsesBasic(operation.responses)}
         </div>
       </div>
     `;
@@ -75,6 +75,23 @@ export class OperationDisplay {
           <li>
             <strong>${code}</strong> - ${response.description || ''}
             ${this.linksCallbacksDisplay.renderLinks(response.links, document)}
+          </li>
+        `).join('')}
+      </ul>
+    `;
+  }
+  
+  renderResponsesBasic(responses) {
+    if (!responses) {
+      return '';
+    }
+    
+    return `
+      <h3>Responses</h3>
+      <ul>
+        ${Object.entries(responses).map(([code, response]) => `
+          <li>
+            <strong>${code}</strong> - ${response.description || ''}
           </li>
         `).join('')}
       </ul>

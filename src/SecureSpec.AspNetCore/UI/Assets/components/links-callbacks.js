@@ -53,8 +53,16 @@ export class LinksCallbacksDisplay {
     }
 
     // Check for circular links (AC 493)
-    const linkKey = `${linkName}-${link.operationId || link.operationRef || ''}`;
-    if (this.visitedLinks.has(linkKey)) {
+    // Include link description or parameters as additional identifying information to avoid false positives
+    const linkIdentifier = JSON.stringify({
+      name: linkName,
+      operationId: link.operationId || '',
+      operationRef: link.operationRef || '',
+      description: link.description || '',
+      paramCount: link.parameters ? Object.keys(link.parameters).length : 0
+    });
+    
+    if (this.visitedLinks.has(linkIdentifier)) {
       console.warn(`[LNK001] Circular link detection: ${linkName}`);
       return `
         <div class="link-item circular">
@@ -63,6 +71,8 @@ export class LinksCallbacksDisplay {
         </div>
       `;
     }
+    
+    this.visitedLinks.add(linkIdentifier);
 
     // Determine operation reference (AC 494, AC 495)
     let operationRef = '';
@@ -238,7 +248,13 @@ export class LinksCallbacksDisplay {
    * @returns {Object|null} The resolved object or null if not found
    */
   resolveReference(ref, document) {
-    if (!ref || !ref.startsWith('#/')) {
+    if (!ref) {
+      return null;
+    }
+    
+    // Only handle internal references starting with '#/'
+    if (!ref.startsWith('#/')) {
+      console.warn(`[LNK004] External or invalid reference not supported: ${ref}`);
       return null;
     }
 
@@ -264,9 +280,14 @@ export class LinksCallbacksDisplay {
     if (!text) {
       return '';
     }
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    
+    // Use string replacement instead of DOM manipulation for better compatibility
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   /**
