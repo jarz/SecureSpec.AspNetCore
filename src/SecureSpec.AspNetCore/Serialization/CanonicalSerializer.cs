@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Writers;
+using SecureSpec.AspNetCore.Security;
 
 namespace SecureSpec.AspNetCore.Serialization;
 
@@ -98,6 +99,40 @@ public static class CanonicalSerializer
         }
 
         return $"W/\"sha256:{hash[..16]}\"";
+    }
+
+    /// <summary>
+    /// Generates an SRI (Subresource Integrity) value from content.
+    /// This is a convenience method that uses IntegrityValidator.
+    /// </summary>
+    /// <param name="content">The content to generate SRI for.</param>
+    /// <returns>The SRI attribute value (e.g., "sha256-abc123...").</returns>
+    public static string GenerateSri(string content)
+    {
+        var validator = new IntegrityValidator();
+        return validator.GenerateSri(content);
+    }
+
+    /// <summary>
+    /// Serializes an OpenAPI document and generates both hash and SRI.
+    /// </summary>
+    /// <param name="document">The OpenAPI document to serialize.</param>
+    /// <param name="format">The serialization format (JSON or YAML).</param>
+    /// <returns>A tuple containing the serialized content, SHA256 hash, and SRI value.</returns>
+    public static (string Content, string Hash, string Sri) SerializeWithIntegrity(
+        OpenApiDocument document,
+        SerializationFormat format = SerializationFormat.Json)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+
+        var content = format == SerializationFormat.Json
+            ? SerializeToJson(document)
+            : SerializeToYaml(document);
+
+        var hash = GenerateHash(content);
+        var sri = GenerateSri(content);
+
+        return (content, hash, sri);
     }
 
     /// <summary>
@@ -204,4 +239,20 @@ public static class CanonicalSerializer
 
         return new string(chars);
     }
+}
+
+/// <summary>
+/// Serialization format options.
+/// </summary>
+public enum SerializationFormat
+{
+    /// <summary>
+    /// JSON format.
+    /// </summary>
+    Json,
+
+    /// <summary>
+    /// YAML format.
+    /// </summary>
+    Yaml
 }

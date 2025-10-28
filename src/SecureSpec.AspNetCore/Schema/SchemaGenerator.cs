@@ -19,6 +19,7 @@ public partial class SchemaGenerator
     private readonly Dictionary<Type, string> _typeToSchemaId = [];
     private readonly ExampleGenerator _exampleGenerator;
     private readonly ExamplePrecedenceEngine _precedenceEngine;
+    private readonly XmlDocumentationProvider _xmlDocumentation;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SchemaGenerator"/> class.
@@ -29,7 +30,19 @@ public partial class SchemaGenerator
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _exampleGenerator = new ExampleGenerator(options);
         _precedenceEngine = new ExamplePrecedenceEngine(_exampleGenerator);
+        _xmlDocumentation = new XmlDocumentationProvider(logger);
+
+        // Load XML documentation files
+        foreach (var xmlPath in _options.XmlDocumentationPaths)
+        {
+            _xmlDocumentation.LoadXmlDocumentation(xmlPath);
+        }
     }
+
+    /// <summary>
+    /// Gets the XML documentation provider.
+    /// </summary>
+    internal XmlDocumentationProvider XmlDocumentation => _xmlDocumentation;
 
     /// <summary>
     /// Generates an OpenAPI schema for the specified type.
@@ -91,6 +104,9 @@ public partial class SchemaGenerator
             {
                 schema = CreateSchemaForPrimitiveOrObject(type);
             }
+
+            // Apply XML documentation if available
+            ApplyXmlDocumentation(schema, type);
         }
         finally
         {
@@ -98,6 +114,46 @@ public partial class SchemaGenerator
         }
 
         return ApplyNullability(schema, isNullable);
+    }
+
+    private void ApplyXmlDocumentation(OpenApiSchema schema, Type type)
+    {
+        var documentation = _xmlDocumentation.GetTypeDocumentation(type);
+        if (documentation != null)
+        {
+            if (!string.IsNullOrEmpty(documentation.Summary))
+            {
+                schema.Description = documentation.Summary;
+            }
+        }
+
+        // If the schema is for an object type, also try to apply documentation to properties
+        if (schema.Type == "object" && schema.Properties != null)
+        {
+            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var propertyDoc = _xmlDocumentation.GetPropertyDocumentation(property);
+                if (propertyDoc != null && !string.IsNullOrEmpty(propertyDoc.Summary))
+                {
+                    var propertyName = GetPropertyName(property);
+                    if (schema.Properties.TryGetValue(propertyName, out var propertySchema))
+                    {
+                        propertySchema.Description = propertyDoc.Summary;
+                    }
+                }
+            }
+        }
+    }
+
+    private string GetPropertyName(PropertyInfo property)
+    {
+        // Use camelCase by default (standard JSON serialization convention)
+        var name = property.Name;
+        if (name.Length > 0)
+        {
+            return char.ToLowerInvariant(name[0]) + name[1..];
+        }
+        return name;
     }
 
     private OpenApiSchema CreateSchemaForPrimitiveOrObject(Type type)
@@ -121,8 +177,25 @@ public partial class SchemaGenerator
             Type t when t == typeof(bool) => new OpenApiSchema { Type = "boolean" },
             Type t when t == typeof(string) => new OpenApiSchema { Type = "string" },
             Type t when t.IsEnum => GenerateEnumSchema(t),
-            _ => new OpenApiSchema { Type = "object" }
+            _ => CreateObjectSchema(type)
         };
+    }
+
+    /// <summary>
+    /// Creates an object schema with virtualization support.
+    /// </summary>
+    private OpenApiSchema CreateObjectSchema(Type type)
+    {
+        var schema = new OpenApiSchema { Type = "object" };
+
+        // AC 301-303: Check if schema requires virtualization
+        var analysis = AnalyzeSchemaForVirtualization(type);
+        if (analysis.RequiresVirtualization)
+        {
+            ApplySchemaVirtualization(schema, type, analysis);
+        }
+
+        return schema;
     }
 
     /// <summary>

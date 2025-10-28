@@ -34,4 +34,24 @@ public class SecureSpecOptions
     /// Gets diagnostics options.
     /// </summary>
     public DiagnosticsOptions Diagnostics { get; } = new();
+
+    /// <summary>
+    /// Gets integrity enforcement options.
+    /// </summary>
+    public IntegrityOptions Integrity { get; } = new();
+
+    /// <summary>
+    /// Gets cache configuration options.
+    /// </summary>
+    public CacheOptions Cache { get; } = new();
+
+    /// <summary>
+    /// Gets performance and resource guard options.
+    /// </summary>
+    public PerformanceOptions Performance { get; } = new();
+
+    /// <summary>
+    /// Gets media type handling and content negotiation options.
+    /// </summary>
+    public MediaTypeOptions MediaTypes { get; } = new();
 }

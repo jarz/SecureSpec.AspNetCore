@@ -15,6 +15,18 @@ Welcome to the SecureSpec.AspNetCore documentation! This index will help you nav
 | **[ROADMAP.md](ROADMAP.md)** | Visual timeline and dependencies | Project planning |
 | **[SUMMARY.md](SUMMARY.md)** | Statistics and overview | Quick facts and metrics |
 
+### Feature Guides
+
+| Document | Description | When to Use |
+|----------|-------------|-------------|
+| **[RESOURCE_GUARDS.md](RESOURCE_GUARDS.md)** | Resource guards configuration | Setting up size/time limits |
+| **[DICTIONARY_USAGE.md](DICTIONARY_USAGE.md)** | Dictionary handling guide | Working with dictionaries |
+| **[API_DESIGN.md](API_DESIGN.md)** | API design guidelines | Contributing to the project |
+| **[DESIGN.md](DESIGN.md)** | Design documentation | Understanding architecture |
+| **[TESTING_STRATEGY.md](TESTING_STRATEGY.md)** | Testing approach | Writing tests |
+| **[THREAT_MODEL.md](THREAT_MODEL.md)** | Security considerations | Understanding security |
+| **[DEPLOYMENT.md](DEPLOYMENT.md)** | Deployment guide | Deploying to production |
+
 ## 🚀 Getting Started
 
 All 54 GitHub issues have been created based on the PRD specifications.
@@ -71,13 +83,14 @@ See [SUMMARY.md](SUMMARY.md) for complete statistics.
 ## 📂 File Sizes
 
 ```
-PRD.md          36 KB  (Original requirements)
-ISSUES.md       30 KB  (Human-readable issues)
-ROADMAP.md      10 KB  (Visual roadmap)
-README.md        7 KB  (Complete guide)
-SUMMARY.md       7 KB  (Statistics)
-QUICKREF.md      4 KB  (Quick reference)
-INDEX.md         3 KB  (This file)
+PRD.md                36 KB  (Original requirements)
+ISSUES.md             30 KB  (Human-readable issues)
+ROADMAP.md            10 KB  (Visual roadmap)
+RESOURCE_GUARDS.md     8 KB  (Performance guards guide)
+README.md              7 KB  (Complete guide)
+SUMMARY.md             7 KB  (Statistics)
+QUICKREF.md            4 KB  (Quick reference)
+INDEX.md               3 KB  (This file)
 ```
 
 ## 🏗️ Project Structure
