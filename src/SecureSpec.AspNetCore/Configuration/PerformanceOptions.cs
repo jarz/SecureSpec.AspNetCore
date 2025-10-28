@@ -39,14 +39,9 @@ public class PerformanceOptions
     /// <summary>
     /// Gets or sets the degraded performance threshold for 1000 operations in milliseconds.
     /// Default is 2000ms. Performance between target and this threshold triggers a warning.
+    /// Performance exceeding this threshold is considered a failure.
     /// </summary>
     public int DegradedThresholdMs { get; set; } = 2000;
-
-    /// <summary>
-    /// Gets or sets the failure threshold for 1000 operations in milliseconds.
-    /// Default is 2000ms. Performance exceeding this threshold triggers an error diagnostic.
-    /// </summary>
-    public int FailureThresholdMs { get; set; } = 2000;
 
     /// <summary>
     /// Gets or sets the number of operations used for performance baseline measurement.

@@ -123,7 +123,6 @@ public sealed class PerformanceMonitor : IDisposable
             BaselineOperations = _options.BaselineOperationCount,
             TargetMs = _options.TargetGenerationTimeMs,
             DegradedThresholdMs = _options.DegradedThresholdMs,
-            FailureThresholdMs = _options.FailureThresholdMs,
             Status = status.ToString()
         };
 

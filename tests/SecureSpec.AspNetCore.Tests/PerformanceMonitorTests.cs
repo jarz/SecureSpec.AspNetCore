@@ -489,7 +489,6 @@ public class DocumentGenerationPerformanceTests
                 EnablePerformanceMonitoring = true,
                 TargetGenerationTimeMs = 1,
                 DegradedThresholdMs = 10, // Very low to trigger failure
-                FailureThresholdMs = 10,
                 BaselineOperationCount = 1000
             }
         };

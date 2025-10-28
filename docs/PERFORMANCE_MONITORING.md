@@ -23,8 +23,7 @@ services.AddSecureSpec(options =>
 {
     options.Performance.EnablePerformanceMonitoring = true; // Default: true
     options.Performance.TargetGenerationTimeMs = 500;       // Default: 500ms
-    options.Performance.DegradedThresholdMs = 2000;         // Default: 2000ms
-    options.Performance.FailureThresholdMs = 2000;          // Default: 2000ms
+    options.Performance.DegradedThresholdMs = 2000;         // Default: 2000ms (also failure threshold)
     options.Performance.BaselineOperationCount = 1000;      // Default: 1000
 });
 ```
@@ -33,8 +32,7 @@ services.AddSecureSpec(options =>
 
 - **EnablePerformanceMonitoring**: Enable or disable performance tracking. When disabled, no performance metrics are collected or emitted.
 - **TargetGenerationTimeMs**: The target generation time in milliseconds. Performance below this threshold is considered optimal (AC 297).
-- **DegradedThresholdMs**: The threshold for degraded performance. Times between the target and this threshold trigger a warning (AC 298).
-- **FailureThresholdMs**: The threshold for performance failure. Times exceeding this trigger an error diagnostic (AC 299).
+- **DegradedThresholdMs**: The threshold for degraded performance. Times between the target and this threshold trigger a warning (AC 298). Times exceeding this threshold are considered failures (AC 299).
 - **BaselineOperationCount**: The number of operations used for normalization. All performance measurements are normalized to this count for consistent comparison (default: 1000 operations).
 
 ## Performance Monitor
@@ -162,7 +160,6 @@ Performance diagnostics include detailed context information:
   "BaselineOperations": 1000,
   "TargetMs": 500,
   "DegradedThresholdMs": 2000,
-  "FailureThresholdMs": 2000,
   "Status": "Target"
 }
 ```
@@ -228,6 +225,6 @@ The performance monitoring system satisfies the following acceptance criteria:
 
 ## See Also
 
-- [Resource Guards](../Core/README_DOCUMENT_CACHE.md) - Resource limit enforcement
-- [Diagnostics](../Diagnostics/DiagnosticsLogger.cs) - Diagnostic logging system
-- [PRD Section 5](../../docs/PRD.md#5-performance-targets) - Performance targets specification
+- [Resource Guards](../src/SecureSpec.AspNetCore/Core/ResourceGuard.cs) - Resource limit enforcement
+- [Diagnostics](../src/SecureSpec.AspNetCore/Diagnostics/DiagnosticsLogger.cs) - Diagnostic logging system
+- [PRD Section 5](PRD.md#5-performance-targets) - Performance targets specification
