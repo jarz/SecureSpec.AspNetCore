@@ -64,7 +64,7 @@ public class XmlDocumentationProvider
                         {
                             ["MemberName"] = memberName,
                             ["XmlFile"] = xmlPath,
-                            ["PreviousFile"] = _loadedFiles.LastOrDefault(f => f != xmlPath) ?? "unknown"
+                            ["PreviousFile"] = _loadedFiles.LastOrDefault() ?? "unknown"
                         });
                 }
 
