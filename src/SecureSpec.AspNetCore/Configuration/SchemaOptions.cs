@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.ObjectModel;
 
 namespace SecureSpec.AspNetCore.Configuration;
 
@@ -61,6 +62,12 @@ public class SchemaOptions
     /// Gets the type mappings for custom types.
     /// </summary>
     public TypeMappingCollection TypeMappings { get; } = new();
+
+    /// <summary>
+    /// Gets the collection of XML documentation file paths.
+    /// Files are loaded in order, with later files overwriting earlier ones on conflicts.
+    /// </summary>
+    public Collection<string> XmlDocumentationPaths { get; } = new();
 }
 
 /// <summary>

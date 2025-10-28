@@ -20,6 +20,13 @@ builder.Services.AddSecureSpec(options =>
     options.Schema.MaxDepth = 32;
     options.Schema.UseEnumStrings = true;
 
+    // Load XML documentation files (if generated)
+    var xmlFile = Path.Combine(AppContext.BaseDirectory, "BasicExample.xml");
+    if (File.Exists(xmlFile))
+    {
+        options.Schema.XmlDocumentationPaths.Add(xmlFile);
+    }
+
     // Configure security schemes
     options.Security.AddHttpBearer("bearerAuth", builder =>
         builder.WithDescription("JWT Bearer token authentication")
@@ -92,12 +99,20 @@ app.MapGet("/weatherforecast", () =>
         ))
         .ToArray();
     return forecast;
-});
+}).WithName("GetWeatherForecast");
 
 app.Run();
 
+/// <summary>
+/// Represents a weather forecast for a specific date.
+/// </summary>
+/// <param name="Date">The date of the forecast.</param>
+/// <param name="TemperatureC">The temperature in Celsius.</param>
+/// <param name="Summary">A brief summary of the weather conditions.</param>
 sealed record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
+    /// <summary>
+    /// Gets the temperature in Fahrenheit, calculated from Celsius.
+    /// </summary>
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
-
