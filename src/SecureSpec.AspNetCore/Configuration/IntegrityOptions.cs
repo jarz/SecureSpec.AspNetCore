@@ -26,7 +26,7 @@ public class IntegrityOptions
     public bool GenerateSri { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets the hash algorithm to use for integrity verification.
+    /// Gets the hash algorithm to use for integrity verification.
     /// Only SHA256 is supported for security and determinism.
     /// </summary>
     public string Algorithm { get; } = "sha256";
