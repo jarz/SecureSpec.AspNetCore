@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.ObjectModel;
 
 namespace SecureSpec.AspNetCore.Configuration;
 
@@ -38,6 +39,20 @@ public class SchemaOptions
     public int EnumVirtualizationThreshold { get; set; } = 10_000;
 
     /// <summary>
+    /// Gets or sets the threshold for schema property virtualization.
+    /// Schemas with more properties than this threshold will be virtualized.
+    /// Default is 200.
+    /// </summary>
+    public int SchemaPropertyVirtualizationThreshold { get; set; } = 200;
+
+    /// <summary>
+    /// Gets or sets the threshold for nested object property virtualization.
+    /// Schemas with more nested object properties than this threshold will be virtualized.
+    /// Default is 50.
+    /// </summary>
+    public int NestedObjectVirtualizationThreshold { get; set; } = 50;
+
+    /// <summary>
     /// Gets or sets the OpenAPI specification version used for schema generation.
     /// Default is OpenAPI 3.0.
     /// </summary>
@@ -47,6 +62,12 @@ public class SchemaOptions
     /// Gets the type mappings for custom types.
     /// </summary>
     public TypeMappingCollection TypeMappings { get; } = new();
+
+    /// <summary>
+    /// Gets the collection of XML documentation file paths.
+    /// Files are loaded in order, with later files overwriting earlier ones on conflicts.
+    /// </summary>
+    public Collection<string> XmlDocumentationPaths { get; } = new();
 }
 
 /// <summary>
