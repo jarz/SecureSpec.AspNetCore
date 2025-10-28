@@ -156,12 +156,29 @@ main {
   box-shadow: var(--shadow-sm);
 }
 
+/* AC 472: Highlight effect for deep linking */
+.operation.highlighted {
+  animation: highlight-pulse 2s ease-in-out;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+  }
+}
+
 .operation-header {
   padding: 1rem;
   background-color: var(--background-color);
   cursor: pointer;
   transition: background-color 0.2s;
   user-select: none;
+  outline: none; /* Custom focus indicator via highlighting */
+  tabindex: 0; /* Make focusable */
 }
 
 .operation-header:hover {

@@ -141,7 +141,7 @@ export class OperationDisplay {
     
     return `
       <div class="operation" id="operation-${opId}" data-operation-id="${operation.operationId}">
-        <div class="operation-header ${expandedClass}" data-operation="${opId}">
+        <div class="operation-header ${expandedClass}" data-operation="${opId}" tabindex="0" role="button" aria-expanded="${isExpanded}">
           <div class="operation-summary">
             <span class="operation-method ${methodClass}">${method.toUpperCase()}</span>
             <code class="operation-path">${this.escapeHtml(operation.path)}</code>

@@ -8,10 +8,10 @@ class SecureSpecApp {
   constructor() {
     this.config = this.loadConfig();
     this.state = new StateManager(this.config);
-    this.router = new Router(this.state);
     this.operationDisplay = new OperationDisplay(this.state);
     this.schemaViewer = new SchemaViewer(this.state);
-    
+    this.router = new Router(this.state, this.operationDisplay);
+
     this.initialize();
   }
   
