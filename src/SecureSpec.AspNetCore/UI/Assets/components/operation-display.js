@@ -1,12 +1,18 @@
 // SecureSpec UI - Operation Display Component
+import { LinksCallbacksDisplay } from './links-callbacks.js';
+
 export class OperationDisplay {
   constructor(state) {
     this.state = state;
+    this.linksCallbacksDisplay = new LinksCallbacksDisplay(state);
   }
   
-  render(operation) {
+  render(operation, document) {
     const method = operation.method.toLowerCase();
     const methodClass = `method-${method}`;
+    
+    // Clear visited links for circular detection on each operation render
+    this.linksCallbacksDisplay.clearVisitedLinks();
     
     return `
       <div class="operation" data-operation-id="${operation.operationId || ''}">
@@ -21,7 +27,8 @@ export class OperationDisplay {
           <p>${operation.description || ''}</p>
           ${this.renderParameters(operation.parameters)}
           ${this.renderRequestBody(operation.requestBody)}
-          ${this.renderResponses(operation.responses)}
+          ${this.renderCallbacks(operation.callbacks, document)}
+          ${this.renderResponses(operation.responses, document)}
         </div>
       </div>
     `;
@@ -56,7 +63,7 @@ export class OperationDisplay {
     `;
   }
   
-  renderResponses(responses) {
+  renderResponses(responses, document) {
     if (!responses) {
       return '';
     }
@@ -67,9 +74,18 @@ export class OperationDisplay {
         ${Object.entries(responses).map(([code, response]) => `
           <li>
             <strong>${code}</strong> - ${response.description || ''}
+            ${this.linksCallbacksDisplay.renderLinks(response.links, document)}
           </li>
         `).join('')}
       </ul>
     `;
+  }
+  
+  renderCallbacks(callbacks, document) {
+    if (!callbacks) {
+      return '';
+    }
+    
+    return this.linksCallbacksDisplay.renderCallbacks(callbacks, document);
   }
 }
