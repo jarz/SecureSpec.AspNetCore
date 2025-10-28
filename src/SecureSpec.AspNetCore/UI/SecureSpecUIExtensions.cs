@@ -24,6 +24,10 @@ public static class SecureSpecUIExtensions
         var options = app.ApplicationServices.GetService(typeof(SecureSpecOptions)) as SecureSpecOptions
             ?? new SecureSpecOptions();
 
+        // Add OpenAPI document middleware first
+        app.UseMiddleware<OpenApiDocumentMiddleware>(options);
+
+        // Then add UI middleware
         app.UseMiddleware<SecureSpecUIMiddleware>(options, routePrefix);
 
         return app;
@@ -47,6 +51,10 @@ public static class SecureSpecUIExtensions
         var options = new SecureSpecOptions();
         configure(options.UI);
 
+        // Add OpenAPI document middleware first
+        app.UseMiddleware<OpenApiDocumentMiddleware>(options);
+
+        // Then add UI middleware
         app.UseMiddleware<SecureSpecUIMiddleware>(options, routePrefix);
 
         return app;
