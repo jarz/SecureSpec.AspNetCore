@@ -59,6 +59,18 @@ public class SchemaOptions
     public SchemaSpecVersion SpecVersion { get; set; } = SchemaSpecVersion.OpenApi3_0;
 
     /// <summary>
+    /// Gets or sets whether example generation is enabled.
+    /// Default is true.
+    /// </summary>
+    public bool GenerateExamples { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the time budget in milliseconds for example generation per schema.
+    /// Default is 25ms as per PRD specification.
+    /// </summary>
+    public int ExampleGenerationTimeoutMs { get; set; } = 25;
+
+    /// <summary>
     /// Gets the type mappings for custom types.
     /// </summary>
     public TypeMappingCollection TypeMappings { get; } = new();

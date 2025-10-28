@@ -78,251 +78,291 @@ Created extensive developer documentation:
 - Updated main README.md with current status
 
 ### 7. Example Application ✅
+# Implementation Progress Summary
 
-Built working example demonstrating:
-- Service registration
-- Document configuration
-- Schema options
-- UI configuration
-- Integration with ASP.NET Core Web API
+## Overview
+
+This document summarizes the implementation work completed for SecureSpec.AspNetCore.
+
+**Date**: October 2025  
+**Branch**: `copilot/implement-precedence-engine-example` (rebased onto `copilot/implement-thread-safe-cache`)  
+**Status**: Phase 6.9 complete with UI and cache foundations ✅
+
+## What Was Accomplished
+
+### 1. Project Structure Created ✅
+
+Created a complete .NET 8.0 solution with proper organization:
+
+```
+SecureSpec.AspNetCore/
+├── SecureSpec.AspNetCore.sln
+├── src/
+│   └── SecureSpec.AspNetCore/          (Main library project)
+├── tests/
+│   └── SecureSpec.AspNetCore.Tests/    (xUnit test project)
+└── examples/
+    └── BasicExample/                   (Integration example)
+```
+
+### 2. Core Configuration API ✅
+
+Implemented a fluent, type-safe configuration API with:
+
+- **SecureSpecOptions** - Main options class
+- **DocumentCollection** - Multiple OpenAPI document support
+- **SchemaOptions** - Schema generation configuration (now including virtualization and XML docs)
+- **SecurityOptions** - OAuth and security scheme configuration
+- **UIOptions** - Interactive UI configuration
+- **SerializationOptions** - Canonical serialization settings
+- **DiagnosticsOptions** - Logging and monitoring configuration
+
+All options follow ASP.NET Core conventions with builder patterns and deterministic defaults.
+
+### 3. Component Structure ✅
+
+Established namespace organization with core components and recent additions:
+
+#### Core Components
+- `ApiDiscoveryEngine` - Endpoint discovery foundation
+- `SchemaGenerator` - Schema generation with ID collision handling, virtualization, XML docs, and example precedence integration
+- `CanonicalSerializer` - Deterministic serialization with SHA256 hashing
+- `DocumentCache` - Thread-safe cache with integrity enforcement
+- `DiagnosticsLogger` - Structured diagnostic logging
+
+#### Configuration
+- Fluent configuration builders
+- Type-safe options classes for security, UI, media types, integrity, and caching
+- OAuth flow configuration (PKCE-enforced)
+
+#### UI & Diagnostics
+- SecureSpec UI middleware, assets, and extension methods
+- Diagnostic codes catalog with structured logging helpers
+
+### 4. Service Registration ✅
+
+Implemented ASP.NET Core integration:
+- `AddSecureSpec()` extension method
+- Dependency injection setup for cache, UI, diagnostics, and schema services
+- Options pattern integration
+
+### 5. Test Infrastructure ✅
+
+Expanded test project now covering:
+- xUnit test framework with 768 tests total (up from 702)
+- Configuration, serialization, schema generation, diagnostics, caching, UI middleware, and example precedence scenarios
+
+### 6. Documentation ✅
+
+Created extensive developer documentation:
+- **GETTING_STARTED.md** and **docs/README.md** collections
+- **docs/MUTUAL_TLS_GUIDE.md**, **docs/RESOURCE_GUARDS.md**, **docs/XML_DOCUMENTATION.md**, and **docs/DIAGNOSTICS_USAGE.md**
+- **docs/EXAMPLE_PRECEDENCE.md** detailing the precedence engine
+
+### 7. Example Application ✅
+
+Basic example updated to demonstrate:
+- SecureSpec UI at `/securespec`
+- Document cache wiring with integrity controls
+- Example precedence in generated schemas
+- Configuration for new media type and integrity options
 
 ## Statistics
 
 ### Code
-- **15** C# source files in library
-- **5** C# test files
-- **913** lines of code in initial commit
-- **100%** test pass rate (6/6 tests passing)
-- **0** build warnings or errors
+- **60+** C# source files in library (expanded with cache, UI, and schema virtualization)
+- **40+** C# test files
+- **768** automated tests (unit, integration, acceptance)
+- **0** build warnings or errors (checked with `dotnet build`)
 
 ### Commits
-1. Initial project structure and core components setup
-2. Update project status in README
-3. Add Getting Started guide and basic usage example
+Recent highlights:
+1. 66e75de: Integrate example precedence engine with `SchemaGenerator`
+2. 5be629d: Documentation and progress updates for cache and UI work
+3. e88132d: Cache configuration and service registration with integration tests
+4. 17b73cd: Thread-safe `DocumentCache` with comprehensive tests
 
 ### Dependencies
 - .NET 8.0 (target framework)
-- Microsoft.AspNetCore.App (framework reference)
 - Microsoft.OpenApi 1.6.22
 - YamlDotNet 16.2.1
-- xUnit 2.5.3 (testing)
+- AngleSharp 1.0.5 (UI HTML validation)
+- xUnit 2.5.3, FluentAssertions 6.12.0, and AngleSharp for tests
 
 ## Key Design Decisions
 
 ### 1. Fluent Configuration API
-Chose builder pattern for discoverability and type safety:
+Builder pattern chosen for discoverability and type safety:
 ```csharp
 services.AddSecureSpec(options =>
 {
-    options.Documents.Add("v1", doc => { ... });
+    options.Documents.Add("v1", doc =>
+    {
+        doc.Title = "Secure API";
+        doc.Version = "v1";
+    });
+
     options.Schema.MaxDepth = 32;
+    options.UI.RoutePrefix = "securespec";
+    options.Cache.Enabled = true;
 });
 ```
 
 ### 2. Security-First Defaults
 - PKCE always required (cannot be disabled)
-- Deterministic ordering always enabled
-- Hash generation enabled by default
+- Deterministic ordering enabled everywhere (schemas, examples, assets)
+- Hash generation and integrity validation enabled by default in cache
 
 ### 3. Namespace Organization
-Clear separation of concerns:
-- `Configuration/` - Options and builders
-- `Core/` - API discovery
-- `Schema/` - Type mapping and generation
+- `Configuration/` - Options and builders (security, UI, cache, media types, integrity)
+- `Core/` - Document generation, caching, resource guards
+- `Schema/` - Schema generator partials for collections, enums, virtualization, examples, XML docs
 - `Serialization/` - Canonical output
-- `Diagnostics/` - Logging
-- `Security/`, `UI/`, `Filters/` - Ready for implementation
+- `Diagnostics/` - Logging infrastructure with codes
+- `UI/` - Middleware, assets, and template generation
+- `Security/` - Builders for API key, bearer, OAuth, mutual TLS, and integrity validation
 
 ### 4. Extensibility Points
-Designed for customization:
-- Custom schema ID strategies
-- Custom type mappings
-- Policy/role mapping functions
-- Enum naming policies
+- Custom schema ID strategies and example sources
+- Cache configuration hooks for eviction, integrity validation, and fallback generation
+- Pluggable UI asset provider and CSP configuration
+- Policy/role to scope mapping hooks for OAuth scopes
 
 ## Build and Test
 
 All projects build successfully:
 ```bash
-dotnet build    # Success: 3 projects
-dotnet test     # Success: 6/6 tests passing
+dotnet build
+```
+
+Full test suite (unit + integration) passes:
+```bash
+dotnet test
 ```
 
 Example application builds and runs:
 ```bash
 cd examples/BasicExample
-dotnet run      # Starts on https://localhost:5001
+dotnet run --launch-profile BasicExample
 ```
 
 ## Completed Implementation
 
 ### Phase 1: Core OpenAPI Generation & Schema Fidelity
 
-Implementation progress:
-
 1. **Issue 1.1**: Canonical Serializer with Deterministic Hash Generation ✅ **COMPLETE**
-   - Full JSON/YAML canonical serialization implemented
-   - SHA256 hash generation with normalization
-   - Deterministic output with lexical ordering
-   - Locale-invariant numeric serialization
-   - ETag generation support
+   - JSON/YAML canonical serialization with SHA256 hashing and lexical ordering
+   - Locale-invariant numeric serialization and ETag support
    - Commit: 80749da
 
 2. **Issue 1.2**: SchemaId Strategy with Collision Handling ✅ **COMPLETE**
-   - Generic notation with guillemet characters (e.g., `List«String»`)
-   - Collision detection with deterministic `_schemaDup{N}` suffix
-   - Stable suffix numbering across rebuilds
-   - Custom IdStrategy support
-   - SCH001 diagnostic emission
-   - Nullable generic arguments canonical form
-   - Suffix reclamation via RemoveType()
-   - 37 comprehensive tests, all passing
-   - Commit: 87d15df
+   - Canonical generic notation (`List«String»`) with deterministic `_schemaDup{N}` suffixing
+   - SCH001 diagnostic emission and suffix reclamation
+   - 37 comprehensive tests, all passing (Commit: 87d15df)
 
 3. **Issue 1.3**: CLR Primitive Type Mapping ✅ **COMPLETE**
-   - Full type mapping (Guid, DateTime, DateTimeOffset, DateOnly, TimeOnly, etc.)
-   - Decimal handling (type:number with no format)
-   - Byte array as base64url (type:string format:byte)
-   - IFormFile as binary (type:string format:binary)
-   - All primitive types mapped correctly
-   - Covered by existing tests
+   - Full primitive coverage (Guid, DateOnly, TimeOnly, decimal, IFormFile, etc.)
 
 4. **Issue 1.4**: Nullability Semantics (OpenAPI 3.0 & 3.1)
-   - Need: NRT support, nullable handling for both specs
+   - Work in progress: NRT metadata ingestion
 
 5. **Issue 1.5**: Recursion Detection and Depth Limits
-   - Already have MaxDepth configuration
-   - Need: Cycle detection, depth enforcement
+   - MaxDepth enforcement in place; cycle diagnostics planned
 
 6. **Issue 1.6**: Dictionary and AdditionalProperties Handling ✅ **COMPLETE**
-   - Dictionary<string,T> mapping implemented
-   - Support for IDictionary and IReadOnlyDictionary
-   - Nullable dictionary and value handling for both OpenAPI 3.0 and 3.1
-   - Deterministic serialization verified
-   - 25 comprehensive tests, all passing
-   - Commit: e39e3a0
+   - Deterministic handling for `Dictionary<string,T>` and interface equivalents
+   - 25 targeted tests
 
 7. **Issue 1.7**: DataAnnotations Ingestion
-   - Need: Required, Range, MinLength, MaxLength, etc.
+   - Remaining work: Range, MinLength, MaxLength, RegularExpression
 
 8. **Issue 1.8**: Enum Advanced Behavior
-   - Already have UseEnumStrings configuration
-   - Need: Declaration order (✅ done), virtualization for large enums
+   - Declaration order honored; virtualization for large enums covered in Phase 3
 
 ### Phase 2: Security Schemes & OAuth Flows
 
-Implementation progress:
-
 1. **Issue 2.1**: HTTP Bearer Security Scheme ✅ **COMPLETE**
-   - HTTP Bearer implementation (AC 189-195)
-   - Basic auth inference blocked with AUTH001 diagnostic (AC 221)
-   - Header sanitization with Unicode normalization
-   - CRLF protection
+   - AC 189-195 satisfied with header sanitization and AUTH001 diagnostic on basic auth detection
    - Commit: 75f10d0
 
 2. **Issue 2.4**: OAuth Client Credentials Flow ✅ **COMPLETE**
-   - OAuth2 Client Credentials flow implementation (AC 209-213)
-   - Token URL configuration with validation
-   - Refresh URL support
-   - Scope management with proper dictionary handling
-   - Scoped client authentication
-   - Token management support
-   - Policy and Role to Scope mapping hooks
-   - Fluent builder API with method chaining
-   - 33 comprehensive tests, all passing
-   - Commit: cc621cc
-
-## Quality Metrics (Updated)
-
-✅ **Builds**: Clean (0 errors, 0 warnings)
-✅ **Tests**: 100% passing (702/702) - up from 597
-✅ **Documentation**: Comprehensive
-✅ **Examples**: Working integration demo with UI
-✅ **Code Quality**: Type-safe, nullable reference types enabled
-✅ **Architecture**: Clear separation of concerns
-✅ **Phase 1.1**: Canonical Serializer - COMPLETE (30 tests)
-✅ **Phase 1.2**: SchemaId Strategy - COMPLETE (37 tests)
-✅ **Phase 1.6**: Dictionary & AdditionalProperties - COMPLETE (25 tests)
-✅ **Phase 2.1**: HTTP Bearer Security Scheme - COMPLETE
-✅ **Phase 2.4**: OAuth Client Credentials Flow - COMPLETE (33 tests)
-✅ **Phase 3.1**: SecureSpec UI Base Framework - COMPLETE (39 tests)
-✅ **Phase 4.6**: Thread-Safe Document Cache - COMPLETE (40 tests)
-
-## Next Steps
-
-Continue Phase 3 implementation:
-
-2. **Issue 3.2**: Operation Display and Navigation
-   - Operation grouping and tags
-   - Navigation between operations
-   
-3. **Issue 3.3**: Schema Models Panel
-   - Model display
-   - Property expansion
-   
-4. **Issue 3.4**: Try It Out Functionality
-   - Request execution
-   - WASM sandbox integration
-
-## Repository Status
-
-- **Branch**: `copilot/implement-thread-safe-cache`
-- **Latest Commits**:
-  - b1c350d: Merge branch 'main' into copilot/implement-thread-safe-cache
-  - 5be629d: Add comprehensive documentation and update implementation progress
-  - e88132d: Add cache configuration and service registration with integration tests
-  - 17b73cd: Implement thread-safe DocumentCache with RW lock and comprehensive tests
-- **Files**: Solution, library, tests, examples, documentation, UI framework
-- **Status**: Phase 3.1 complete (UI Base Framework), Phase 4.6 complete (Thread-Safe Document Cache), ready for additional phases
-
----
+   - Token/refresh URL validation, scope dictionary helpers, policy-role mapping hooks
+   - 33 tests verifying flows (Commit: cc621cc)
 
 ### Phase 3.1: SecureSpec UI Base Framework ✅ **COMPLETE**
 
-**Conclusion**: Phase 3.1 (SecureSpec UI Base Framework) is successfully implemented with acceptance criteria AC 331-340 met, and 39 comprehensive tests validating the implementation. The implementation includes:
-- SecureSpec UI middleware for serving the interactive UI
-- Base HTML template with strict CSP headers and security controls
-- JavaScript module architecture with Router, State Manager, and component structure
-- Asset provider for in-memory static file delivery
-- Extension methods for easy middleware integration
-- Full integration with existing UIOptions configuration API
-- Example usage in BasicExample project demonstrating the UI at `/securespec` endpoint
-- Comprehensive test coverage (11 middleware tests, 9 template tests, 13 asset tests, 6 extension tests)
+- SecureSpec UI middleware with strict CSP headers and security controls
+- JavaScript module architecture (`router.js`, `state.js`, `operation-display.js`)
+- In-memory asset provider and template generator with deterministic bundling
+- Integration with `UIOptions` and example app demonstration at `/securespec`
+- 39 comprehensive tests (11 middleware, 9 template, 13 asset, 6 extensions)
 
 ### Phase 4.6: Thread-Safe Document Cache ✅ **COMPLETE**
 
-Implementation progress:
+- `DocumentCache` with `ReaderWriterLockSlim` for multi-reader/single-writer scheduling
+- `CacheEntry` immutable payload with SHA256 hash, timestamp, expiration metadata
+- Configurable eviction (`AutoEvictionInterval`), integrity validation, and manual invalidation
+- Diagnostic codes `CACHE001`-`CACHE008`
+- 40 tests including high-concurrency stress scenarios (5000 operations across 50 threads)
+- Documentation: `Core/README_DOCUMENT_CACHE.md`
 
-**Issue 4.6**: Implement Thread-Safe Document Cache ✅ **COMPLETE**
-- Full thread-safe document cache with RW lock strategy
-- ReaderWriterLockSlim for multiple readers, single writer
-- CacheEntry with document content, SHA256 hash, timestamp, and expiration
-- Integrity validation on every cache retrieval
-- Configurable expiration and eviction policies
-- Cache invalidation support (individual and bulk)
-- Service registration with dependency injection
-- CacheOptions for configuration (DefaultExpiration, Enabled, ValidateIntegrity, AutoEvictionInterval)
-- Diagnostic logging with codes CACHE001-CACHE008
-- 40 comprehensive tests (33 unit + 7 integration), all passing
-- Concurrency stress tests validate thread safety:
-  - 100 concurrent readers
-  - 50 concurrent writers
-  - Mixed read/write operations
-  - High concurrency stress test (5000 operations, 50 threads)
-- Documentation: README_DOCUMENT_CACHE.md with usage examples
-- Commit: e88132d, 17b73cd, 5be629d, b1c350d
+### Phase 6.9: Example Precedence Engine ✅ **COMPLETE**
 
-**Conclusion**: Phase 4.6 (Thread-Safe Document Cache) is successfully implemented with acceptance criteria AC 325-330 met. The implementation includes:
-- DocumentCache class with ReaderWriterLockSlim for thread-safe concurrent access
-- CacheEntry with immutable content, SHA256 hash, timestamp, and expiration
+- Precedence resolved as **Named > Single/Attribute > Component > Generated > Blocked** (AC 4)
+- `ExampleContext`, `ExamplePrecedenceEngine`, and `ExampleGenerator` with deterministic fallback
+- Integration with `SchemaGenerator` (ApplyExamples/CreateExampleContext) and schema virtualization
+- Generation support for string formats (uuid, email, uri, date-time), numeric ranges, arrays, and nested objects
+- Thread-safe configuration with cancellation-aware timeouts
+- Documentation: `docs/EXAMPLE_PRECEDENCE.md`
+- 66 comprehensive tests (42 unit, 10 acceptance, 14 integration)
+
+## Quality Metrics (Updated)
+
+✅ **Builds**: Clean (0 errors, 0 warnings)  
+✅ **Tests**: 100% passing (768/768) - up from 702 after integrating example precedence suite  
+✅ **Documentation**: Comprehensive across configuration, diagnostics, cache, UI, and examples  
+✅ **Examples**: BasicExample covers UI, caching, and precedence  
+✅ **Code Quality**: Nullable reference types enabled; deterministic ordering enforced  
+✅ **Architecture**: Clear separation of concerns with partial classes for schema generator  
+✅ **Phase 1.1**: Canonical Serializer - COMPLETE (30 tests)  
+✅ **Phase 1.2**: SchemaId Strategy - COMPLETE (37 tests)  
+✅ **Phase 1.6**: Dictionary & AdditionalProperties - COMPLETE (25 tests)  
+✅ **Phase 2.1**: HTTP Bearer Security Scheme - COMPLETE  
+✅ **Phase 2.4**: OAuth Client Credentials Flow - COMPLETE (33 tests)  
+✅ **Phase 3.1**: SecureSpec UI Base Framework - COMPLETE (39 tests)  
+✅ **Phase 4.6**: Thread-Safe Document Cache - COMPLETE (40 tests)  
+✅ **Phase 6.9**: Example Precedence Engine - COMPLETE (66 tests)
+
+## Next Steps
+
+Continue Phase 3 UI enhancements and schema fidelity improvements:
+
+1. **Issue 3.2**: Operation Display and Navigation
+   - Operation grouping and tag navigation in UI
+
+2. **Issue 3.3**: Schema Models Panel
+   - Interactive property expansion and schema drill-down
+
+3. **Issue 3.4**: Try It Out Functionality
+   - Request execution with WASM sandbox integration
+
+4. **Issue 1.4/1.7**: Complete nullability and DataAnnotations ingestion
+
+## Repository Status
+
+- **Branch**: `copilot/implement-precedence-engine-example`
+- **Latest Commits**:
+  - 66e75de: Integrate example precedence engine with `SchemaGenerator`
+  - 7b19b0a: Add example configuration options and acceptance tests
+  - cb4ecd6: Implement example precedence engine with comprehensive tests
+  - b1c350d: Merge `main` into `copilot/implement-thread-safe-cache`
+  - 5be629d: Documentation and progress updates
+  - e88132d: Cache configuration and integration tests
+  - 17b73cd: Thread-safe `DocumentCache`
+- **Files**: Solution, library, tests, examples, documentation, UI framework, cache infrastructure
+- **Status**: Phases 3.1, 4.6, and 6.9 complete; ready to proceed with UI enhancements and schema fidelity tasks
+
+---
+
+The codebase maintains clean builds, full test coverage, and adheres to security, concurrency, and accessibility best practices. Example precedence now layers on top of the established UI and caching foundation, providing deterministic example generation across the API surface.
 - Read-locked operations: TryGet (with integrity validation), Count
-- Write-locked operations: Set, Invalidate, InvalidateAll, EvictExpired
-- Configurable expiration policies via CacheOptions
-- Service registration as singleton with dependency injection
-- Diagnostic logging for all cache operations (CACHE001-CACHE008)
-- Comprehensive test coverage: 40 tests validating functionality and thread safety
-- Documentation with usage examples and integration patterns
-- Zero build warnings or errors
-- Zero security vulnerabilities (CodeQL verified)
-
-The codebase maintains clean builds, full test coverage (702 tests passing), and follows best practices for security, concurrency, extensibility, and maintainability. The UI framework provides the foundation for operation display, schema viewing, and interactive "Try it out" functionality.
