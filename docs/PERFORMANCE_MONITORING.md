@@ -2,7 +2,7 @@
 
 ## Overview
 
-SecureSpec.AspNetCore includes built-in performance monitoring to ensure document generation meets the targets specified in the PRD (AC 297-300). The system tracks generation times, normalizes them to a baseline operation count, and emits diagnostics when performance thresholds are exceeded.
+SecureSpec.AspNetCore includes built-in performance monitoring to ensure document generation meets the targets specified in the PRD (AC 297-300). The system measures actual generation time and emits diagnostics when performance thresholds are exceeded.
 
 ## Performance Targets
 
@@ -10,9 +10,11 @@ As defined in PRD Section 5, the performance targets are:
 
 | Operation | Target | Degraded | Failure |
 |-----------|--------|----------|---------|
-| Generation (1000 ops) | <500ms | 500-2000ms | >2000ms |
+| Document Generation | <500ms | 500-2000ms | >2000ms |
 | Recursive schema traversal | <100ms | 100-500ms | >500ms |
 | Hash computation | <50ms | 50-200ms | >200ms |
+
+**Note**: The "1000 ops" in the PRD refers to generating a document with approximately 1000 API endpoints. The thresholds apply to the absolute generation time.
 
 ## Configuration
 
@@ -24,16 +26,14 @@ services.AddSecureSpec(options =>
     options.Performance.EnablePerformanceMonitoring = true; // Default: true
     options.Performance.TargetGenerationTimeMs = 500;       // Default: 500ms
     options.Performance.DegradedThresholdMs = 2000;         // Default: 2000ms (also failure threshold)
-    options.Performance.BaselineOperationCount = 1000;      // Default: 1000
 });
 ```
 
 ### Configuration Options
 
 - **EnablePerformanceMonitoring**: Enable or disable performance tracking. When disabled, no performance metrics are collected or emitted.
-- **TargetGenerationTimeMs**: The target generation time in milliseconds. Performance below this threshold is considered optimal (AC 297).
-- **DegradedThresholdMs**: The threshold for degraded performance. Times between the target and this threshold trigger a warning (AC 298). Times exceeding this threshold are considered failures (AC 299).
-- **BaselineOperationCount**: The number of operations used for normalization. All performance measurements are normalized to this count for consistent comparison (default: 1000 operations).
+- **TargetGenerationTimeMs**: The target generation time in milliseconds. Performance below this threshold is considered optimal (AC 297). Default is 500ms, based on generating a document with ~1000 API endpoints.
+- **DegradedThresholdMs**: The threshold for degraded performance. Times between the target and this threshold trigger a warning (AC 298). Times exceeding this threshold are considered failures (AC 299). Default is 2000ms.
 
 ## Performance Monitor
 
@@ -47,7 +47,7 @@ var options = new PerformanceOptions
 };
 var logger = new DiagnosticsLogger();
 
-using (var monitor = new PerformanceMonitor(options, logger, "MyOperation", operationCount: 1000))
+using (var monitor = new PerformanceMonitor(options, logger, "MyOperation"))
 {
     // Perform the operation
     GenerateDocument();
@@ -58,9 +58,9 @@ using (var monitor = new PerformanceMonitor(options, logger, "MyOperation", oper
 
 ### Performance Status
 
-The monitor tracks the following performance states:
+The monitor tracks the following performance states via the `Status` property:
 
-- **Target**: Performance met the target threshold (<500ms for 1000 operations)
+- **Target**: Performance met the target threshold (<500ms)
 - **Degraded**: Performance is above target but below failure threshold (500-2000ms)
 - **Failure**: Performance exceeded the failure threshold (>2000ms)
 - **NotMonitored**: Performance monitoring is disabled
@@ -77,19 +77,19 @@ The performance monitoring system emits the following diagnostic codes:
 
 ### PERF002 - Performance Target Met
 - **Severity**: Info
-- **Description**: Performance met the target threshold (<500ms for 1000 operations)
+- **Description**: Performance met the target threshold (<500ms)
 - **Action**: None
 - **Emitted by**: PerformanceMonitor
 
 ### PERF003 - Performance Degraded
 - **Severity**: Warning
-- **Description**: Performance is degraded (500-2000ms for 1000 operations)
+- **Description**: Performance is degraded (500-2000ms)
 - **Action**: Review performance optimizations
 - **Emitted by**: PerformanceMonitor
 
 ### PERF004 - Performance Failure
 - **Severity**: Error
-- **Description**: Performance failure (>2000ms for 1000 operations)
+- **Description**: Performance failure (>2000ms)
 - **Action**: Immediate optimization required
 - **Emitted by**: PerformanceMonitor
 
@@ -98,22 +98,6 @@ The performance monitoring system emits the following diagnostic codes:
 - **Description**: Performance metrics collected for analysis
 - **Action**: Review performance trends
 - **Emitted by**: PerformanceMonitor
-
-## Operation Count Normalization
-
-The performance monitor normalizes all measurements to the baseline operation count (default: 1000 operations). This allows for consistent comparison across different operation counts.
-
-### Example
-
-If you perform 500 operations in 250ms, the normalized time would be:
-- **Actual time**: 250ms for 500 operations
-- **Normalized time**: 500ms for 1000 operations
-- **Status**: Target met (500ms <= 500ms target)
-
-If you perform 2000 operations in 800ms, the normalized time would be:
-- **Actual time**: 800ms for 2000 operations
-- **Normalized time**: 400ms for 1000 operations
-- **Status**: Target met (400ms < 500ms target)
 
 ## Integration with Document Generator
 
@@ -136,7 +120,7 @@ var document = generator.GenerateWithGuards("MyAPI", () =>
 {
     // Your document generation logic
     return myOpenApiDocument;
-}, operationCount: 1000);
+});
 
 // Check diagnostics
 var events = logger.GetEvents();
@@ -154,10 +138,7 @@ Performance diagnostics include detailed context information:
 ```json
 {
   "Operation": "Document generation: MyAPI",
-  "OperationCount": 1000,
   "ElapsedMs": 450,
-  "NormalizedMs": 450,
-  "BaselineOperations": 1000,
   "TargetMs": 500,
   "DegradedThresholdMs": 2000,
   "Status": "Target"
@@ -172,11 +153,11 @@ Performance diagnostics include detailed context information:
 
 3. **Act on performance failures**: PERF004 errors indicate critical performance issues that require immediate attention.
 
-4. **Use normalization for comparison**: When comparing performance across different operation counts, use the normalized metrics.
+4. **Adjust thresholds based on your requirements**: The default thresholds are based on the PRD (500ms target for ~1000 endpoint documents), but you can adjust them based on your specific needs.
 
-5. **Adjust thresholds based on your requirements**: The default thresholds are based on the PRD, but you can adjust them based on your specific needs.
+5. **Monitor trends over time**: Track PERF005 metrics events to identify performance degradation over time.
 
-6. **Monitor trends over time**: Track PERF005 metrics events to identify performance degradation over time.
+6. **Consider document complexity**: The 500ms target assumes ~1000 API endpoints. Simpler documents should be faster, complex documents may be slower.
 
 ## Relationship with Resource Guards
 
