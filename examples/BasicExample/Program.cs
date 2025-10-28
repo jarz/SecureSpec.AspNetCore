@@ -65,6 +65,15 @@ builder.Services.AddSecureSpec(options =>
     options.UI.Assets.EnableIntegrityRevalidation = true;
     options.UI.Assets.AllowPublicCache = true;
 
+    // Configure integrity enforcement (SHA256 + SRI)
+    options.Integrity.Enabled = true;
+    options.Integrity.FailClosed = true;  // Fail-closed for security
+    options.Integrity.GenerateSri = true; // Generate SRI attributes
+
+    // Configure serialization with hashing
+    options.Serialization.GenerateHashes = true;
+    options.Serialization.GenerateETags = true;
+
     // Configure performance and resource guards (AC 319-324)
     options.Performance.EnableResourceGuards = true;
     options.Performance.MaxGenerationTimeMs = 2000; // 2 seconds

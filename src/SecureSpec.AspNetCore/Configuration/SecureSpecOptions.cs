@@ -36,6 +36,11 @@ public class SecureSpecOptions
     public DiagnosticsOptions Diagnostics { get; } = new();
 
     /// <summary>
+    /// Gets integrity enforcement options.
+    /// </summary>
+    public IntegrityOptions Integrity { get; } = new();
+
+    /// <summary>
     /// Gets cache configuration options.
     /// </summary>
     public CacheOptions Cache { get; } = new();
