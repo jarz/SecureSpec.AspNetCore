@@ -48,7 +48,9 @@ public class XmlDocumentationProvider
             {
                 var nameAttr = member.Attribute("name");
                 if (nameAttr == null)
+                {
                     continue;
+                }
 
                 var memberName = nameAttr.Value;
                 var documentation = ParseMemberDocumentation(member);
@@ -174,7 +176,9 @@ public class XmlDocumentationProvider
     private string NormalizeWhitespace(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
+        {
             return string.Empty;
+        }
 
         // Trim each line and remove empty lines
         var lines = text.Split('\n')
