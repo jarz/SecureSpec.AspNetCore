@@ -34,14 +34,13 @@ public class PerformanceMonitorTests
             EnablePerformanceMonitoring = true,
             TargetGenerationTimeMs = 500,
             DegradedThresholdMs = 2000,
-            BaselineOperationCount = 1000
         };
         var logger = new DiagnosticsLogger();
 
         // Act
-        using var monitor = new PerformanceMonitor(options, logger, "test-operation", 1000);
+        using var monitor = new PerformanceMonitor(options, logger, "test-operation");
         // Very short operation - should be under target
-        var status = monitor.GetStatus();
+        var status = monitor.Status;
 
         // Assert
         Assert.Equal(PerformanceStatus.Target, status);
@@ -56,14 +55,13 @@ public class PerformanceMonitorTests
             EnablePerformanceMonitoring = true,
             TargetGenerationTimeMs = 1, // Very low threshold
             DegradedThresholdMs = 2000,
-            BaselineOperationCount = 1000
         };
         var logger = new DiagnosticsLogger();
 
         // Act
-        using var monitor = new PerformanceMonitor(options, logger, "test-operation", 1000);
+        using var monitor = new PerformanceMonitor(options, logger, "test-operation");
         Thread.Sleep(10); // Exceed target but not degraded threshold
-        var status = monitor.GetStatus();
+        var status = monitor.Status;
 
         // Assert
         Assert.Equal(PerformanceStatus.Degraded, status);
@@ -78,14 +76,13 @@ public class PerformanceMonitorTests
             EnablePerformanceMonitoring = true,
             TargetGenerationTimeMs = 1,
             DegradedThresholdMs = 10, // Very low threshold
-            BaselineOperationCount = 1000
         };
         var logger = new DiagnosticsLogger();
 
         // Act
-        using var monitor = new PerformanceMonitor(options, logger, "test-operation", 1000);
+        using var monitor = new PerformanceMonitor(options, logger, "test-operation");
         Thread.Sleep(50); // Exceed failure threshold
-        var status = monitor.GetStatus();
+        var status = monitor.Status;
 
         // Assert
         Assert.Equal(PerformanceStatus.Failure, status);
@@ -103,7 +100,7 @@ public class PerformanceMonitorTests
 
         // Act
         using var monitor = new PerformanceMonitor(options, logger, "test-operation");
-        var status = monitor.GetStatus();
+        var status = monitor.Status;
 
         // Assert
         Assert.Equal(PerformanceStatus.NotMonitored, status);
@@ -118,12 +115,11 @@ public class PerformanceMonitorTests
             EnablePerformanceMonitoring = true,
             TargetGenerationTimeMs = 500,
             DegradedThresholdMs = 2000,
-            BaselineOperationCount = 1000
         };
         var logger = new DiagnosticsLogger();
 
         // Act
-        using var monitor = new PerformanceMonitor(options, logger, "test-operation", 1000);
+        using var monitor = new PerformanceMonitor(options, logger, "test-operation");
         monitor.Stop();
 
         // Assert
@@ -140,12 +136,11 @@ public class PerformanceMonitorTests
             EnablePerformanceMonitoring = true,
             TargetGenerationTimeMs = 1,
             DegradedThresholdMs = 2000,
-            BaselineOperationCount = 1000
         };
         var logger = new DiagnosticsLogger();
 
         // Act
-        using var monitor = new PerformanceMonitor(options, logger, "test-operation", 1000);
+        using var monitor = new PerformanceMonitor(options, logger, "test-operation");
         Thread.Sleep(10); // Exceed target
         monitor.Stop();
 
@@ -163,12 +158,11 @@ public class PerformanceMonitorTests
             EnablePerformanceMonitoring = true,
             TargetGenerationTimeMs = 1,
             DegradedThresholdMs = 10,
-            BaselineOperationCount = 1000
         };
         var logger = new DiagnosticsLogger();
 
         // Act
-        using var monitor = new PerformanceMonitor(options, logger, "test-operation", 1000);
+        using var monitor = new PerformanceMonitor(options, logger, "test-operation");
         Thread.Sleep(50); // Exceed failure threshold
         monitor.Stop();
 
@@ -215,20 +209,26 @@ public class PerformanceMonitorTests
     }
 
     [Fact]
-    public void PerformanceMonitor_NormalizesToBaseline_Correctly()
+    public void PerformanceMonitor_TracksElapsedTime_Correctly()
     {
-        // Arrange - simulate 500 operations
+        // Arrange
         var options = new PerformanceOptions
         {
             EnablePerformanceMonitoring = true,
-            TargetGenerationTimeMs = 500,
-            BaselineOperationCount = 1000
+            TargetGenerationTimeMs = 500
         };
         var logger = new DiagnosticsLogger();
 
-        // Act
-        using var monitor = new PerformanceMonitor(options, logger, "test-operation", 500);
-        Thread.Sleep(100); // 100ms for 500 ops = 200ms for 1000 ops
+        // Act - perform actual work to consume some time
+        using var monitor = new PerformanceMonitor(options, logger, "test-operation");
+
+        // Do some actual work to consume time
+        var sum = 0;
+        for (var i = 0; i < 100000; i++)
+        {
+            sum += i;
+        }
+
         monitor.Stop();
 
         // Assert
@@ -236,16 +236,25 @@ public class PerformanceMonitorTests
         var metricsEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.PerformanceMetrics);
         Assert.NotNull(metricsEvent);
 
-        // The normalized time should be approximately 200ms (double the actual 100ms)
-        // Use reflection to access anonymous type properties
+        // Verify elapsed time is tracked
         Assert.NotNull(metricsEvent.Context);
         var contextType = metricsEvent.Context.GetType();
-        var normalizedMsProp = contextType.GetProperty("NormalizedMs");
-        Assert.NotNull(normalizedMsProp);
 
-        var normalizedMs = (long)normalizedMsProp.GetValue(metricsEvent.Context)!;
-        // Allow some tolerance for timing variance
-        Assert.InRange(normalizedMs, 150, 300);
+        var elapsedMsProp = contextType.GetProperty("ElapsedMs");
+        Assert.NotNull(elapsedMsProp);
+        var elapsedMs = (long)elapsedMsProp.GetValue(metricsEvent.Context)!;
+
+        // Elapsed time should be positive and reasonable (some work was done)
+        Assert.True(elapsedMs >= 0);
+
+        // Verify context includes expected fields
+        var targetMsProp = contextType.GetProperty("TargetMs");
+        Assert.NotNull(targetMsProp);
+        Assert.Equal(500, (int)targetMsProp.GetValue(metricsEvent.Context)!);
+
+        var statusProp = contextType.GetProperty("Status");
+        Assert.NotNull(statusProp);
+        Assert.NotNull(statusProp.GetValue(metricsEvent.Context));
     }
 
     [Fact]
@@ -281,30 +290,6 @@ public class PerformanceMonitorTests
         Assert.Throws<ArgumentNullException>(() =>
             new PerformanceMonitor(options, logger, null!));
     }
-
-    [Fact]
-    public void PerformanceMonitor_ThrowsOnNegativeOperationCount()
-    {
-        // Arrange
-        var options = new PerformanceOptions();
-        var logger = new DiagnosticsLogger();
-
-        // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new PerformanceMonitor(options, logger, "test", -1));
-    }
-
-    [Fact]
-    public void PerformanceMonitor_ThrowsOnZeroOperationCount()
-    {
-        // Arrange
-        var options = new PerformanceOptions();
-        var logger = new DiagnosticsLogger();
-
-        // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new PerformanceMonitor(options, logger, "test", 0));
-    }
 }
 
 /// <summary>
@@ -339,43 +324,6 @@ public class DocumentGenerationPerformanceTests
         Assert.NotNull(doc);
         var events = logger.GetEvents();
         Assert.Contains(events, e => e.Code == DiagnosticCodes.PerformanceMetrics);
-    }
-
-    [Fact]
-    public void DocumentGenerator_WithMonitoring_TracksOperationCount()
-    {
-        // Arrange
-        var options = new SecureSpecOptions
-        {
-            Performance =
-            {
-                EnableResourceGuards = true,
-                EnablePerformanceMonitoring = true,
-                TargetGenerationTimeMs = 500
-            }
-        };
-        var logger = new DiagnosticsLogger();
-        var generator = new DocumentGenerator(options, logger);
-
-        // Act - simulate 1000 operations
-        var doc = generator.GenerateWithGuards("test", () => new OpenApiDocument
-        {
-            Info = new OpenApiInfo { Title = "Test", Version = "1.0" },
-            Paths = new OpenApiPaths()
-        }, operationCount: 1000);
-
-        // Assert
-        Assert.NotNull(doc);
-        var events = logger.GetEvents();
-        var metricsEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.PerformanceMetrics);
-        Assert.NotNull(metricsEvent);
-
-        // Use reflection to access anonymous type properties
-        Assert.NotNull(metricsEvent.Context);
-        var contextType = metricsEvent.Context.GetType();
-        var operationCountProp = contextType.GetProperty("OperationCount");
-        Assert.NotNull(operationCountProp);
-        Assert.Equal(1000, (int)operationCountProp.GetValue(metricsEvent.Context)!);
     }
 
     [Fact]
@@ -417,7 +365,6 @@ public class DocumentGenerationPerformanceTests
                 EnableResourceGuards = true,
                 EnablePerformanceMonitoring = true,
                 TargetGenerationTimeMs = 500,
-                BaselineOperationCount = 1000
             }
         };
         var logger = new DiagnosticsLogger();
@@ -428,7 +375,7 @@ public class DocumentGenerationPerformanceTests
         {
             Info = new OpenApiInfo { Title = "Test", Version = "1.0" },
             Paths = new OpenApiPaths()
-        }, operationCount: 1000);
+        });
 
         // Assert
         Assert.NotNull(doc);
@@ -451,7 +398,6 @@ public class DocumentGenerationPerformanceTests
                 EnablePerformanceMonitoring = true,
                 TargetGenerationTimeMs = 1, // Very low to trigger degraded
                 DegradedThresholdMs = 2000,
-                BaselineOperationCount = 1000
             }
         };
         var logger = new DiagnosticsLogger();
@@ -466,7 +412,7 @@ public class DocumentGenerationPerformanceTests
                 Info = new OpenApiInfo { Title = "Test", Version = "1.0" },
                 Paths = new OpenApiPaths()
             };
-        }, operationCount: 1000);
+        });
 
         // Assert
         Assert.NotNull(doc);
@@ -489,7 +435,6 @@ public class DocumentGenerationPerformanceTests
                 EnablePerformanceMonitoring = true,
                 TargetGenerationTimeMs = 1,
                 DegradedThresholdMs = 10, // Very low to trigger failure
-                BaselineOperationCount = 1000
             }
         };
         var logger = new DiagnosticsLogger();
@@ -504,7 +449,7 @@ public class DocumentGenerationPerformanceTests
                 Info = new OpenApiInfo { Title = "Test", Version = "1.0" },
                 Paths = new OpenApiPaths()
             };
-        }, operationCount: 1000);
+        });
 
         // Assert
         Assert.NotNull(doc);
@@ -535,7 +480,7 @@ public class DocumentGenerationPerformanceTests
         {
             Info = new OpenApiInfo { Title = "Test", Version = "1.0" },
             Paths = new OpenApiPaths()
-        }, operationCount: 1000);
+        });
 
         // Assert
         Assert.NotNull(doc);
@@ -548,10 +493,6 @@ public class DocumentGenerationPerformanceTests
         // Verify metrics include expected fields using reflection
         Assert.NotNull(metricsEvent.Context);
         var contextType = metricsEvent.Context.GetType();
-
-        var operationCountProp = contextType.GetProperty("OperationCount");
-        Assert.NotNull(operationCountProp);
-        Assert.Equal(1000, (int)operationCountProp.GetValue(metricsEvent.Context)!);
 
         var elapsedMsProp = contextType.GetProperty("ElapsedMs");
         Assert.NotNull(elapsedMsProp);

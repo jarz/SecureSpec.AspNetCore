@@ -38,19 +38,17 @@ public class DocumentGenerator
     /// </summary>
     /// <param name="documentName">The name of the document to generate.</param>
     /// <param name="generationFunc">The function that generates the full document.</param>
-    /// <param name="operationCount">Number of operations for performance normalization (default 1).</param>
     /// <returns>The generated OpenAPI document, or a fallback document if limits were exceeded.</returns>
     public OpenApiDocument GenerateWithGuards(
         string documentName,
-        Func<OpenApiDocument> generationFunc,
-        int operationCount = 1)
+        Func<OpenApiDocument> generationFunc)
     {
         ArgumentNullException.ThrowIfNull(documentName);
         ArgumentNullException.ThrowIfNull(generationFunc);
 
         // Start performance monitoring
         using var perfMonitor = _options.Performance.EnablePerformanceMonitoring
-            ? new PerformanceMonitor(_options.Performance, _logger, $"Document generation: {documentName}", operationCount)
+            ? new PerformanceMonitor(_options.Performance, _logger, $"Document generation: {documentName}")
             : null;
 
         // If resource guards are disabled, just generate normally
