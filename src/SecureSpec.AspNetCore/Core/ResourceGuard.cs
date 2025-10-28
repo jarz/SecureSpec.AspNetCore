@@ -76,7 +76,7 @@ public sealed class ResourceGuard : IDisposable
         if (ElapsedMilliseconds > _options.MaxGenerationTimeMs)
         {
             reason = $"Generation time exceeded limit: {ElapsedMilliseconds}ms > {_options.MaxGenerationTimeMs}ms";
-            _logger.LogWarning("PERF001", reason, new
+            _logger.LogWarning(DiagnosticCodes.ResourceLimitExceeded, reason, new
             {
                 ElapsedMs = ElapsedMilliseconds,
                 LimitMs = _options.MaxGenerationTimeMs,
@@ -90,7 +90,7 @@ public sealed class ResourceGuard : IDisposable
         if (memoryUsage > _options.MaxMemoryBytes)
         {
             reason = $"Memory usage exceeded limit: {memoryUsage} bytes > {_options.MaxMemoryBytes} bytes";
-            _logger.LogWarning("PERF001", reason, new
+            _logger.LogWarning(DiagnosticCodes.ResourceLimitExceeded, reason, new
             {
                 MemoryBytes = memoryUsage,
                 LimitBytes = _options.MaxMemoryBytes,

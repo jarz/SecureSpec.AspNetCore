@@ -30,8 +30,8 @@ public class DiagnosticCodesTests
         var allCodes = DiagnosticCodes.GetAllCodes();
 
         // Assert
-        // As of this implementation, we have 19 defined codes
-        Assert.Equal(19, allCodes.Length);
+        // As of this implementation, we have 24 defined codes (added 5 PERF codes)
+        Assert.Equal(24, allCodes.Length);
     }
 
     [Fact]

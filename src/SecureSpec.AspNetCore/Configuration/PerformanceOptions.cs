@@ -23,4 +23,34 @@ public class PerformanceOptions
     /// Default is true. When disabled, no time or memory limits are enforced.
     /// </summary>
     public bool EnableResourceGuards { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets whether performance monitoring is enabled.
+    /// Default is true. When enabled, performance metrics are collected and diagnostic events are emitted.
+    /// </summary>
+    public bool EnablePerformanceMonitoring { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the target generation time for 1000 operations in milliseconds.
+    /// Default is 500ms (AC 297). Performance below this threshold is considered optimal.
+    /// </summary>
+    public int TargetGenerationTimeMs { get; set; } = 500;
+
+    /// <summary>
+    /// Gets or sets the degraded performance threshold for 1000 operations in milliseconds.
+    /// Default is 2000ms. Performance between target and this threshold triggers a warning.
+    /// </summary>
+    public int DegradedThresholdMs { get; set; } = 2000;
+
+    /// <summary>
+    /// Gets or sets the failure threshold for 1000 operations in milliseconds.
+    /// Default is 2000ms. Performance exceeding this threshold triggers an error diagnostic.
+    /// </summary>
+    public int FailureThresholdMs { get; set; } = 2000;
+
+    /// <summary>
+    /// Gets or sets the number of operations used for performance baseline measurement.
+    /// Default is 1000 operations (as per AC 297-300).
+    /// </summary>
+    public int BaselineOperationCount { get; set; } = 1000;
 }

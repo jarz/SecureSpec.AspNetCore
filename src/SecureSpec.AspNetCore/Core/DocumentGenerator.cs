@@ -33,23 +33,32 @@ public class DocumentGenerator
     }
 
     /// <summary>
-    /// Generates an OpenAPI document with resource guard protection.
+    /// Generates an OpenAPI document with resource guard protection and performance monitoring.
     /// If resource limits are exceeded, a fallback document is generated instead.
     /// </summary>
     /// <param name="documentName">The name of the document to generate.</param>
     /// <param name="generationFunc">The function that generates the full document.</param>
+    /// <param name="operationCount">Number of operations for performance normalization (default 1).</param>
     /// <returns>The generated OpenAPI document, or a fallback document if limits were exceeded.</returns>
     public OpenApiDocument GenerateWithGuards(
         string documentName,
-        Func<OpenApiDocument> generationFunc)
+        Func<OpenApiDocument> generationFunc,
+        int operationCount = 1)
     {
         ArgumentNullException.ThrowIfNull(documentName);
         ArgumentNullException.ThrowIfNull(generationFunc);
 
+        // Start performance monitoring
+        using var perfMonitor = _options.Performance.EnablePerformanceMonitoring
+            ? new PerformanceMonitor(_options.Performance, _logger, $"Document generation: {documentName}", operationCount)
+            : null;
+
         // If resource guards are disabled, just generate normally
         if (!_options.Performance.EnableResourceGuards)
         {
-            return generationFunc();
+            var doc = generationFunc();
+            perfMonitor?.Stop();
+            return doc;
         }
 
         using var guard = _guardFactory.Create();
@@ -62,7 +71,7 @@ public class DocumentGenerator
             // Check if limits were exceeded after generation
             if (guard.IsLimitExceeded(out var reason))
             {
-                _logger.LogWarning("PERF001", $"Document '{documentName}' exceeded resource limits during generation", new
+                _logger.LogWarning(DiagnosticCodes.ResourceLimitExceeded, $"Document '{documentName}' exceeded resource limits during generation", new
                 {
                     DocumentName = documentName,
                     Reason = reason,
@@ -70,16 +79,18 @@ public class DocumentGenerator
                     MemoryBytes = guard.MemoryUsageBytes
                 });
 
+                perfMonitor?.Stop();
                 // Return fallback document instead of the full one
                 return CreateFallbackDocument(documentName, reason!);
             }
 
+            perfMonitor?.Stop();
             return document;
         }
         catch (ResourceLimitExceededException ex)
         {
             // Limit exceeded during generation - return fallback
-            _logger.LogWarning("PERF001", $"Document '{documentName}' generation aborted due to resource limits", new
+            _logger.LogWarning(DiagnosticCodes.ResourceLimitExceeded, $"Document '{documentName}' generation aborted due to resource limits", new
             {
                 DocumentName = documentName,
                 Reason = ex.Message,
@@ -87,6 +98,7 @@ public class DocumentGenerator
                 MemoryBytes = guard.MemoryUsageBytes
             });
 
+            perfMonitor?.Stop();
             return CreateFallbackDocument(documentName, ex.Message);
         }
 #pragma warning disable CA1031 // Do not catch general exception types - intentional for fallback behavior
@@ -94,13 +106,14 @@ public class DocumentGenerator
 #pragma warning restore CA1031 // Do not catch general exception types
         {
             // Other generation errors - also return fallback
-            _logger.LogWarning("PERF001", $"Document '{documentName}' generation failed", new
+            _logger.LogWarning(DiagnosticCodes.ResourceLimitExceeded, $"Document '{documentName}' generation failed", new
             {
                 DocumentName = documentName,
                 Error = ex.Message,
                 ExceptionType = ex.GetType().Name
             });
 
+            perfMonitor?.Stop();
             return CreateFallbackDocument(documentName, $"Generation failed: {ex.Message}");
         }
     }
