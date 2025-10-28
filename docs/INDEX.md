@@ -19,13 +19,8 @@ Welcome to the SecureSpec.AspNetCore documentation! This index will help you nav
 
 | Document | Description | When to Use |
 |----------|-------------|-------------|
-| **[SECURITY_REQUIREMENTS.md](SECURITY_REQUIREMENTS.md)** | Security requirement AND/OR semantics | Configuring authentication |
 | **[RESOURCE_GUARDS.md](RESOURCE_GUARDS.md)** | Resource guards configuration | Setting up size/time limits |
 | **[DICTIONARY_USAGE.md](DICTIONARY_USAGE.md)** | Dictionary handling guide | Working with dictionaries |
-| **[EXAMPLE_PRECEDENCE.md](EXAMPLE_PRECEDENCE.md)** | Example precedence rules | Understanding example generation |
-| **[MUTUAL_TLS_GUIDE.md](MUTUAL_TLS_GUIDE.md)** | Mutual TLS configuration | Setting up mTLS |
-| **[DIAGNOSTICS_USAGE.md](DIAGNOSTICS_USAGE.md)** | Diagnostics and logging | Monitoring and debugging |
-| **[XML_DOCUMENTATION.md](XML_DOCUMENTATION.md)** | XML documentation integration | Adding API documentation |
 | **[API_DESIGN.md](API_DESIGN.md)** | API design guidelines | Contributing to the project |
 | **[DESIGN.md](DESIGN.md)** | Design documentation | Understanding architecture |
 | **[TESTING_STRATEGY.md](TESTING_STRATEGY.md)** | Testing approach | Writing tests |
