@@ -28,7 +28,7 @@ public partial class SchemaGenerator
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _exampleGenerator = new ExampleGenerator(options);
+        _exampleGenerator = new ExampleGenerator(options, logger);
         _precedenceEngine = new ExamplePrecedenceEngine(_exampleGenerator);
         _xmlDocumentation = new XmlDocumentationProvider(logger);
 
