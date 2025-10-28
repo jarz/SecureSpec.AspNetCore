@@ -147,7 +147,7 @@ public partial class SchemaGenerator
         var name = property.Name;
         if (name.Length > 0)
         {
-            return char.ToLowerInvariant(name[0]) + name.Substring(1);
+            return char.ToLowerInvariant(name[0]) + name[1..];
         }
         return name;
     }
