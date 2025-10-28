@@ -2,7 +2,6 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Schema;
-using Xunit;
 
 namespace SecureSpec.AspNetCore.Tests;
 
@@ -72,10 +71,10 @@ public class ExamplePrecedenceAcceptanceTests
         // Arrange - No named or single examples
         var context = new ExampleContext
         {
-            ComponentExample = new OpenApiReference 
-            { 
-                Type = ReferenceType.Example, 
-                Id = "UserExample" 
+            ComponentExample = new OpenApiReference
+            {
+                Type = ReferenceType.Example,
+                Id = "UserExample"
             },
             Schema = new OpenApiSchema { Type = "string" }
         };
@@ -96,8 +95,8 @@ public class ExamplePrecedenceAcceptanceTests
         // Arrange - Only schema provided
         var context = new ExampleContext
         {
-            Schema = new OpenApiSchema 
-            { 
+            Schema = new OpenApiSchema
+            {
                 Type = "object",
                 Properties = new Dictionary<string, OpenApiSchema>
                 {
@@ -151,13 +150,13 @@ public class ExamplePrecedenceAcceptanceTests
         {
             NamedExamples =
             {
-                ["success"] = new OpenApiExample 
-                { 
+                ["success"] = new OpenApiExample
+                {
                     Value = new OpenApiString("success-value"),
                     Summary = "Success case"
                 },
-                ["error"] = new OpenApiExample 
-                { 
+                ["error"] = new OpenApiExample
+                {
                     Value = new OpenApiString("error-value"),
                     Summary = "Error case"
                 }
@@ -212,17 +211,17 @@ public class ExamplePrecedenceAcceptanceTests
         // Assert - Complex nested structure generated correctly
         Assert.NotNull(result);
         var obj = Assert.IsType<OpenApiObject>(result);
-        
+
         // Verify user object
         var userObj = Assert.IsType<OpenApiObject>(obj["user"]);
         Assert.Equal("00000000-0000-0000-0000-000000000000", ((OpenApiString)userObj["id"]).Value);
         Assert.Equal("user@example.com", ((OpenApiString)userObj["email"]).Value);
         Assert.Equal("2024-01-01T00:00:00Z", ((OpenApiString)userObj["created"]).Value);
-        
+
         // Verify tags array
         var tagsArray = Assert.IsType<OpenApiArray>(obj["tags"]);
         Assert.Single(tagsArray);
-        
+
         // Verify active boolean
         var activeBool = Assert.IsType<OpenApiBoolean>(obj["active"]);
         Assert.False(activeBool.Value);
@@ -233,7 +232,7 @@ public class ExamplePrecedenceAcceptanceTests
     {
         // Arrange - Configuration with examples disabled
         var disabledOptions = new SchemaOptions { GenerateExamples = false };
-        
+
         // Act & Assert - Verify configuration property exists and can be set
         Assert.False(disabledOptions.GenerateExamples);
         Assert.Equal(25, disabledOptions.ExampleGenerationTimeoutMs); // Default timeout
@@ -244,7 +243,7 @@ public class ExamplePrecedenceAcceptanceTests
     {
         // Arrange
         var customOptions = new SchemaOptions { ExampleGenerationTimeoutMs = 50 };
-        
+
         // Act & Assert
         Assert.Equal(50, customOptions.ExampleGenerationTimeoutMs);
     }

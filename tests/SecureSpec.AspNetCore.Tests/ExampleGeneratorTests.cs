@@ -2,7 +2,6 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Schema;
-using Xunit;
 
 namespace SecureSpec.AspNetCore.Tests;
 
