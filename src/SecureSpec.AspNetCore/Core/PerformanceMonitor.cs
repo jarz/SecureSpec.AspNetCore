@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Diagnostics;
 
@@ -12,7 +11,8 @@ public sealed class PerformanceMonitor : IDisposable
 {
     private readonly PerformanceOptions _options;
     private readonly DiagnosticsLogger _logger;
-    private readonly Stopwatch _stopwatch;
+    private readonly TimeProvider _timeProvider;
+    private readonly long _startTimestamp;
     private readonly string _operationName;
     private bool _disposed;
 
@@ -22,10 +22,12 @@ public sealed class PerformanceMonitor : IDisposable
     /// <param name="options">Performance configuration options.</param>
     /// <param name="logger">Diagnostics logger for emitting performance events.</param>
     /// <param name="operationName">Name of the operation being monitored.</param>
+    /// <param name="timeProvider">Time provider for getting current time. If null, uses TimeProvider.System.</param>
     public PerformanceMonitor(
         PerformanceOptions options,
         DiagnosticsLogger logger,
-        string operationName)
+        string operationName,
+        TimeProvider? timeProvider = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(logger);
@@ -34,13 +36,21 @@ public sealed class PerformanceMonitor : IDisposable
         _options = options;
         _logger = logger;
         _operationName = operationName;
-        _stopwatch = Stopwatch.StartNew();
+        _timeProvider = timeProvider ?? TimeProvider.System;
+        _startTimestamp = _timeProvider.GetTimestamp();
     }
 
     /// <summary>
     /// Gets the elapsed time in milliseconds since monitoring started.
     /// </summary>
-    public long ElapsedMilliseconds => _stopwatch.ElapsedMilliseconds;
+    public long ElapsedMilliseconds
+    {
+        get
+        {
+            var elapsed = _timeProvider.GetElapsedTime(_startTimestamp);
+            return (long)elapsed.TotalMilliseconds;
+        }
+    }
 
     /// <summary>
     /// Gets the current performance status based on elapsed time and thresholds.
@@ -79,8 +89,6 @@ public sealed class PerformanceMonitor : IDisposable
         {
             return;
         }
-
-        _stopwatch.Stop();
 
         if (!_options.EnablePerformanceMonitoring)
         {

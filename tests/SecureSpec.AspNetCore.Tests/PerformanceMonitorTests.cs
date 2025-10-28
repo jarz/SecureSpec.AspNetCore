@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Time.Testing;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Core;
@@ -57,10 +58,11 @@ public class PerformanceMonitorTests
             DegradedThresholdMs = 2000,
         };
         var logger = new DiagnosticsLogger();
+        var fakeTime = new FakeTimeProvider();
 
         // Act
-        using var monitor = new PerformanceMonitor(options, logger, "test-operation");
-        Thread.Sleep(10); // Exceed target but not degraded threshold
+        using var monitor = new PerformanceMonitor(options, logger, "test-operation", fakeTime);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(10)); // Exceed target but not degraded threshold
         var status = monitor.Status;
 
         // Assert
@@ -78,10 +80,11 @@ public class PerformanceMonitorTests
             DegradedThresholdMs = 10, // Very low threshold
         };
         var logger = new DiagnosticsLogger();
+        var fakeTime = new FakeTimeProvider();
 
         // Act
-        using var monitor = new PerformanceMonitor(options, logger, "test-operation");
-        Thread.Sleep(50); // Exceed failure threshold
+        using var monitor = new PerformanceMonitor(options, logger, "test-operation", fakeTime);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(50)); // Exceed failure threshold
         var status = monitor.Status;
 
         // Assert
@@ -138,10 +141,11 @@ public class PerformanceMonitorTests
             DegradedThresholdMs = 2000,
         };
         var logger = new DiagnosticsLogger();
+        var fakeTime = new FakeTimeProvider();
 
         // Act
-        using var monitor = new PerformanceMonitor(options, logger, "test-operation");
-        Thread.Sleep(10); // Exceed target
+        using var monitor = new PerformanceMonitor(options, logger, "test-operation", fakeTime);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(10)); // Exceed target
         monitor.Stop();
 
         // Assert
@@ -160,10 +164,11 @@ public class PerformanceMonitorTests
             DegradedThresholdMs = 10,
         };
         var logger = new DiagnosticsLogger();
+        var fakeTime = new FakeTimeProvider();
 
         // Act
-        using var monitor = new PerformanceMonitor(options, logger, "test-operation");
-        Thread.Sleep(50); // Exceed failure threshold
+        using var monitor = new PerformanceMonitor(options, logger, "test-operation", fakeTime);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(50)); // Exceed failure threshold
         monitor.Stop();
 
         // Assert
@@ -403,10 +408,16 @@ public class DocumentGenerationPerformanceTests
         var logger = new DiagnosticsLogger();
         var generator = new DocumentGenerator(options, logger);
 
-        // Act - add some delay to exceed target
+        // Act - add some CPU work to exceed very low target
         var doc = generator.GenerateWithGuards("test", () =>
         {
-            Thread.Sleep(10); // Small delay to exceed very low target
+            // Use actual CPU work instead of Thread.Sleep for cross-platform reliability
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            double dummy = 0;
+            while (sw.ElapsedMilliseconds < 10)
+            {
+                dummy += Math.Sqrt(sw.ElapsedMilliseconds + 1);
+            }
             return new OpenApiDocument
             {
                 Info = new OpenApiInfo { Title = "Test", Version = "1.0" },
@@ -440,10 +451,16 @@ public class DocumentGenerationPerformanceTests
         var logger = new DiagnosticsLogger();
         var generator = new DocumentGenerator(options, logger);
 
-        // Act - add significant delay to exceed failure threshold
+        // Act - add significant CPU work to exceed failure threshold
         var doc = generator.GenerateWithGuards("test", () =>
         {
-            Thread.Sleep(50); // Enough delay to exceed very low threshold
+            // Use actual CPU work instead of Thread.Sleep for cross-platform reliability
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            while (sw.ElapsedMilliseconds < 50)
+            {
+                // Perform some work
+                Math.Sqrt(sw.ElapsedMilliseconds);
+            }
             return new OpenApiDocument
             {
                 Info = new OpenApiInfo { Title = "Test", Version = "1.0" },

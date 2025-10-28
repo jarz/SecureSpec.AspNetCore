@@ -185,7 +185,7 @@ public void PerformanceMonitor_MeetsTargetThreshold()
     };
     var logger = new DiagnosticsLogger();
 
-    using (var monitor = new PerformanceMonitor(options, logger, "test", 1000))
+    using (var monitor = new PerformanceMonitor(options, logger, "test"))
     {
         // Fast operation
     }
