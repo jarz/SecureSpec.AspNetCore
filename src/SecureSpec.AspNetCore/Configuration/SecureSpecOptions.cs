@@ -36,6 +36,11 @@ public class SecureSpecOptions
     public DiagnosticsOptions Diagnostics { get; } = new();
 
     /// <summary>
+    /// Gets cache configuration options.
+    /// </summary>
+    public CacheOptions Cache { get; } = new();
+
+    /// <summary>
     /// Gets performance and resource guard options.
     /// </summary>
     public PerformanceOptions Performance { get; } = new();
