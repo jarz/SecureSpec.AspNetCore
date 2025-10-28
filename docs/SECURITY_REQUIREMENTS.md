@@ -190,10 +190,10 @@ new SecurityRequirementBuilder()
     .Build();
 ```
 
-For other schemes (API Key, HTTP Bearer, Mutual TLS), use an empty scopes array:
+For other schemes (API Key, HTTP Bearer, Mutual TLS), omit the scopes parameter:
 
 ```csharp
-// API Key (no scopes)
+// API Key (no scopes needed)
 new SecurityRequirementBuilder()
     .AddScheme("apiKey")
     .Build();

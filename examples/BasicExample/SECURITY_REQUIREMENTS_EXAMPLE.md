@@ -287,7 +287,7 @@ app.Run();
 ## Common Pitfalls
 
 1. **Null vs Empty**: `null` means "use global", `[]` means "no auth required"
-2. **Scope Requirements**: Only OAuth2 and OpenID Connect use scopes; other schemes should have empty arrays
+2. **Scope Requirements**: Only OAuth2 and OpenID Connect use scopes; for other schemes (API Key, HTTP Bearer, Mutual TLS), omit the scopes parameter entirely
 3. **Operation Override**: Operation-level security completely replaces global (no merging)
 
 ## Additional Resources
