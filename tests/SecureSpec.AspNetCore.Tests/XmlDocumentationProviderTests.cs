@@ -55,7 +55,7 @@ public class XmlDocumentationProviderTests
     public void LoadXmlDocumentation_ShouldHandleNonexistentFile()
     {
         // Arrange
-        const string xmlPath = "/tmp/nonexistent-file.xml";
+        var xmlPath = Path.Combine(Path.GetTempPath(), "nonexistent-file.xml");
 
         // Act
         _provider.LoadXmlDocumentation(xmlPath);
