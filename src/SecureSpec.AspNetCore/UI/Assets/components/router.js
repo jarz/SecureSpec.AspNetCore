@@ -79,7 +79,8 @@ export class Router {
 
     if (operationElement) {
       // Expand the operation if it's not already expanded
-      if (!this.state.getState().expandedOperations.has(operationId)) {
+      const currentState = this.state.getState();
+      if (!currentState.expandedOperations.has(operationId)) {
         this.state.toggleOperation(operationId);
       }
 

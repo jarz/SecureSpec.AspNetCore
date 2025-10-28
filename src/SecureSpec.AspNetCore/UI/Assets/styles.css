@@ -178,7 +178,6 @@ main {
   transition: background-color 0.2s;
   user-select: none;
   outline: none; /* Custom focus indicator via highlighting */
-  tabindex: 0; /* Make focusable */
 }
 
 .operation-header:hover {
