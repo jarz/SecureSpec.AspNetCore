@@ -30,7 +30,6 @@ public class DiagnosticCodesTests
         var allCodes = DiagnosticCodes.GetAllCodes();
 
         // Assert
-        // As of this implementation, we have 24 defined codes (19 original + 5 new for Links/Callbacks)
         Assert.Equal(24, allCodes.Length);
     }
 
