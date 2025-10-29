@@ -233,7 +233,7 @@ public class PerformanceMonitorTests
         {
             sum += i;
         }
-
+        Assert.True(sum > 0); // Ensure sum is used so the loop is not optimized away
         monitor.Stop();
 
         // Assert
