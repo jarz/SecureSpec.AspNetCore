@@ -98,6 +98,19 @@ public class LinksCallbacksTests
         Assert.Equal("Fix reference path", metadata.RecommendedAction);
     }
 
+    [Fact]
+    public void LinkExternalReference_WarnsAboutUnsupportedReference()
+    {
+        // Arrange - This test validates that the diagnostic code exists for external link references
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkExternalReference);
+
+        // Assert
+        Assert.NotNull(metadata);
+        Assert.Equal("External or unsupported reference in link", metadata.Description);
+        Assert.Equal(DiagnosticLevel.Warn, metadata.Level);
+        Assert.Equal("Use internal references only", metadata.RecommendedAction);
+    }
+
     // Additional diagnostic code validation tests
 
     [Theory]
@@ -105,6 +118,7 @@ public class LinksCallbacksTests
     [InlineData("LNK002")]
     [InlineData("LNK003")]
     [InlineData("LNK004")]
+    [InlineData("LNK005")]
     [InlineData("CBK001")]
     [InlineData("CBK002")]
     public void LinksAndCallbacksCodes_AreValidDiagnosticCodes(string code)
@@ -126,18 +140,22 @@ public class LinksCallbacksTests
             DiagnosticCodes.LinkOperationRefFallback,
             DiagnosticCodes.LinkMissingReference,
             DiagnosticCodes.LinkBrokenReference,
+            DiagnosticCodes.LinkExternalReference,
             DiagnosticCodes.CallbackReadOnly,
             DiagnosticCodes.CallbackBrokenReference
         };
 
         // Act & Assert
-        foreach (var code in codes)
+        var results = codes.Select(code =>
         {
             var metadata = DiagnosticCodes.GetMetadata(code);
             Assert.NotNull(metadata);
             Assert.False(string.IsNullOrEmpty(metadata.Description));
             Assert.False(string.IsNullOrEmpty(metadata.RecommendedAction));
-        }
+            return metadata;
+        }).ToList();
+
+        Assert.Equal(codes.Length, results.Count);
     }
 
     [Fact]
@@ -148,6 +166,7 @@ public class LinksCallbacksTests
         Assert.StartsWith("LNK", DiagnosticCodes.LinkOperationRefFallback);
         Assert.StartsWith("LNK", DiagnosticCodes.LinkMissingReference);
         Assert.StartsWith("LNK", DiagnosticCodes.LinkBrokenReference);
+        Assert.StartsWith("LNK", DiagnosticCodes.LinkExternalReference);
 
         // Assert - Callback codes should start with CBK
         Assert.StartsWith("CBK", DiagnosticCodes.CallbackReadOnly);
@@ -162,6 +181,7 @@ public class LinksCallbacksTests
         Assert.Equal("LNK002", DiagnosticCodes.LinkOperationRefFallback);
         Assert.Equal("LNK003", DiagnosticCodes.LinkMissingReference);
         Assert.Equal("LNK004", DiagnosticCodes.LinkBrokenReference);
+        Assert.Equal("LNK005", DiagnosticCodes.LinkExternalReference);
 
         // Assert - Callback codes are numbered sequentially
         Assert.Equal("CBK001", DiagnosticCodes.CallbackReadOnly);
@@ -176,12 +196,14 @@ public class LinksCallbacksTests
         var operationRefFallback = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkOperationRefFallback);
         var missingReference = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkMissingReference);
         var brokenReference = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkBrokenReference);
+        var externalReference = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkExternalReference);
 
         // Assert
         Assert.Equal(DiagnosticLevel.Warn, circularLink!.Level);
         Assert.Equal(DiagnosticLevel.Info, operationRefFallback!.Level);
         Assert.Equal(DiagnosticLevel.Warn, missingReference!.Level);
         Assert.Equal(DiagnosticLevel.Error, brokenReference!.Level);
+        Assert.Equal(DiagnosticLevel.Warn, externalReference!.Level);
     }
 
     [Fact]

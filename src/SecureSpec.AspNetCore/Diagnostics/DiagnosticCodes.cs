@@ -259,6 +259,13 @@ public static class DiagnosticCodes
     /// </summary>
     public const string LinkBrokenReference = "LNK004";
 
+    /// <summary>
+    /// External or unsupported reference in link.
+    /// Severity: Warn
+    /// Action: Use internal references only
+    /// </summary>
+    public const string LinkExternalReference = "LNK005";
+
     // ============================================
     // Callback Codes (CBK)
     // ============================================
@@ -313,6 +320,7 @@ public static class DiagnosticCodes
             LinkOperationRefFallback => new("Missing operationId but operationRef present", DiagnosticLevel.Info, "Using operationRef fallback"),
             LinkMissingReference => new("Missing both operationId and operationRef", DiagnosticLevel.Warn, "Provide operationId or operationRef"),
             LinkBrokenReference => new("Broken $ref in link", DiagnosticLevel.Error, "Fix reference path"),
+            LinkExternalReference => new("External or unsupported reference in link", DiagnosticLevel.Warn, "Use internal references only"),
             CallbackReadOnly => new("Callback section rendered read-only", DiagnosticLevel.Info, "Callbacks do not support Try It Out"),
             CallbackBrokenReference => new("Broken $ref in callback", DiagnosticLevel.Error, "Fix reference path"),
             _ => null
@@ -364,6 +372,7 @@ public static class DiagnosticCodes
             LinkOperationRefFallback,
             LinkMissingReference,
             LinkBrokenReference,
+            LinkExternalReference,
             CallbackReadOnly,
             CallbackBrokenReference
         };

@@ -30,7 +30,7 @@ public class DiagnosticCodesTests
         var allCodes = DiagnosticCodes.GetAllCodes();
 
         // Assert
-        Assert.Equal(29, allCodes.Length);
+        Assert.Equal(30, allCodes.Length);
     }
 
     [Fact]
@@ -369,6 +369,19 @@ public class DiagnosticCodesTests
         Assert.Equal("Fix reference path", metadata.RecommendedAction);
     }
 
+    [Fact]
+    public void LNK005_LinkExternalReference_HasCorrectMetadata()
+    {
+        // Act
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkExternalReference);
+
+        // Assert
+        Assert.NotNull(metadata);
+        Assert.Equal("External or unsupported reference in link", metadata.Description);
+        Assert.Equal(DiagnosticLevel.Warn, metadata.Level);
+        Assert.Equal("Use internal references only", metadata.RecommendedAction);
+    }
+
     // Callback Codes (CBK)
 
     [Fact]
@@ -420,6 +433,7 @@ public class DiagnosticCodesTests
     [InlineData("LNK002")]
     [InlineData("LNK003")]
     [InlineData("LNK004")]
+    [InlineData("LNK005")]
     [InlineData("CBK001")]
     [InlineData("CBK002")]
     public void AllDefinedCodeConstants_AreRecognizedByIsValidCode(string code)

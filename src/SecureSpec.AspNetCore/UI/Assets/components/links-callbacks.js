@@ -249,7 +249,7 @@ export class LinksCallbacksDisplay {
     
     // Only handle internal references starting with '#/'
     if (!ref.startsWith('#/')) {
-      console.warn(`[LNK004] External or invalid reference not supported: ${ref}`);
+      console.warn(`[LNK005] External or invalid reference not supported: ${ref}`);
       return null;
     }
 
