@@ -98,6 +98,45 @@ public static class DiagnosticCodes
     public const string NullabilityMismatch = "NRT001";
 
     // ============================================
+    // Performance Codes (PERF)
+    // ============================================
+
+    /// <summary>
+    /// Resource limit exceeded (time or memory).
+    /// Severity: Warn
+    /// Action: Review resource configuration
+    /// </summary>
+    public const string ResourceLimitExceeded = "PERF001";
+
+    /// <summary>
+    /// Performance target met (&lt;500ms for 1000 operations).
+    /// Severity: Info
+    /// Action: None
+    /// </summary>
+    public const string PerformanceTargetMet = "PERF002";
+
+    /// <summary>
+    /// Performance degraded (500-2000ms for 1000 operations).
+    /// Severity: Warn
+    /// Action: Review performance optimizations
+    /// </summary>
+    public const string PerformanceDegraded = "PERF003";
+
+    /// <summary>
+    /// Performance failure (&gt;2000ms for 1000 operations).
+    /// Severity: Error
+    /// Action: Immediate optimization required
+    /// </summary>
+    public const string PerformanceFailure = "PERF004";
+
+    /// <summary>
+    /// Performance monitoring metrics collected.
+    /// Severity: Info
+    /// Action: Review performance trends
+    /// </summary>
+    public const string PerformanceMetrics = "PERF005";
+
+    // ============================================
     // Example Generation Codes (EXM)
     // ============================================
 
@@ -217,6 +256,11 @@ public static class DiagnosticCodes
             RateLimitResetAnomaly => new("Rate limit reset anomaly", DiagnosticLevel.Warn, "Check time source"),
             MapTypeOverride => new("MapType override applied", DiagnosticLevel.Info, "Validate mapping correctness"),
             NullabilityMismatch => new("Nullability mismatch", DiagnosticLevel.Error, "Adjust NRT config"),
+            ResourceLimitExceeded => new("Resource limit exceeded", DiagnosticLevel.Warn, "Review resource configuration"),
+            PerformanceTargetMet => new("Performance target met", DiagnosticLevel.Info, "None"),
+            PerformanceDegraded => new("Performance degraded", DiagnosticLevel.Warn, "Review performance optimizations"),
+            PerformanceFailure => new("Performance failure", DiagnosticLevel.Error, "Immediate optimization required"),
+            PerformanceMetrics => new("Performance monitoring metrics collected", DiagnosticLevel.Info, "Review performance trends"),
             ExampleGenerationThrottled => new("Example generation throttled", DiagnosticLevel.Warn, "Provide explicit example"),
             VirtualizationThresholdTriggered => new("Virtualization threshold triggered", DiagnosticLevel.Info, "Performance expectation"),
             RetentionSizePurge => new("Retention size purge executed", DiagnosticLevel.Info, "Monitor volume"),
@@ -258,6 +302,11 @@ public static class DiagnosticCodes
             RateLimitResetAnomaly,
             MapTypeOverride,
             NullabilityMismatch,
+            ResourceLimitExceeded,
+            PerformanceTargetMet,
+            PerformanceDegraded,
+            PerformanceFailure,
+            PerformanceMetrics,
             ExampleGenerationThrottled,
             VirtualizationThresholdTriggered,
             RetentionSizePurge,

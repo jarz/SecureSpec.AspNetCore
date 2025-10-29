@@ -33,7 +33,7 @@ public class DocumentGenerator
     }
 
     /// <summary>
-    /// Generates an OpenAPI document with resource guard protection.
+    /// Generates an OpenAPI document with resource guard protection and performance monitoring.
     /// If resource limits are exceeded, a fallback document is generated instead.
     /// </summary>
     /// <param name="documentName">The name of the document to generate.</param>
@@ -45,6 +45,11 @@ public class DocumentGenerator
     {
         ArgumentNullException.ThrowIfNull(documentName);
         ArgumentNullException.ThrowIfNull(generationFunc);
+
+        // Start performance monitoring
+        using var perfMonitor = _options.Performance.EnablePerformanceMonitoring
+            ? new PerformanceMonitor(_options.Performance, _logger, $"Document generation: {documentName}")
+            : null;
 
         // If resource guards are disabled, just generate normally
         if (!_options.Performance.EnableResourceGuards)
@@ -62,7 +67,7 @@ public class DocumentGenerator
             // Check if limits were exceeded after generation
             if (guard.IsLimitExceeded(out var reason))
             {
-                _logger.LogWarning("PERF001", $"Document '{documentName}' exceeded resource limits during generation", new
+                _logger.LogWarning(DiagnosticCodes.ResourceLimitExceeded, $"Document '{documentName}' exceeded resource limits during generation", new
                 {
                     DocumentName = documentName,
                     Reason = reason,
@@ -79,7 +84,7 @@ public class DocumentGenerator
         catch (ResourceLimitExceededException ex)
         {
             // Limit exceeded during generation - return fallback
-            _logger.LogWarning("PERF001", $"Document '{documentName}' generation aborted due to resource limits", new
+            _logger.LogWarning(DiagnosticCodes.ResourceLimitExceeded, $"Document '{documentName}' generation aborted due to resource limits", new
             {
                 DocumentName = documentName,
                 Reason = ex.Message,
@@ -94,7 +99,7 @@ public class DocumentGenerator
 #pragma warning restore CA1031 // Do not catch general exception types
         {
             // Other generation errors - also return fallback
-            _logger.LogWarning("PERF001", $"Document '{documentName}' generation failed", new
+            _logger.LogWarning(DiagnosticCodes.ResourceLimitExceeded, $"Document '{documentName}' generation failed", new
             {
                 DocumentName = documentName,
                 Error = ex.Message,

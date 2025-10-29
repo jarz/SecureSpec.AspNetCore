@@ -23,4 +23,24 @@ public class PerformanceOptions
     /// Default is true. When disabled, no time or memory limits are enforced.
     /// </summary>
     public bool EnableResourceGuards { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets whether performance monitoring is enabled.
+    /// Default is true. When enabled, performance metrics are collected and diagnostic events are emitted.
+    /// </summary>
+    public bool EnablePerformanceMonitoring { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the target generation time in milliseconds.
+    /// Default is 500ms. Performance below this threshold is considered optimal.
+    /// This target is based on generating a document with ~1000 API operations (AC 297).
+    /// </summary>
+    public int TargetGenerationTimeMs { get; set; } = 500;
+
+    /// <summary>
+    /// Gets or sets the degraded performance threshold in milliseconds.
+    /// Default is 2000ms. Performance between target and this threshold triggers a warning.
+    /// Performance exceeding this threshold is considered a failure (AC 298-299).
+    /// </summary>
+    public int DegradedThresholdMs { get; set; } = 2000;
 }
