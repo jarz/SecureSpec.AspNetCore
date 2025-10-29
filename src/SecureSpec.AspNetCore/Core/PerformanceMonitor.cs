@@ -136,14 +136,11 @@ public sealed class PerformanceMonitor : IDisposable
                 break;
         }
 
-        // Emit metrics for tracking only if monitoring is enabled
-        if (_options.EnablePerformanceMonitoring)
-        {
-            _logger.LogInfo(
-                DiagnosticCodes.PerformanceMetrics,
-                $"Performance metrics collected for '{_operationName}'",
-                context);
-        }
+        // Emit metrics for tracking
+        _logger.LogInfo(
+            DiagnosticCodes.PerformanceMetrics,
+            $"Performance metrics collected for '{_operationName}'",
+            context);
     }
 
     /// <summary>
