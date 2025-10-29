@@ -54,13 +54,8 @@ export class LinksCallbacksDisplay {
 
     // Check for circular links (AC 493)
     // Include link description or parameters as additional identifying information to avoid false positives
-    const linkIdentifier = JSON.stringify({
-      name: linkName,
-      operationId: link.operationId || '',
-      operationRef: link.operationRef || '',
-      description: link.description || '',
-      paramCount: link.parameters ? Object.keys(link.parameters).length : 0
-    });
+    // Use a deterministic identifier for circular detection
+    const linkIdentifier = `${linkName}:${link.operationId || link.operationRef || ''}`;
     
     if (this.visitedLinks.has(linkIdentifier)) {
       console.warn(`[LNK001] Circular link detection: ${linkName}`);
