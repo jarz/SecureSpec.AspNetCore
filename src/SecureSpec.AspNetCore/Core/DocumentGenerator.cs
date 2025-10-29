@@ -54,9 +54,7 @@ public class DocumentGenerator
         // If resource guards are disabled, just generate normally
         if (!_options.Performance.EnableResourceGuards)
         {
-            var doc = generationFunc();
-            perfMonitor?.Stop();
-            return doc;
+            return generationFunc();
         }
 
         using var guard = _guardFactory.Create();
@@ -77,12 +75,10 @@ public class DocumentGenerator
                     MemoryBytes = guard.MemoryUsageBytes
                 });
 
-                perfMonitor?.Stop();
                 // Return fallback document instead of the full one
                 return CreateFallbackDocument(documentName, reason!);
             }
 
-            perfMonitor?.Stop();
             return document;
         }
         catch (ResourceLimitExceededException ex)
@@ -96,7 +92,6 @@ public class DocumentGenerator
                 MemoryBytes = guard.MemoryUsageBytes
             });
 
-            perfMonitor?.Stop();
             return CreateFallbackDocument(documentName, ex.Message);
         }
 #pragma warning disable CA1031 // Do not catch general exception types - intentional for fallback behavior
@@ -111,7 +106,6 @@ public class DocumentGenerator
                 ExceptionType = ex.GetType().Name
             });
 
-            perfMonitor?.Stop();
             return CreateFallbackDocument(documentName, $"Generation failed: {ex.Message}");
         }
     }

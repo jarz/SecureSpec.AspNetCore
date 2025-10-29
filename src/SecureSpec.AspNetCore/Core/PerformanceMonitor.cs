@@ -22,7 +22,7 @@ public sealed class PerformanceMonitor : IDisposable
     /// <param name="options">Performance configuration options.</param>
     /// <param name="logger">Diagnostics logger for emitting performance events.</param>
     /// <param name="operationName">Name of the operation being monitored.</param>
-    /// <param name="timeProvider">Time provider for getting current time. If null, uses TimeProvider.System.</param>
+    /// <param name="timeProvider">Optional time provider for getting current time. Defaults to TimeProvider.System if null.</param>
     public PerformanceMonitor(
         PerformanceOptions options,
         DiagnosticsLogger logger,
