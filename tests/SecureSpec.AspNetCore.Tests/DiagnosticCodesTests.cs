@@ -30,7 +30,7 @@ public class DiagnosticCodesTests
         var allCodes = DiagnosticCodes.GetAllCodes();
 
         // Assert
-        Assert.Equal(24, allCodes.Length);
+        Assert.Equal(29, allCodes.Length);
     }
 
     [Fact]
