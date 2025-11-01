@@ -246,6 +246,52 @@ public static class DiagnosticCodes
     public const string CircularLinkDetected = "LNK001";
 
     /// <summary>
+    /// Missing operationId but operationRef present.
+    /// Severity: Info
+    /// Action: Using operationRef fallback
+    /// </summary>
+    public const string LinkOperationRefFallback = "LNK002";
+
+    /// <summary>
+    /// Missing both operationId and operationRef.
+    /// Severity: Warn
+    /// Action: Provide operationId or operationRef
+    /// </summary>
+    public const string LinkMissingReference = "LNK003";
+
+    /// <summary>
+    /// Broken $ref in link.
+    /// Severity: Error
+    /// Action: Fix reference path
+    /// </summary>
+    public const string LinkBrokenReference = "LNK004";
+
+    /// <summary>
+    /// External or unsupported reference in link.
+    /// Severity: Warn
+    /// Action: Use internal references only
+    /// </summary>
+    public const string LinkExternalReference = "LNK005";
+
+    // ============================================
+    // Callback Codes (CBK)
+    // ============================================
+
+    /// <summary>
+    /// Callback section rendered read-only.
+    /// Severity: Info
+    /// Action: Callbacks do not support Try It Out
+    /// </summary>
+    public const string CallbackReadOnly = "CBK001";
+
+    /// <summary>
+    /// Broken $ref in callback.
+    /// Severity: Error
+    /// Action: Fix reference path
+    /// </summary>
+    public const string CallbackBrokenReference = "CBK002";
+
+    /// <summary>
     /// Gets metadata for a diagnostic code.
     /// </summary>
     /// <param name="code">The diagnostic code.</param>
@@ -279,6 +325,12 @@ public static class DiagnosticCodes
             DisallowedHeadInjectionAttempt => new("Disallowed head injection attempt", DiagnosticLevel.Warn, "Use local meta/link"),
             MultipartFieldCountExceeded => new("Multipart field count limit exceeded", DiagnosticLevel.Warn, "Review field count limits"),
             CircularLinkDetected => new("Circular link detection", DiagnosticLevel.Warn, "Review link structure"),
+            LinkOperationRefFallback => new("Missing operationId but operationRef present", DiagnosticLevel.Info, "Using operationRef fallback"),
+            LinkMissingReference => new("Missing both operationId and operationRef", DiagnosticLevel.Warn, "Provide operationId or operationRef"),
+            LinkBrokenReference => new("Broken $ref in link", DiagnosticLevel.Error, "Fix reference path"),
+            LinkExternalReference => new("External or unsupported reference in link", DiagnosticLevel.Warn, "Use internal references only"),
+            CallbackReadOnly => new("Callback section rendered read-only", DiagnosticLevel.Info, "Callbacks do not support Try It Out"),
+            CallbackBrokenReference => new("Broken $ref in callback", DiagnosticLevel.Error, "Fix reference path"),
             _ => null
         };
     }
@@ -325,7 +377,13 @@ public static class DiagnosticCodes
             DisallowedHeadInjection,
             DisallowedHeadInjectionAttempt,
             MultipartFieldCountExceeded,
-            CircularLinkDetected
+            CircularLinkDetected,
+            LinkOperationRefFallback,
+            LinkMissingReference,
+            LinkBrokenReference,
+            LinkExternalReference,
+            CallbackReadOnly,
+            CallbackBrokenReference
         };
     }
 }
