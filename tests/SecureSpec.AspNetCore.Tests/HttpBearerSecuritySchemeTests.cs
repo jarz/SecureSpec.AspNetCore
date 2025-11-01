@@ -290,8 +290,11 @@ public class HttpBearerSecuritySchemeTests
         // Arrange
         var options = new SecurityOptions();
 
-        // Act & Assert - Should not throw
+        // Act
         options.BlockBasicAuthInference();
+
+        // Assert
+        Assert.Empty(options.Schemes);
     }
 
     [Fact]
