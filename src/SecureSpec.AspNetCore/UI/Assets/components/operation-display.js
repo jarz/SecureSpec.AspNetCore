@@ -7,7 +7,30 @@ export class OperationDisplay {
     this.linksCallbacksDisplay = new LinksCallbacksDisplay(state);
   }
   
-  render(operation, document = null) {
+  render(operation) {
+    const method = operation.method.toLowerCase();
+    const methodClass = `method-${method}`;
+    
+    return `
+      <div class="operation" data-operation-id="${operation.operationId || ''}">
+        <div class="operation-header">
+          <div>
+            <span class="operation-method ${methodClass}">${method}</span>
+            <strong>${operation.path}</strong>
+          </div>
+          <span>${operation.summary || ''}</span>
+        </div>
+        <div class="operation-content">
+          <p>${operation.description || ''}</p>
+          ${this.renderParameters(operation.parameters)}
+          ${this.renderRequestBody(operation.requestBody)}
+          ${this.renderResponsesBasic(operation.responses)}
+        </div>
+      </div>
+    `;
+  }
+  
+  renderWithDocument(operation, document) {
     const method = operation.method.toLowerCase();
     const methodClass = `method-${method}`;
     
@@ -27,8 +50,8 @@ export class OperationDisplay {
           <p>${operation.description || ''}</p>
           ${this.renderParameters(operation.parameters)}
           ${this.renderRequestBody(operation.requestBody)}
-          ${document ? this.renderCallbacks(operation.callbacks, document) : ''}
-          ${document ? this.renderResponses(operation.responses, document) : this.renderResponsesBasic(operation.responses)}
+          ${this.renderCallbacks(operation.callbacks, document)}
+          ${this.renderResponses(operation.responses, document)}
         </div>
       </div>
     `;
