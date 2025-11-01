@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
+using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore;
+using SecureSpec.AspNetCore.Security;
 using SecureSpec.AspNetCore.UI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +15,18 @@ builder.Services.AddSecureSpec(options =>
     {
         doc.Info.Title = "Weather API";
         doc.Info.Version = "1.0.0";
-        doc.Info.Description = "A simple weather forecast API";
+        doc.Info.Description = "A simple weather forecast API demonstrating security requirement AND/OR semantics";
+
+        // Global security: Accept Bearer token OR API Key (OR semantics)
+        doc.SecurityRequirements = new List<OpenApiSecurityRequirement>
+        {
+            new SecurityRequirementBuilder()
+                .AddScheme("bearerAuth")
+                .Build(),
+            new SecurityRequirementBuilder()
+                .AddScheme("apiKeyHeader")
+                .Build()
+        };
     });
 
     // Configure schema generation

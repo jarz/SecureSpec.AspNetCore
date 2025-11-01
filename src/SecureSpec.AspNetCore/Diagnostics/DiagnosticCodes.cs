@@ -17,6 +17,13 @@ public static class DiagnosticCodes
     /// </summary>
     public const string IntegrityCheckFailed = "SEC001";
 
+    /// <summary>
+    /// Operation security requirements mutated (overridden from global).
+    /// Severity: Info
+    /// Action: Review security configuration
+    /// </summary>
+    public const string SecurityRequirementsMutated = "SEC002";
+
     // ============================================
     // CSP Codes (CSP)
     // ============================================
@@ -96,6 +103,45 @@ public static class DiagnosticCodes
     /// Action: Adjust NRT config
     /// </summary>
     public const string NullabilityMismatch = "NRT001";
+
+    // ============================================
+    // Performance Codes (PERF)
+    // ============================================
+
+    /// <summary>
+    /// Resource limit exceeded (time or memory).
+    /// Severity: Warn
+    /// Action: Review resource configuration
+    /// </summary>
+    public const string ResourceLimitExceeded = "PERF001";
+
+    /// <summary>
+    /// Performance target met (&lt;500ms for 1000 operations).
+    /// Severity: Info
+    /// Action: None
+    /// </summary>
+    public const string PerformanceTargetMet = "PERF002";
+
+    /// <summary>
+    /// Performance degraded (500-2000ms for 1000 operations).
+    /// Severity: Warn
+    /// Action: Review performance optimizations
+    /// </summary>
+    public const string PerformanceDegraded = "PERF003";
+
+    /// <summary>
+    /// Performance failure (&gt;2000ms for 1000 operations).
+    /// Severity: Error
+    /// Action: Immediate optimization required
+    /// </summary>
+    public const string PerformanceFailure = "PERF004";
+
+    /// <summary>
+    /// Performance monitoring metrics collected.
+    /// Severity: Info
+    /// Action: Review performance trends
+    /// </summary>
+    public const string PerformanceMetrics = "PERF005";
 
     // ============================================
     // Example Generation Codes (EXM)
@@ -200,6 +246,52 @@ public static class DiagnosticCodes
     public const string CircularLinkDetected = "LNK001";
 
     /// <summary>
+    /// Missing operationId but operationRef present.
+    /// Severity: Info
+    /// Action: Using operationRef fallback
+    /// </summary>
+    public const string LinkOperationRefFallback = "LNK002";
+
+    /// <summary>
+    /// Missing both operationId and operationRef.
+    /// Severity: Warn
+    /// Action: Provide operationId or operationRef
+    /// </summary>
+    public const string LinkMissingReference = "LNK003";
+
+    /// <summary>
+    /// Broken $ref in link.
+    /// Severity: Error
+    /// Action: Fix reference path
+    /// </summary>
+    public const string LinkBrokenReference = "LNK004";
+
+    /// <summary>
+    /// External or unsupported reference in link.
+    /// Severity: Warn
+    /// Action: Use internal references only
+    /// </summary>
+    public const string LinkExternalReference = "LNK005";
+
+    // ============================================
+    // Callback Codes (CBK)
+    // ============================================
+
+    /// <summary>
+    /// Callback section rendered read-only.
+    /// Severity: Info
+    /// Action: Callbacks do not support Try It Out
+    /// </summary>
+    public const string CallbackReadOnly = "CBK001";
+
+    /// <summary>
+    /// Broken $ref in callback.
+    /// Severity: Error
+    /// Action: Fix reference path
+    /// </summary>
+    public const string CallbackBrokenReference = "CBK002";
+
+    /// <summary>
     /// Gets metadata for a diagnostic code.
     /// </summary>
     /// <param name="code">The diagnostic code.</param>
@@ -209,6 +301,7 @@ public static class DiagnosticCodes
         return code switch
         {
             IntegrityCheckFailed => new("Integrity check failed", DiagnosticLevel.Critical, "Abort load"),
+            SecurityRequirementsMutated => new("Operation security requirements mutated", DiagnosticLevel.Info, "Review security configuration"),
             CspMismatch => new("CSP mismatch or missing directives", DiagnosticLevel.Error, "Review policy"),
             SchemaIdCollision => new("SchemaId collision suffix applied", DiagnosticLevel.Info, "Confirm stability"),
             SchemaDepthExceeded => new("Schema generation exceeded maximum depth", DiagnosticLevel.Warn, "Review schema structure"),
@@ -217,6 +310,11 @@ public static class DiagnosticCodes
             RateLimitResetAnomaly => new("Rate limit reset anomaly", DiagnosticLevel.Warn, "Check time source"),
             MapTypeOverride => new("MapType override applied", DiagnosticLevel.Info, "Validate mapping correctness"),
             NullabilityMismatch => new("Nullability mismatch", DiagnosticLevel.Error, "Adjust NRT config"),
+            ResourceLimitExceeded => new("Resource limit exceeded", DiagnosticLevel.Warn, "Review resource configuration"),
+            PerformanceTargetMet => new("Performance target met", DiagnosticLevel.Info, "None"),
+            PerformanceDegraded => new("Performance degraded", DiagnosticLevel.Warn, "Review performance optimizations"),
+            PerformanceFailure => new("Performance failure", DiagnosticLevel.Error, "Immediate optimization required"),
+            PerformanceMetrics => new("Performance monitoring metrics collected", DiagnosticLevel.Info, "Review performance trends"),
             ExampleGenerationThrottled => new("Example generation throttled", DiagnosticLevel.Warn, "Provide explicit example"),
             VirtualizationThresholdTriggered => new("Virtualization threshold triggered", DiagnosticLevel.Info, "Performance expectation"),
             RetentionSizePurge => new("Retention size purge executed", DiagnosticLevel.Info, "Monitor volume"),
@@ -227,6 +325,12 @@ public static class DiagnosticCodes
             DisallowedHeadInjectionAttempt => new("Disallowed head injection attempt", DiagnosticLevel.Warn, "Use local meta/link"),
             MultipartFieldCountExceeded => new("Multipart field count limit exceeded", DiagnosticLevel.Warn, "Review field count limits"),
             CircularLinkDetected => new("Circular link detection", DiagnosticLevel.Warn, "Review link structure"),
+            LinkOperationRefFallback => new("Missing operationId but operationRef present", DiagnosticLevel.Info, "Using operationRef fallback"),
+            LinkMissingReference => new("Missing both operationId and operationRef", DiagnosticLevel.Warn, "Provide operationId or operationRef"),
+            LinkBrokenReference => new("Broken $ref in link", DiagnosticLevel.Error, "Fix reference path"),
+            LinkExternalReference => new("External or unsupported reference in link", DiagnosticLevel.Warn, "Use internal references only"),
+            CallbackReadOnly => new("Callback section rendered read-only", DiagnosticLevel.Info, "Callbacks do not support Try It Out"),
+            CallbackBrokenReference => new("Broken $ref in callback", DiagnosticLevel.Error, "Fix reference path"),
             _ => null
         };
     }
@@ -250,6 +354,7 @@ public static class DiagnosticCodes
         return new[]
         {
             IntegrityCheckFailed,
+            SecurityRequirementsMutated,
             CspMismatch,
             SchemaIdCollision,
             SchemaDepthExceeded,
@@ -258,6 +363,11 @@ public static class DiagnosticCodes
             RateLimitResetAnomaly,
             MapTypeOverride,
             NullabilityMismatch,
+            ResourceLimitExceeded,
+            PerformanceTargetMet,
+            PerformanceDegraded,
+            PerformanceFailure,
+            PerformanceMetrics,
             ExampleGenerationThrottled,
             VirtualizationThresholdTriggered,
             RetentionSizePurge,
@@ -267,7 +377,13 @@ public static class DiagnosticCodes
             DisallowedHeadInjection,
             DisallowedHeadInjectionAttempt,
             MultipartFieldCountExceeded,
-            CircularLinkDetected
+            CircularLinkDetected,
+            LinkOperationRefFallback,
+            LinkMissingReference,
+            LinkBrokenReference,
+            LinkExternalReference,
+            CallbackReadOnly,
+            CallbackBrokenReference
         };
     }
 }

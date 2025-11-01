@@ -1,9 +1,12 @@
 // SecureSpec UI - Operation Display Component
+import { LinksCallbacksDisplay } from './links-callbacks.js';
+
 export class OperationDisplay {
   constructor(state) {
     this.state = state;
     this.operations = [];
     this.tags = new Map(); // tag name -> operations[]
+    this.linksCallbacksDisplay = new LinksCallbacksDisplay(state);
   }
   
   /**
@@ -153,7 +156,34 @@ export class OperationDisplay {
           ${operation.description ? `<p class="operation-description">${this.escapeHtml(operation.description)}</p>` : ''}
           ${this.renderParameters(operation.parameters)}
           ${this.renderRequestBody(operation.requestBody)}
-          ${this.renderResponses(operation.responses)}
+          ${this.renderResponsesBasic(operation.responses)}
+        </div>
+      </div>
+    `;
+  }
+  
+  renderWithDocument(operation, document) {
+    const method = operation.method.toLowerCase();
+    const methodClass = `method-${method}`;
+    
+    // Clear visited links for circular detection on each operation render
+    this.linksCallbacksDisplay.clearVisitedLinks();
+    
+    return `
+      <div class="operation" data-operation-id="${operation.operationId || ''}">
+        <div class="operation-header">
+          <div>
+            <span class="operation-method ${methodClass}">${method}</span>
+            <strong>${operation.path}</strong>
+          </div>
+          <span>${operation.summary || ''}</span>
+        </div>
+        <div class="operation-content">
+          <p>${operation.description || ''}</p>
+          ${this.renderParameters(operation.parameters)}
+          ${this.renderRequestBody(operation.requestBody)}
+          ${this.renderCallbacks(operation.callbacks, document)}
+          ${this.renderResponses(operation.responses, document)}
         </div>
       </div>
     `;
@@ -246,12 +276,25 @@ export class OperationDisplay {
     `;
   }
   
-  /**
-   * Render responses section
-   * @param {object} responses - Responses definition
-   * @returns {string} HTML string
-   */
-  renderResponses(responses) {
+  renderResponses(responses, document) {
+    if (!responses) {
+      return '';
+    }
+    
+    return `
+      <h3>Responses</h3>
+      <ul>
+        ${Object.entries(responses).map(([code, response]) => `
+          <li>
+            <strong>${code}</strong> - ${response.description || ''}
+            ${this.linksCallbacksDisplay.renderLinks(response.links, document)}
+          </li>
+        `).join('')}
+      </ul>
+    `;
+  }
+  
+  renderResponsesBasic(responses) {
     if (!responses) {
       return '';
     }
@@ -277,6 +320,14 @@ export class OperationDisplay {
         </table>
       </div>
     `;
+  }
+  
+  renderCallbacks(callbacks, document) {
+    if (!callbacks) {
+      return '';
+    }
+    
+    return this.linksCallbacksDisplay.renderCallbacks(callbacks, document);
   }
 
   /**

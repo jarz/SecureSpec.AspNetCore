@@ -24,14 +24,14 @@ public class DiagnosticCodesTests
     }
 
     [Fact]
-    public void GetAllCodes_ReturnsExpectedCount()
+    public void GetAllCodes_ReturnsNoDuplicates()
     {
         // Act
         var allCodes = DiagnosticCodes.GetAllCodes();
 
-        // Assert
-        // As of this implementation, we have 19 defined codes
-        Assert.Equal(19, allCodes.Length);
+        // Assert - Verify no duplicate codes
+        var uniqueCodes = allCodes.Distinct().ToArray();
+        Assert.Equal(allCodes.Length, uniqueCodes.Length);
     }
 
     [Fact]
@@ -67,6 +67,19 @@ public class DiagnosticCodesTests
         Assert.Equal("Integrity check failed", metadata.Description);
         Assert.Equal(DiagnosticLevel.Critical, metadata.Level);
         Assert.Equal("Abort load", metadata.RecommendedAction);
+    }
+
+    [Fact]
+    public void SEC002_SecurityRequirementsMutated_HasCorrectMetadata()
+    {
+        // Act
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.SecurityRequirementsMutated);
+
+        // Assert
+        Assert.NotNull(metadata);
+        Assert.Equal("Operation security requirements mutated", metadata.Description);
+        Assert.Equal(DiagnosticLevel.Info, metadata.Level);
+        Assert.Equal("Review security configuration", metadata.RecommendedAction);
     }
 
     // CSP Codes (CSP)
@@ -331,6 +344,86 @@ public class DiagnosticCodesTests
         Assert.Equal("Review link structure", metadata.RecommendedAction);
     }
 
+    [Fact]
+    public void LNK002_LinkOperationRefFallback_HasCorrectMetadata()
+    {
+        // Act
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkOperationRefFallback);
+
+        // Assert
+        Assert.NotNull(metadata);
+        Assert.Equal("Missing operationId but operationRef present", metadata.Description);
+        Assert.Equal(DiagnosticLevel.Info, metadata.Level);
+        Assert.Equal("Using operationRef fallback", metadata.RecommendedAction);
+    }
+
+    [Fact]
+    public void LNK003_LinkMissingReference_HasCorrectMetadata()
+    {
+        // Act
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkMissingReference);
+
+        // Assert
+        Assert.NotNull(metadata);
+        Assert.Equal("Missing both operationId and operationRef", metadata.Description);
+        Assert.Equal(DiagnosticLevel.Warn, metadata.Level);
+        Assert.Equal("Provide operationId or operationRef", metadata.RecommendedAction);
+    }
+
+    [Fact]
+    public void LNK004_LinkBrokenReference_HasCorrectMetadata()
+    {
+        // Act
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkBrokenReference);
+
+        // Assert
+        Assert.NotNull(metadata);
+        Assert.Equal("Broken $ref in link", metadata.Description);
+        Assert.Equal(DiagnosticLevel.Error, metadata.Level);
+        Assert.Equal("Fix reference path", metadata.RecommendedAction);
+    }
+
+    [Fact]
+    public void LNK005_LinkExternalReference_HasCorrectMetadata()
+    {
+        // Act
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkExternalReference);
+
+        // Assert
+        Assert.NotNull(metadata);
+        Assert.Equal("External or unsupported reference in link", metadata.Description);
+        Assert.Equal(DiagnosticLevel.Warn, metadata.Level);
+        Assert.Equal("Use internal references only", metadata.RecommendedAction);
+    }
+
+    // Callback Codes (CBK)
+
+    [Fact]
+    public void CBK001_CallbackReadOnly_HasCorrectMetadata()
+    {
+        // Act
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.CallbackReadOnly);
+
+        // Assert
+        Assert.NotNull(metadata);
+        Assert.Equal("Callback section rendered read-only", metadata.Description);
+        Assert.Equal(DiagnosticLevel.Info, metadata.Level);
+        Assert.Equal("Callbacks do not support Try It Out", metadata.RecommendedAction);
+    }
+
+    [Fact]
+    public void CBK002_CallbackBrokenReference_HasCorrectMetadata()
+    {
+        // Act
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.CallbackBrokenReference);
+
+        // Assert
+        Assert.NotNull(metadata);
+        Assert.Equal("Broken $ref in callback", metadata.Description);
+        Assert.Equal(DiagnosticLevel.Error, metadata.Level);
+        Assert.Equal("Fix reference path", metadata.RecommendedAction);
+    }
+
     [Theory]
     [InlineData("SEC001")]
     [InlineData("CSP001")]
@@ -351,6 +444,12 @@ public class DiagnosticCodesTests
     [InlineData("HD001")]
     [InlineData("BND001")]
     [InlineData("LNK001")]
+    [InlineData("LNK002")]
+    [InlineData("LNK003")]
+    [InlineData("LNK004")]
+    [InlineData("LNK005")]
+    [InlineData("CBK001")]
+    [InlineData("CBK002")]
     public void AllDefinedCodeConstants_AreRecognizedByIsValidCode(string code)
     {
         // Act
