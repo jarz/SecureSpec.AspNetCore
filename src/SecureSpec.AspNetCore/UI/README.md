@@ -45,6 +45,7 @@ In-memory static asset management system.
   - `assets/components/state.js` - State management
   - `assets/components/operation-display.js` - Operation rendering
   - `assets/components/schema-viewer.js` - Schema visualization
+  - `assets/components/links-callbacks.js` - Links and Callbacks display (Phase 3.10)
 
 #### `SecureSpecUIExtensions`
 Extension methods for easy middleware registration.
@@ -79,7 +80,8 @@ assets/
     ├── router.js               # Hash-based routing
     ├── state.js                # Centralized state management
     ├── operation-display.js    # Operation component
-    └── schema-viewer.js        # Schema component
+    ├── schema-viewer.js        # Schema component
+    └── links-callbacks.js      # Links and Callbacks component
 ```
 
 ### Router Component
@@ -102,6 +104,30 @@ Each component follows a consistent pattern:
 - Constructor receives state manager
 - `render()` method returns HTML
 - Event handling through state updates
+
+#### Links and Callbacks Component
+
+The `LinksCallbacksDisplay` component provides read-only rendering of OpenAPI Links and Callbacks with comprehensive edge case handling (AC 493-497):
+
+**Links Rendering:**
+- Displays links in operation responses
+- Resolves operationId or operationRef references
+- Detects circular link references (LNK001 diagnostic)
+- Handles missing references gracefully (LNK002, LNK003)
+- Safely omits broken $ref references (LNK004)
+
+**Callbacks Rendering:**
+- Displays callbacks as read-only sections (CBK001)
+- Shows webhook URLs and HTTP methods
+- No Try It Out functionality (by design)
+- Handles broken $ref references (CBK002)
+
+**Edge Cases:**
+- AC 493: Circular link detection logs diagnostic and inserts placeholder
+- AC 494: Missing operationId but valid operationRef uses operationRef only
+- AC 495: Missing both operationId & operationRef logs warning and renders stub
+- AC 496: Callback section read-only (no Try It Out) logged informational
+- AC 497: Broken $ref in link emits error and omits broken reference safely
 
 ## Configuration
 
@@ -156,6 +182,8 @@ Comprehensive test coverage includes:
 - Template generation tests (9 tests)
 - Asset provider tests (13 tests)
 - Extension method tests (6 tests)
+- Diagnostic codes tests (34 tests)
+- Links and Callbacks tests (17 tests)
 
 All tests validate:
 - Null argument handling
@@ -163,6 +191,7 @@ All tests validate:
 - Content generation
 - Configuration application
 - Error handling
+- Edge case handling for Links and Callbacks
 
 ## Performance
 
@@ -197,6 +226,9 @@ The UI follows WCAG 2.1 AA guidelines:
 - Screen reader compatibility
 
 ## Future Enhancements
+
+Completed in Phase 3.10:
+- ✅ Links and Callbacks display with edge case handling
 
 Planned for subsequent phases:
 - Operation display and navigation (Phase 3.2)
