@@ -82,71 +82,93 @@ public class OperationSecurityProcessor
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentException.ThrowIfNullOrWhiteSpace(operationId);
 
-        // Case 1: Operation has no security defined - inherit from global
         if (operation.Security == null)
         {
-            if (globalSecurity != null && globalSecurity.Count > 0)
-            {
-                operation.Security = new List<OpenApiSecurityRequirement>();
-                foreach (var requirement in globalSecurity)
-                {
-                    operation.Security.Add(OrderSecurityRequirement(requirement));
-                }
-            }
-            else
-            {
-                operation.Security = new List<OpenApiSecurityRequirement>();
-            }
+            ApplyInheritedSecurity(operation, globalSecurity);
         }
-        // Case 2: Operation has empty security array - explicitly public (no auth required)
         else if (operation.Security.Count == 0)
         {
-            // AC 465: Empty array clears global requirements
-            // Log mutation if global had requirements
-            if (globalSecurity != null && globalSecurity.Count > 0)
-            {
-                _logger.LogInfo(
-                    DiagnosticCodes.SecurityRequirementsMutated,
-                    $"Operation '{operationId}' cleared global security requirements (empty array)",
-                    new
-                    {
-                        OperationId = operationId,
-                        GlobalRequirementsCount = globalSecurity.Count,
-                        OperationRequirementsCount = 0,
-                        OverrideType = "EmptyArray"
-                    });
-            }
-            // Keep the empty array as-is
+            HandleEmptySecurityArray(globalSecurity, operationId);
         }
-        // Case 3: Operation has security requirements - override global
         else
         {
-            // AC 464: Operation-level security overrides global (no merge)
-            // AC 467: Preserve declaration order of requirement objects
-            // AC 466: Order schemes within each requirement lexically
-
-            var orderedSecurity = new List<OpenApiSecurityRequirement>();
-            foreach (var requirement in operation.Security)
-            {
-                orderedSecurity.Add(OrderSecurityRequirement(requirement));
-            }
-            operation.Security = orderedSecurity;
-
-            // AC 468: Log mutation when operation overrides global
-            if (globalSecurity != null && globalSecurity.Count > 0)
-            {
-                _logger.LogInfo(
-                    DiagnosticCodes.SecurityRequirementsMutated,
-                    $"Operation '{operationId}' overrode global security requirements",
-                    new
-                    {
-                        OperationId = operationId,
-                        GlobalRequirementsCount = globalSecurity.Count,
-                        OperationRequirementsCount = operation.Security.Count,
-                        OverrideType = "OperationDefined"
-                    });
-            }
+            ApplyOperationDefinedSecurity(operation, globalSecurity, operationId);
         }
+    }
+
+    /// <summary>
+    /// Applies inherited security from global requirements when operation has no security defined.
+    /// </summary>
+    private void ApplyInheritedSecurity(
+        OpenApiOperation operation,
+        IList<OpenApiSecurityRequirement>? globalSecurity)
+    {
+        if (globalSecurity != null && globalSecurity.Count > 0)
+        {
+            operation.Security = OrderSecurityRequirements(globalSecurity).ToList();
+        }
+        else
+        {
+            operation.Security = new List<OpenApiSecurityRequirement>();
+        }
+    }
+
+    /// <summary>
+    /// Handles empty security array (public endpoint) and logs mutation if needed.
+    /// AC 465: Empty array clears global requirements.
+    /// </summary>
+    private void HandleEmptySecurityArray(
+        IList<OpenApiSecurityRequirement>? globalSecurity,
+        string operationId)
+    {
+        if (globalSecurity != null && globalSecurity.Count > 0)
+        {
+            LogSecurityMutation(operationId, globalSecurity.Count, 0, "EmptyArray",
+                $"Operation '{operationId}' cleared global security requirements (empty array)");
+        }
+    }
+
+    /// <summary>
+    /// Applies operation-defined security requirements with ordering and logs mutation.
+    /// AC 464: Operation-level security overrides global (no merge).
+    /// AC 466: Order schemes within each requirement lexically.
+    /// AC 467: Preserve declaration order of requirement objects.
+    /// </summary>
+    private void ApplyOperationDefinedSecurity(
+        OpenApiOperation operation,
+        IList<OpenApiSecurityRequirement>? globalSecurity,
+        string operationId)
+    {
+        operation.Security = OrderSecurityRequirements(operation.Security).ToList();
+
+        if (globalSecurity != null && globalSecurity.Count > 0)
+        {
+            LogSecurityMutation(operationId, globalSecurity.Count, operation.Security.Count, "OperationDefined",
+                $"Operation '{operationId}' overrode global security requirements");
+        }
+    }
+
+    /// <summary>
+    /// Logs security requirement mutation diagnostic.
+    /// AC 468: Operation security mutation logged.
+    /// </summary>
+    private void LogSecurityMutation(
+        string operationId,
+        int globalCount,
+        int operationCount,
+        string overrideType,
+        string message)
+    {
+        _logger.LogInfo(
+            DiagnosticCodes.SecurityRequirementsMutated,
+            message,
+            new
+            {
+                OperationId = operationId,
+                GlobalRequirementsCount = globalCount,
+                OperationRequirementsCount = operationCount,
+                OverrideType = overrideType
+            });
     }
 
     /// <summary>
