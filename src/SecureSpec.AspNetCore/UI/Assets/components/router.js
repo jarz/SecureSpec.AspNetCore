@@ -1,4 +1,6 @@
 // SecureSpec UI - Router Component
+import { sanitizeId, escapeHtml } from './utils.js';
+
 export class Router {
   constructor(state, operationDisplay) {
     this.state = state;
@@ -74,7 +76,7 @@ export class Router {
     const config = this.state.config || {};
 
     // Find the operation element
-    const sanitizedId = operationId.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const sanitizedId = sanitizeId(operationId);
     const operationElement = document.getElementById(`operation-${sanitizedId}`);
 
     if (operationElement) {
@@ -98,7 +100,7 @@ export class Router {
     // Schema viewing can be implemented later
     const content = document.getElementById('content');
     if (content) {
-      content.innerHTML = `<div class="schema-view"><h2>Schema: ${this.escapeHtml(params.id)}</h2></div>`;
+      content.innerHTML = `<div class="schema-view"><h2>Schema: ${escapeHtml(params.id)}</h2></div>`;
     }
   }
 
@@ -131,20 +133,5 @@ export class Router {
     setTimeout(() => {
       element.classList.remove('highlighted');
     }, 2000);
-  }
-
-  /**
-   * Escape HTML special characters
-   * @param {string} text - Text to escape
-   * @returns {string} Escaped text
-   */
-  escapeHtml(text) {
-    if (!text) {
-      return '';
-    }
-
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 }

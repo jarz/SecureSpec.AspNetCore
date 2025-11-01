@@ -1,5 +1,6 @@
 // SecureSpec UI - Operation Display Component
 import { LinksCallbacksDisplay } from './links-callbacks.js';
+import { sanitizeId, escapeHtml } from './utils.js';
 
 export class OperationDisplay {
   constructor(state) {
@@ -111,7 +112,7 @@ export class OperationDisplay {
    * @returns {string} HTML string
    */
   renderTag(tagName, operations) {
-    const tagId = this.sanitizeId(tagName);
+    const tagId = sanitizeId(tagName);
     const isExpanded = this.state.getState().expandedTags?.has(tagName) ?? true;
     const expandedClass = isExpanded ? 'expanded' : '';
     const arrowIcon = isExpanded ? '▼' : '▶';
@@ -120,7 +121,7 @@ export class OperationDisplay {
       <div class="tag-group" data-tag="${tagName}">
         <div class="tag-header ${expandedClass}" data-tag-id="${tagId}">
           <span class="tag-arrow">${arrowIcon}</span>
-          <h2 class="tag-name">${this.escapeHtml(tagName)}</h2>
+          <h2 class="tag-name">${escapeHtml(tagName)}</h2>
           <span class="tag-count">${operations.length} operation${operations.length !== 1 ? 's' : ''}</span>
         </div>
         <div class="tag-operations ${expandedClass}">
@@ -138,7 +139,7 @@ export class OperationDisplay {
   renderOperation(operation) {
     const method = operation.method.toLowerCase();
     const methodClass = `method-${method}`;
-    const opId = this.sanitizeId(operation.operationId);
+    const opId = sanitizeId(operation.operationId);
     const isExpanded = this.state.getState().expandedOperations?.has(operation.operationId) ?? false;
     const expandedClass = isExpanded ? 'expanded' : '';
     
@@ -147,13 +148,13 @@ export class OperationDisplay {
         <div class="operation-header ${expandedClass}" data-operation="${opId}" tabindex="0" role="button" aria-expanded="${isExpanded}">
           <div class="operation-summary">
             <span class="operation-method ${methodClass}">${method.toUpperCase()}</span>
-            <code class="operation-path">${this.escapeHtml(operation.path)}</code>
-            ${operation.summary ? `<span class="operation-title">${this.escapeHtml(operation.summary)}</span>` : ''}
+            <code class="operation-path">${escapeHtml(operation.path)}</code>
+            ${operation.summary ? `<span class="operation-title">${escapeHtml(operation.summary)}</span>` : ''}
           </div>
-          ${this.shouldDisplayOperationId() ? `<span class="operation-id">${this.escapeHtml(operation.operationId)}</span>` : ''}
+          ${this.shouldDisplayOperationId() ? `<span class="operation-id">${escapeHtml(operation.operationId)}</span>` : ''}
         </div>
         <div class="operation-content ${expandedClass}">
-          ${operation.description ? `<p class="operation-description">${this.escapeHtml(operation.description)}</p>` : ''}
+          ${operation.description ? `<p class="operation-description">${escapeHtml(operation.description)}</p>` : ''}
           ${this.renderParameters(operation.parameters)}
           ${this.renderRequestBody(operation.requestBody)}
           ${this.renderResponsesBasic(operation.responses)}
@@ -223,11 +224,11 @@ export class OperationDisplay {
           <tbody>
             ${parameters.map(p => `
               <tr>
-                <td><code>${this.escapeHtml(p.name)}</code></td>
-                <td><span class="param-in">${this.escapeHtml(p.in)}</span></td>
-                <td><code>${this.escapeHtml(p.schema?.type || 'object')}</code></td>
+                <td><code>${escapeHtml(p.name)}</code></td>
+                <td><span class="param-in">${escapeHtml(p.in)}</span></td>
+                <td><code>${escapeHtml(p.schema?.type || 'object')}</code></td>
                 <td>${p.required ? '<span class="required">✓</span>' : ''}</td>
-                <td>${this.escapeHtml(p.description || '')}</td>
+                <td>${escapeHtml(p.description || '')}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -249,7 +250,7 @@ export class OperationDisplay {
     return `
       <div class="request-body-section">
         <h3>Request Body ${requestBody.required ? '<span class="required">required</span>' : ''}</h3>
-        ${requestBody.description ? `<p>${this.escapeHtml(requestBody.description)}</p>` : ''}
+        ${requestBody.description ? `<p>${escapeHtml(requestBody.description)}</p>` : ''}
         ${this.renderMediaTypes(requestBody.content)}
       </div>
     `;
@@ -269,7 +270,7 @@ export class OperationDisplay {
       <div class="media-types">
         ${Object.entries(content).map(([mediaType, mediaTypeObj]) => `
           <div class="media-type">
-            <strong>${this.escapeHtml(mediaType)}</strong>
+            <strong>${escapeHtml(mediaType)}</strong>
           </div>
         `).join('')}
       </div>
@@ -312,8 +313,8 @@ export class OperationDisplay {
           <tbody>
             ${Object.entries(responses).map(([code, response]) => `
               <tr>
-                <td><code class="response-code response-${code[0]}xx">${this.escapeHtml(code)}</code></td>
-                <td>${this.escapeHtml(response.description || '')}</td>
+                <td><code class="response-code response-${code[0]}xx">${escapeHtml(code)}</code></td>
+                <td>${escapeHtml(response.description || '')}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -328,29 +329,5 @@ export class OperationDisplay {
     }
     
     return this.linksCallbacksDisplay.renderCallbacks(callbacks, document);
-  }
-
-  /**
-   * Sanitize ID for use in HTML
-   * @param {string} id - ID to sanitize
-   * @returns {string} Sanitized ID
-   */
-  sanitizeId(id) {
-    return id.replace(/[^a-zA-Z0-9_-]/g, '_');
-  }
-
-  /**
-   * Escape HTML special characters
-   * @param {string} text - Text to escape
-   * @returns {string} Escaped text
-   */
-  escapeHtml(text) {
-    if (!text) {
-      return '';
-    }
-
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 }
