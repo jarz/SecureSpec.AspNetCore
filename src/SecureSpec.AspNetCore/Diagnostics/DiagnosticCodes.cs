@@ -17,6 +17,13 @@ public static class DiagnosticCodes
     /// </summary>
     public const string IntegrityCheckFailed = "SEC001";
 
+    /// <summary>
+    /// Operation security requirements mutated (overridden from global).
+    /// Severity: Info
+    /// Action: Review security configuration
+    /// </summary>
+    public const string SecurityRequirementsMutated = "SEC002";
+
     // ============================================
     // CSP Codes (CSP)
     // ============================================
@@ -294,6 +301,7 @@ public static class DiagnosticCodes
         return code switch
         {
             IntegrityCheckFailed => new("Integrity check failed", DiagnosticLevel.Critical, "Abort load"),
+            SecurityRequirementsMutated => new("Operation security requirements mutated", DiagnosticLevel.Info, "Review security configuration"),
             CspMismatch => new("CSP mismatch or missing directives", DiagnosticLevel.Error, "Review policy"),
             SchemaIdCollision => new("SchemaId collision suffix applied", DiagnosticLevel.Info, "Confirm stability"),
             SchemaDepthExceeded => new("Schema generation exceeded maximum depth", DiagnosticLevel.Warn, "Review schema structure"),
@@ -346,6 +354,7 @@ public static class DiagnosticCodes
         return new[]
         {
             IntegrityCheckFailed,
+            SecurityRequirementsMutated,
             CspMismatch,
             SchemaIdCollision,
             SchemaDepthExceeded,
