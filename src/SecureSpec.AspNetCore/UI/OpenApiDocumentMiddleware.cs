@@ -7,7 +7,7 @@ using System.Text;
 namespace SecureSpec.AspNetCore.UI;
 
 /// <summary>
-/// Middleware for serving OpenAPI documents in JSON format.
+/// Middleware for serving OpenAPI documents in JSON and YAML formats.
 /// </summary>
 public class OpenApiDocumentMiddleware
 {
@@ -38,7 +38,7 @@ public class OpenApiDocumentMiddleware
         // Check if the request is for an OpenAPI document
         if (path.StartsWith("openapi/", StringComparison.OrdinalIgnoreCase))
         {
-            var documentPath = path.Substring("openapi/".Length);
+            var documentPath = path["openapi/".Length..];
 
             // Extract document name and format
             // Expected formats: v1.json, v1.yaml
@@ -101,9 +101,7 @@ public class OpenApiDocumentMiddleware
     /// </summary>
     private OpenApiDocument CreateSampleDocument(string documentName)
     {
-        var doc = _options.Documents.ContainsKey(documentName)
-            ? _options.Documents[documentName]
-            : null;
+        _options.Documents.TryGetValue(documentName, out var doc);
 
         var document = new OpenApiDocument
         {

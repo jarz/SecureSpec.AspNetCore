@@ -180,6 +180,12 @@ main {
   outline: none; /* Custom focus indicator via highlighting */
 }
 
+/* Visible focus indicator for accessibility */
+.operation-header:focus,
+.operation-header:focus-visible {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.5);
+  outline: none;
+}
 .operation-header:hover {
   background-color: var(--hover-color);
 }
