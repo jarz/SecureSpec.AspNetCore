@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using SecureSpec.AspNetCore.Configuration;
 
 namespace SecureSpec.AspNetCore.UI;
@@ -20,10 +22,14 @@ public static class SecureSpecUIExtensions
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        // Get options from DI if available, otherwise use defaults
-        var options = app.ApplicationServices.GetService(typeof(SecureSpecOptions)) as SecureSpecOptions
-            ?? new SecureSpecOptions();
+        // Get options from DI - use IOptions pattern
+        var optionsAccessor = app.ApplicationServices.GetService<IOptions<SecureSpecOptions>>();
+        var options = optionsAccessor?.Value ?? new SecureSpecOptions();
 
+        // Add OpenAPI document middleware first
+        app.UseMiddleware<OpenApiDocumentMiddleware>(options);
+
+        // Then add UI middleware
         app.UseMiddleware<SecureSpecUIMiddleware>(options, routePrefix);
 
         return app;
@@ -47,6 +53,10 @@ public static class SecureSpecUIExtensions
         var options = new SecureSpecOptions();
         configure(options.UI);
 
+        // Add OpenAPI document middleware first
+        app.UseMiddleware<OpenApiDocumentMiddleware>(options);
+
+        // Then add UI middleware
         app.UseMiddleware<SecureSpecUIMiddleware>(options, routePrefix);
 
         return app;
