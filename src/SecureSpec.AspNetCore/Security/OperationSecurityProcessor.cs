@@ -103,14 +103,9 @@ public class OperationSecurityProcessor
         OpenApiOperation operation,
         IList<OpenApiSecurityRequirement>? globalSecurity)
     {
-        if (globalSecurity != null && globalSecurity.Count > 0)
-        {
-            operation.Security = OrderSecurityRequirements(globalSecurity).ToList();
-        }
-        else
-        {
-            operation.Security = new List<OpenApiSecurityRequirement>();
-        }
+        operation.Security = (globalSecurity != null && globalSecurity.Count > 0)
+            ? OrderSecurityRequirements(globalSecurity).ToList()
+            : new List<OpenApiSecurityRequirement>();
     }
 
     /// <summary>
