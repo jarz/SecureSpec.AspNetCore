@@ -1,6 +1,7 @@
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
+using SecureSpec.AspNetCore.Diagnostics;
 using SecureSpec.AspNetCore.Schema;
 
 namespace SecureSpec.AspNetCore.Tests;
@@ -14,7 +15,7 @@ public class ExamplePrecedenceEngineTests
     public ExamplePrecedenceEngineTests()
     {
         _options = new SchemaOptions();
-        _generator = new ExampleGenerator(_options);
+        _generator = new ExampleGenerator(_options, new DiagnosticsLogger());
         _engine = new ExamplePrecedenceEngine(_generator);
     }
 

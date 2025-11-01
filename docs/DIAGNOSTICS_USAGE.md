@@ -146,6 +146,53 @@ var allCodes = DiagnosticCodes.GetAllCodes();
 Console.WriteLine($"Total defined codes: {allCodes.Length}");
 ```
 
+## Common Diagnostic Scenarios
+
+### Example Generation Throttling (EXM001)
+
+The **EXM001** diagnostic is emitted when example generation exceeds the configured time budget. This is part of the throttling mechanism to ensure predictable performance.
+
+**When it occurs:**
+- Example generation for deeply nested schemas takes longer than `ExampleGenerationTimeoutMs` (default: 25ms)
+- Recursive generation of complex object graphs or large arrays
+
+**Example:**
+```csharp
+var options = new SchemaOptions 
+{ 
+    ExampleGenerationTimeoutMs = 25,  // 25ms budget per schema
+    GenerateExamples = true
+};
+var logger = new DiagnosticsLogger();
+var generator = new ExampleGenerator(options, logger);
+
+// Generate example for complex schema
+var schema = CreateDeeplyNestedSchema();
+var result = generator.GenerateDeterministicFallback(schema);
+
+// Check if throttling occurred
+if (generator.ThrottledCount > 0)
+{
+    var events = logger.GetEvents()
+        .Where(e => e.Code == DiagnosticCodes.ExampleGenerationThrottled);
+    
+    foreach (var evt in events)
+    {
+        Console.WriteLine($"Throttled: {evt.Message}");
+        // Example output: "Example generation throttled after 26ms (budget: 25ms)"
+    }
+}
+```
+
+**Resolution:**
+- Provide explicit examples for complex schemas
+- Increase `ExampleGenerationTimeoutMs` if needed
+- Simplify schema structure
+- Use example references instead of inline generation
+
+**Thread Safety:**
+The throttle counter is implemented using atomic operations (`Interlocked`), ensuring thread-safe tracking across concurrent example generation requests.
+
 ## Clearing Events
 
 ```csharp
