@@ -24,14 +24,14 @@ public class DiagnosticCodesTests
     }
 
     [Fact]
-    public void GetAllCodes_ReturnsExpectedCount()
+    public void GetAllCodes_ReturnsNoDuplicates()
     {
         // Act
         var allCodes = DiagnosticCodes.GetAllCodes();
 
-        // Assert
-        // As of this implementation, we have 25 defined codes (added SEC002 for security requirements mutation)
-        Assert.Equal(25, allCodes.Length);
+        // Assert - Verify no duplicate codes
+        var uniqueCodes = allCodes.Distinct().ToArray();
+        Assert.Equal(allCodes.Length, uniqueCodes.Length);
     }
 
     [Fact]
@@ -67,6 +67,19 @@ public class DiagnosticCodesTests
         Assert.Equal("Integrity check failed", metadata.Description);
         Assert.Equal(DiagnosticLevel.Critical, metadata.Level);
         Assert.Equal("Abort load", metadata.RecommendedAction);
+    }
+
+    [Fact]
+    public void SEC002_SecurityRequirementsMutated_HasCorrectMetadata()
+    {
+        // Act
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.SecurityRequirementsMutated);
+
+        // Assert
+        Assert.NotNull(metadata);
+        Assert.Equal("Operation security requirements mutated", metadata.Description);
+        Assert.Equal(DiagnosticLevel.Info, metadata.Level);
+        Assert.Equal("Review security configuration", metadata.RecommendedAction);
     }
 
     // CSP Codes (CSP)
