@@ -4,60 +4,80 @@ import { StateManager } from './components/state.js';
 import { OperationDisplay } from './components/operation-display.js';
 import { SchemaViewer } from './components/schema-viewer.js';
 
-class SecureSpecApp {
-  constructor() {
-    this.config = this.loadConfig();
-    this.state = new StateManager(this.config);
-    this.router = new Router(this.state);
-    this.operationDisplay = new OperationDisplay(this.state);
-    this.schemaViewer = new SchemaViewer(this.state);
-    
-    this.initialize();
-  }
-  
-  loadConfig() {
-    const configElement = document.getElementById('ui-config');
-    if (configElement) {
-      try {
-        return JSON.parse(configElement.textContent);
-      } catch (e) {
-        // Configuration parsing failed - use defaults
-      }
-    }
+function loadConfig() {
+  const configElement = document.getElementById('ui-config');
+  if (!configElement) {
     return {};
   }
-  
-  async initialize() {
-    // Initialize components
-    await this.loadOpenAPIDocument();
-    this.setupEventListeners();
-    this.router.initialize();
+
+  try {
+    return JSON.parse(configElement.textContent);
+  } catch (error) {
+    // Configuration parsing failed - use defaults
+    // eslint-disable-next-line no-console
+    console.warn('SecureSpec UI configuration is not valid JSON, falling back to defaults.', error);
+    return {};
   }
-  
-  async loadOpenAPIDocument() {
-    // TODO: Load OpenAPI document from endpoint
-    // For now, display a placeholder
+}
+
+function createSecureSpecApp() {
+  const config = loadConfig();
+  const state = new StateManager(config);
+  const router = new Router(state);
+  const operationDisplay = new OperationDisplay(state);
+  const schemaViewer = new SchemaViewer(state);
+
+  const setupEventListeners = () => {
+    if (config.deepLinking) {
+      globalThis.addEventListener('hashchange', () => {
+        router.handleHashChange();
+      });
+    }
+  };
+
+  const loadOpenAPIDocument = async () => {
     const content = document.getElementById('content');
     if (content) {
       content.innerHTML = '<div class="loading">Loading API documentation...</div>';
     }
-  }
-  
-  setupEventListeners() {
-    // Setup hash change listener for deep linking
-    if (this.config.deepLinking) {
-      window.addEventListener('hashchange', () => {
-        this.router.handleHashChange();
-      });
-    }
-  }
+  };
+
+  const initialize = async () => {
+    await loadOpenAPIDocument();
+    setupEventListeners();
+    router.initialize();
+  };
+
+  return {
+    config,
+    state,
+    router,
+    operationDisplay,
+    schemaViewer,
+    initialize
+  };
 }
+
+async function bootstrapApp() {
+  const app = createSecureSpecApp();
+  await app.initialize();
+  return app;
+}
+
+const attachApp = () => {
+  bootstrapApp()
+    .then(instance => {
+      globalThis.secureSpecApp = instance;
+    })
+    .catch(error => {
+      // eslint-disable-next-line no-console
+      console.error('SecureSpec UI failed to initialize', error);
+    });
+};
 
 // Initialize the application when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    window.secureSpecApp = new SecureSpecApp();
-  });
+  document.addEventListener('DOMContentLoaded', attachApp);
 } else {
-  window.secureSpecApp = new SecureSpecApp();
+  attachApp();
 }

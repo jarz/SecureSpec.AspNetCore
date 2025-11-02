@@ -40,8 +40,29 @@ public class XmlContentGenerator
         ArgumentNullException.ThrowIfNull(schema);
         ArgumentNullException.ThrowIfNull(elementName);
 
-        // Create a new schema that mirrors the original
-        var xmlSchema = new OpenApiSchema
+        var xmlSchema = CloneSchemaForXml(schema, elementName);
+
+        if (schema.Reference != null)
+        {
+            xmlSchema.Reference = schema.Reference;
+            return xmlSchema;
+        }
+
+        ApplyXmlStructure(schema, xmlSchema, elementName);
+        return xmlSchema;
+    }
+
+    private void ApplyXmlStructure(OpenApiSchema source, OpenApiSchema target, string elementName)
+    {
+        CopyObjectProperties(source, target);
+        CopyArraySchema(source, target, elementName);
+        CopyEnumValues(source, target);
+        CopyComposedSchemas(source, target, elementName);
+    }
+
+    private static OpenApiSchema CloneSchemaForXml(OpenApiSchema schema, string elementName)
+    {
+        return new OpenApiSchema
         {
             Type = schema.Type,
             Format = schema.Format,
@@ -59,65 +80,73 @@ public class XmlContentGenerator
                 Name = elementName
             }
         };
+    }
 
-        // Handle reference schemas
-        if (schema.Reference != null)
+    private void CopyObjectProperties(OpenApiSchema source, OpenApiSchema target)
+    {
+        if (source.Properties == null || source.Properties.Count == 0)
         {
-            xmlSchema.Reference = schema.Reference;
-            return xmlSchema;
+            return;
         }
 
-        // Mirror properties for object schemas
-        if (schema.Properties != null && schema.Properties.Count > 0)
+        target.Properties = new Dictionary<string, OpenApiSchema>();
+        foreach (var property in source.Properties)
         {
-            xmlSchema.Properties = new Dictionary<string, OpenApiSchema>();
-            foreach (var prop in schema.Properties)
-            {
-                var propSchema = CreateXmlSchema(prop.Value, prop.Key);
-                xmlSchema.Properties[prop.Key] = propSchema;
-            }
-
-            // Preserve required properties
-            if (schema.Required != null && schema.Required.Count > 0)
-            {
-                xmlSchema.Required = new HashSet<string>(schema.Required);
-            }
+            target.Properties[property.Key] = CreateXmlSchema(property.Value, property.Key);
         }
 
-        // Mirror array items
-        if (schema.Items != null)
+        if (source.Required != null && source.Required.Count > 0)
         {
-            var itemElementName = GetArrayItemElementName(elementName);
-            xmlSchema.Items = CreateXmlSchema(schema.Items, itemElementName);
+            target.Required = new HashSet<string>(source.Required);
+        }
+    }
 
-            // Set wrapped array if appropriate
-            xmlSchema.Xml ??= new OpenApiXml();
-            xmlSchema.Xml.Wrapped = true;
+    private void CopyArraySchema(OpenApiSchema source, OpenApiSchema target, string elementName)
+    {
+        if (source.Items == null)
+        {
+            return;
         }
 
-        // Mirror enum values (stable ordering)
-        if (schema.Enum != null && schema.Enum.Count > 0)
+        var itemElementName = GetArrayItemElementName(elementName);
+        target.Items = CreateXmlSchema(source.Items, itemElementName);
+        target.Xml ??= new OpenApiXml();
+        target.Xml.Wrapped = true;
+    }
+
+    private static void CopyEnumValues(OpenApiSchema source, OpenApiSchema target)
+    {
+        if (source.Enum == null || source.Enum.Count == 0)
         {
-            xmlSchema.Enum = new List<Microsoft.OpenApi.Any.IOpenApiAny>(schema.Enum);
+            return;
         }
 
-        // Mirror oneOf/anyOf/allOf (where representable)
-        if (schema.OneOf != null && schema.OneOf.Count > 0)
+        target.Enum = new List<Microsoft.OpenApi.Any.IOpenApiAny>(source.Enum);
+    }
+
+    private void CopyComposedSchemas(OpenApiSchema source, OpenApiSchema target, string elementName)
+    {
+        AssignComposition(CloneSchemaList(source.OneOf, elementName), composition => target.OneOf = composition);
+        AssignComposition(CloneSchemaList(source.AllOf, elementName), composition => target.AllOf = composition);
+        AssignComposition(CloneSchemaList(source.AnyOf, elementName), composition => target.AnyOf = composition);
+    }
+
+    private static void AssignComposition(List<OpenApiSchema>? composition, Action<List<OpenApiSchema>> assign)
+    {
+        if (composition != null)
         {
-            xmlSchema.OneOf = schema.OneOf.Select(s => CreateXmlSchema(s, elementName)).ToList();
+            assign(composition);
+        }
+    }
+
+    private List<OpenApiSchema>? CloneSchemaList(IList<OpenApiSchema>? source, string elementName)
+    {
+        if (source == null || source.Count == 0)
+        {
+            return null;
         }
 
-        if (schema.AllOf != null && schema.AllOf.Count > 0)
-        {
-            xmlSchema.AllOf = schema.AllOf.Select(s => CreateXmlSchema(s, elementName)).ToList();
-        }
-
-        if (schema.AnyOf != null && schema.AnyOf.Count > 0)
-        {
-            xmlSchema.AnyOf = schema.AnyOf.Select(s => CreateXmlSchema(s, elementName)).ToList();
-        }
-
-        return xmlSchema;
+        return source.Select(s => CreateXmlSchema(s, elementName)).ToList();
     }
 
     /// <summary>
@@ -125,7 +154,7 @@ public class XmlContentGenerator
     /// </summary>
     /// <param name="arrayElementName">The name of the array element.</param>
     /// <returns>A singular form element name for items.</returns>
-    private string GetArrayItemElementName(string arrayElementName)
+    private static string GetArrayItemElementName(string arrayElementName)
     {
         // Simple singularization: remove trailing 's' if present
         // This is a basic implementation; could be enhanced with proper pluralization rules
@@ -166,32 +195,60 @@ public class XmlContentGenerator
     private void GenerateXmlElement(StringBuilder builder, OpenApiSchema schema, string elementName, int indent)
     {
         var indentStr = new string(' ', indent * 2);
+        switch (GetNodeKind(schema))
+        {
+            case XmlNodeKind.Object:
+                WriteObjectElement(builder, schema, elementName, indent, indentStr);
+                break;
+            case XmlNodeKind.Array:
+                WriteArrayElement(builder, schema, elementName, indent, indentStr);
+                break;
+            default:
+                WriteScalarElement(builder, schema, elementName, indentStr);
+                break;
+        }
+    }
 
+    private static XmlNodeKind GetNodeKind(OpenApiSchema schema)
+    {
         if (schema.Type == "object" && schema.Properties != null)
         {
-            builder.Append(indentStr).Append('<').Append(elementName).AppendLine(">");
+            return XmlNodeKind.Object;
+        }
 
-            // Sort properties for stable output
-            foreach (var prop in schema.Properties.OrderBy(p => p.Key, StringComparer.Ordinal))
-            {
-                GenerateXmlElement(builder, prop.Value, prop.Key, indent + 1);
-            }
+        if (schema.Type == "array" && schema.Items != null)
+        {
+            return XmlNodeKind.Array;
+        }
 
-            builder.Append(indentStr).Append("</").Append(elementName).AppendLine(">");
-        }
-        else if (schema.Type == "array" && schema.Items != null)
+        return XmlNodeKind.Scalar;
+    }
+
+    private void WriteObjectElement(StringBuilder builder, OpenApiSchema schema, string elementName, int indent, string indentStr)
+    {
+        builder.Append(indentStr).Append('<').Append(elementName).AppendLine(">");
+
+        foreach (var prop in schema.Properties!.OrderBy(p => p.Key, StringComparer.Ordinal))
         {
-            var itemName = GetArrayItemElementName(elementName);
-            builder.Append(indentStr).Append('<').Append(elementName).AppendLine(">");
-            GenerateXmlElement(builder, schema.Items, itemName, indent + 1);
-            builder.Append(indentStr).Append("</").Append(elementName).AppendLine(">");
+            GenerateXmlElement(builder, prop.Value, prop.Key, indent + 1);
         }
-        else
-        {
-            var value = GetExampleValue(schema);
-            builder.Append(indentStr).Append('<').Append(elementName).Append('>')
-                   .Append(value).Append("</").Append(elementName).AppendLine(">");
-        }
+
+        builder.Append(indentStr).Append("</").Append(elementName).AppendLine(">");
+    }
+
+    private void WriteArrayElement(StringBuilder builder, OpenApiSchema schema, string elementName, int indent, string indentStr)
+    {
+        var itemName = GetArrayItemElementName(elementName);
+        builder.Append(indentStr).Append('<').Append(elementName).AppendLine(">");
+        GenerateXmlElement(builder, schema.Items!, itemName, indent + 1);
+        builder.Append(indentStr).Append("</").Append(elementName).AppendLine(">");
+    }
+
+    private static void WriteScalarElement(StringBuilder builder, OpenApiSchema schema, string elementName, string indentStr)
+    {
+        var value = GetExampleValue(schema);
+        builder.Append(indentStr).Append('<').Append(elementName).Append('>')
+               .Append(value).Append("</").Append(elementName).AppendLine(">");
     }
 
     private static string GetExampleValue(OpenApiSchema schema)
@@ -220,5 +277,12 @@ public class XmlContentGenerator
             .Replace(">", "&gt;", StringComparison.Ordinal)
             .Replace("\"", "&quot;", StringComparison.Ordinal)
             .Replace("'", "&apos;", StringComparison.Ordinal);
+    }
+
+    private enum XmlNodeKind
+    {
+        Scalar,
+        Object,
+        Array
     }
 }

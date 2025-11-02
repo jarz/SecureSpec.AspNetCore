@@ -1,6 +1,7 @@
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using System.Globalization;
+using System.Linq;
 
 namespace SecureSpec.AspNetCore.Schema;
 
@@ -11,109 +12,165 @@ public partial class SchemaGenerator
     /// </summary>
     private OpenApiSchema GenerateEnumSchema(Type enumType)
     {
-        var schema = new OpenApiSchema();
-
         if (_options.UseEnumStrings)
         {
-            // AC 417, AC 438: String mode preserves declaration order
-            schema.Type = "string";
-            var enumNames = Enum.GetNames(enumType);
-
-            // Apply naming policy if configured (AC 419, AC 442)
-            var processedNames = _options.EnumNamingPolicy != null
-                ? enumNames.Select(n => _options.EnumNamingPolicy(n))
-                : enumNames;
-
-            var namesList = processedNames.ToList();
-
-            // AC 440: Check for virtualization threshold
-            if (namesList.Count > _options.EnumVirtualizationThreshold)
-            {
-                ApplyEnumVirtualization(schema, namesList, enumType);
-            }
-            else
-            {
-                foreach (var name in namesList)
-                {
-                    schema.Enum.Add(new OpenApiString(name));
-                }
-            }
+            return GenerateStringEnumSchema(enumType);
         }
-        else
+
+        var analysis = AnalyzeEnum(enumType);
+        return analysis.NumericEvaluation.RequiresStringFallback
+            ? CreateStringFallbackEnumSchema(analysis)
+            : CreateNumericEnumSchema(analysis);
+    }
+
+    private static EnumAnalysis AnalyzeEnum(Type enumType)
+    {
+        var values = GetEnumValues(enumType);
+        var underlyingType = Enum.GetUnderlyingType(enumType);
+        var evaluation = EvaluateEnumNumericRange(values, underlyingType);
+        return new EnumAnalysis(enumType, underlyingType, values, evaluation);
+    }
+
+    private OpenApiSchema GenerateStringEnumSchema(Type enumType)
+    {
+        // AC 417, AC 438: String mode preserves declaration order
+        var schema = new OpenApiSchema { Type = "string" };
+        var names = ApplyEnumNamingPolicy(Enum.GetNames(enumType));
+
+        if (TryVirtualizeStringEnum(schema, names, enumType))
         {
-            var rawValues = Enum.GetValues(enumType);
-            var enumValues = new object[rawValues.Length];
-            rawValues.CopyTo(enumValues, 0);
-            var underlyingType = Enum.GetUnderlyingType(enumType);
-            var rangeEvaluation = EvaluateEnumNumericRange(enumValues, underlyingType);
+            return schema;
+        }
 
-            if (rangeEvaluation.RequiresStringFallback)
-            {
-                schema.Type = "string";
-                var stringValues = enumValues.Select(v => ConvertEnumValueToString(v, underlyingType)).ToList();
+        AddStringEnumValues(schema, names);
 
-                // AC 440: Check for virtualization threshold
-                if (stringValues.Count > _options.EnumVirtualizationThreshold)
-                {
-                    ApplyEnumVirtualization(schema, stringValues, enumType);
-                }
-                else
-                {
-                    foreach (var value in stringValues)
-                    {
-                        schema.Enum.Add(new OpenApiString(value));
-                    }
-                }
+        return schema;
+    }
 
-                _logger.LogWarning(
-                    "SCH002",
-                    $"Enum '{enumType.FullName}' contains values that exceed Int64 range. Falling back to string representation.");
-            }
-            else
-            {
-                // AC 418, AC 439: Integer mode uses type:integer
-                schema.Type = "integer";
-                schema.Format = rangeEvaluation.UseInt64 ? "int64" : "int32";
+    private List<string> ApplyEnumNamingPolicy(IEnumerable<string> enumNames)
+    {
+        if (_options.EnumNamingPolicy == null)
+        {
+            return enumNames.ToList();
+        }
 
-                // AC 440: Check for virtualization threshold
-                if (enumValues.Length > _options.EnumVirtualizationThreshold)
-                {
-                    // Truncate to threshold and add metadata
-                    for (int i = 0; i < _options.EnumVirtualizationThreshold; i++)
-                    {
-                        schema.Enum.Add(CreateNumericEnumValue(enumValues[i], underlyingType));
-                    }
+        return enumNames.Select(n => _options.EnumNamingPolicy(n)).ToList();
+    }
 
-                    // AC 440, AC 441: Add virtualization metadata
-                    AddVirtualizationMetadata(schema, enumValues.Length, enumType);
-                }
-                else
-                {
-                    foreach (var value in enumValues)
-                    {
-                        schema.Enum.Add(CreateNumericEnumValue(value, underlyingType));
-                    }
-                }
-            }
+    private static object[] GetEnumValues(Type enumType)
+    {
+        var rawValues = Enum.GetValues(enumType);
+        var enumValues = new object[rawValues.Length];
+        rawValues.CopyTo(enumValues, 0);
+        return enumValues;
+    }
+
+    private OpenApiSchema CreateStringFallbackEnumSchema(EnumAnalysis analysis)
+    {
+        var schema = new OpenApiSchema { Type = "string" };
+        var stringValues = analysis.Values
+            .Select(v => ConvertEnumValueToString(v, analysis.UnderlyingType))
+            .ToList();
+
+        if (TryVirtualizeStringEnum(schema, stringValues, analysis.EnumType))
+        {
+            LogEnumStringFallback(analysis.EnumType);
+            return schema;
+        }
+
+        AddStringEnumValues(schema, stringValues);
+        LogEnumStringFallback(analysis.EnumType);
+
+        return schema;
+    }
+
+    private OpenApiSchema CreateNumericEnumSchema(EnumAnalysis analysis)
+    {
+        // AC 418, AC 439: Integer mode uses type:integer
+        var schema = new OpenApiSchema
+        {
+            Type = "integer",
+            Format = analysis.NumericEvaluation.UseInt64 ? "int64" : "int32"
+        };
+
+        if (!TryVirtualizeNumericEnum(schema, analysis))
+        {
+            AddNumericEnumValues(schema, analysis.Values, analysis.UnderlyingType);
         }
 
         return schema;
     }
 
+    private void AddVirtualizedNumericValues(OpenApiSchema schema, EnumAnalysis analysis)
+    {
+        var limit = Math.Min(_options.EnumVirtualizationThreshold, analysis.Values.Length);
+        for (var i = 0; i < limit; i++)
+        {
+            schema.Enum.Add(CreateNumericEnumValue(analysis.Values[i], analysis.UnderlyingType));
+        }
+    }
+
+    private bool TryVirtualizeNumericEnum(OpenApiSchema schema, EnumAnalysis analysis)
+    {
+        if (!ShouldVirtualize(analysis.Values.Length))
+        {
+            return false;
+        }
+
+        AddVirtualizedNumericValues(schema, analysis);
+        AddVirtualizationMetadata(schema, analysis.Values.Length, analysis.EnumType);
+        return true;
+    }
+
+    private void LogEnumStringFallback(Type enumType)
+    {
+        _logger.LogWarning(
+            "SCH002",
+            $"Enum '{enumType.FullName}' contains values that exceed Int64 range. Falling back to string representation.");
+    }
+
+    private static void AddNumericEnumValues(OpenApiSchema schema, IEnumerable<object> enumValues, Type underlyingType)
+    {
+        foreach (var value in enumValues)
+        {
+            schema.Enum.Add(CreateNumericEnumValue(value, underlyingType));
+        }
+    }
+
+    private static void AddStringEnumValues(OpenApiSchema schema, IEnumerable<string> values)
+    {
+        foreach (var value in values)
+        {
+            schema.Enum.Add(new OpenApiString(value));
+        }
+    }
+
+    private bool TryVirtualizeStringEnum(OpenApiSchema schema, IReadOnlyList<string> values, Type enumType)
+    {
+        if (!ShouldVirtualize(values.Count))
+        {
+            return false;
+        }
+
+        AddVirtualizedStringValues(schema, values);
+        AddVirtualizationMetadata(schema, values.Count, enumType);
+        return true;
+    }
+
     /// <summary>
     /// Applies virtualization to an enum schema with string values.
     /// </summary>
-    private void ApplyEnumVirtualization(OpenApiSchema schema, List<string> values, Type enumType)
+    private void AddVirtualizedStringValues(OpenApiSchema schema, IReadOnlyList<string> values)
     {
         // AC 440: Truncate to threshold
-        for (int i = 0; i < _options.EnumVirtualizationThreshold; i++)
+        var limit = Math.Min(_options.EnumVirtualizationThreshold, values.Count);
+        for (int i = 0; i < limit; i++)
         {
             schema.Enum.Add(new OpenApiString(values[i]));
         }
-
-        // AC 441: Add virtualization metadata for search support
-        AddVirtualizationMetadata(schema, values.Count, enumType);
     }
+
+    private bool ShouldVirtualize(int valueCount) => valueCount > _options.EnumVirtualizationThreshold;
 
     /// <summary>
     /// Adds virtualization metadata to an enum schema.
@@ -122,7 +179,7 @@ public partial class SchemaGenerator
     {
         schema.Extensions["x-enum-virtualized"] = new OpenApiBoolean(true);
         schema.Extensions["x-enum-total-count"] = new OpenApiInteger(totalCount);
-        schema.Extensions["x-enum-truncated-count"] = new OpenApiInteger(totalCount - _options.EnumVirtualizationThreshold);
+        schema.Extensions["x-enum-truncated-count"] = new OpenApiInteger(totalCount - Math.Min(totalCount, _options.EnumVirtualizationThreshold));
 
         // AC 440: Emit VIRT001 diagnostic
         _logger.LogInfo(
@@ -169,64 +226,48 @@ public partial class SchemaGenerator
 
     private static EnumNumericEvaluation EvaluateEnumNumericRange(IReadOnlyList<object> values, Type underlyingType)
     {
-        var useInt64 = false;
-        var typeCode = Type.GetTypeCode(underlyingType);
-
-        foreach (var value in values)
+        return Type.GetTypeCode(underlyingType) switch
         {
-            switch (typeCode)
+            TypeCode.SByte or TypeCode.Byte or TypeCode.Int16 or TypeCode.UInt16 or TypeCode.Int32 => default,
+            TypeCode.UInt32 => EvaluateUInt32Range(values),
+            TypeCode.Int64 => EvaluateInt64Range(values),
+            TypeCode.UInt64 => EvaluateUInt64Range(values),
+            _ => throw new NotSupportedException($"Enum underlying type '{underlyingType.FullName}' is not supported.")
+        };
+    }
+
+    private static EnumNumericEvaluation EvaluateUInt32Range(IEnumerable<object> values)
+    {
+        return values.Cast<uint>().Any(v => v > int.MaxValue)
+            ? new EnumNumericEvaluation { RequiresStringFallback = false, UseInt64 = true }
+            : default;
+    }
+
+    private static EnumNumericEvaluation EvaluateInt64Range(IEnumerable<object> values)
+    {
+        return values.Cast<long>().Any(v => v is > int.MaxValue or < int.MinValue)
+            ? new EnumNumericEvaluation { RequiresStringFallback = false, UseInt64 = true }
+            : default;
+    }
+
+    private static EnumNumericEvaluation EvaluateUInt64Range(IEnumerable<object> values)
+    {
+        var castValues = values.Cast<ulong>().ToList();
+
+        if (castValues.Any(v => v > long.MaxValue))
+        {
+            return new EnumNumericEvaluation
             {
-                case TypeCode.SByte:
-                case TypeCode.Byte:
-                case TypeCode.Int16:
-                case TypeCode.UInt16:
-                case TypeCode.Int32:
-                    break;
-
-                case TypeCode.UInt32:
-                    if ((uint)value > int.MaxValue)
-                    {
-                        useInt64 = true;
-                    }
-
-                    break;
-
-                case TypeCode.Int64:
-                    var int64Value = (long)value;
-                    if (int64Value > int.MaxValue || int64Value < int.MinValue)
-                    {
-                        useInt64 = true;
-                    }
-
-                    break;
-
-                case TypeCode.UInt64:
-                    var uint64Value = (ulong)value;
-                    if (uint64Value > long.MaxValue)
-                    {
-                        return new EnumNumericEvaluation
-                        {
-                            RequiresStringFallback = true,
-                            UseInt64 = true
-                        };
-                    }
-
-                    if (uint64Value > int.MaxValue)
-                    {
-                        useInt64 = true;
-                    }
-
-                    break;
-
-                default:
-                    throw new NotSupportedException($"Enum underlying type '{underlyingType.FullName}' is not supported.");
-            }
+                RequiresStringFallback = true,
+                UseInt64 = true
+            };
         }
 
+        var requiresInt64 = castValues.Any(v => v > int.MaxValue);
         return new EnumNumericEvaluation
         {
             RequiresStringFallback = false,
-            UseInt64 = useInt64
+            UseInt64 = requiresInt64
         };
     }
 
@@ -284,4 +325,6 @@ public partial class SchemaGenerator
             _ => null
         };
     }
+
+    private sealed record EnumAnalysis(Type EnumType, Type UnderlyingType, object[] Values, EnumNumericEvaluation NumericEvaluation);
 }

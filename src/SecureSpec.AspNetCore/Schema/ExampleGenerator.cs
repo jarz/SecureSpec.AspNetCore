@@ -9,14 +9,15 @@ namespace SecureSpec.AspNetCore.Schema;
 /// </summary>
 public sealed class ExampleGenerator
 {
-    private readonly SchemaOptions _options;
+    private readonly bool _shouldGenerateExamples;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExampleGenerator"/> class.
     /// </summary>
     public ExampleGenerator(SchemaOptions options)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(options);
+        _shouldGenerateExamples = options.GenerateExamples;
     }
 
     /// <summary>
@@ -27,6 +28,11 @@ public sealed class ExampleGenerator
     public IOpenApiAny? GenerateDeterministicFallback(OpenApiSchema schema)
     {
         ArgumentNullException.ThrowIfNull(schema);
+
+        if (!_shouldGenerateExamples)
+        {
+            return null;
+        }
 
         return schema.Type switch
         {
