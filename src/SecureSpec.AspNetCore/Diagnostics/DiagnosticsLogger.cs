@@ -7,6 +7,16 @@ public class DiagnosticsLogger
 {
     private readonly List<DiagnosticEvent> _events = new();
     private readonly object _lock = new();
+    private readonly TimeProvider _timeProvider;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DiagnosticsLogger"/> class.
+    /// </summary>
+    /// <param name="timeProvider">Optional time provider for timestamp generation. Defaults to <see cref="TimeProvider.System"/>.</param>
+    public DiagnosticsLogger(TimeProvider? timeProvider = null)
+    {
+        _timeProvider = timeProvider ?? TimeProvider.System;
+    }
 
     /// <summary>
     /// Logs a diagnostic event.
@@ -23,7 +33,7 @@ public class DiagnosticsLogger
 
         var evt = new DiagnosticEvent
         {
-            Timestamp = DateTimeOffset.UtcNow,
+            Timestamp = _timeProvider.GetUtcNow(),
             Level = level,
             Code = code,
             Message = message,

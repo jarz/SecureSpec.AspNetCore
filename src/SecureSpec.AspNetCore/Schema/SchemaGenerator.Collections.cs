@@ -1,5 +1,4 @@
 using Microsoft.OpenApi.Models;
-using System.Linq;
 
 namespace SecureSpec.AspNetCore.Schema;
 

@@ -1,7 +1,6 @@
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using System.Globalization;
-using System.Linq;
 
 namespace SecureSpec.AspNetCore.Schema;
 

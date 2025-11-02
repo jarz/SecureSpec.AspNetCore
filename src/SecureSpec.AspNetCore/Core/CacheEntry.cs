@@ -44,9 +44,10 @@ internal sealed class CacheEntry
     public DateTimeOffset ExpiresAt { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the entry has expired.
+    /// Gets a value indicating whether the entry has expired using the provided time source.
     /// </summary>
-    public bool IsExpired => DateTimeOffset.UtcNow >= ExpiresAt;
+    /// <param name="timeProvider">The time provider used to determine the current UTC time.</param>
+    public bool IsExpired(TimeProvider timeProvider) => timeProvider.GetUtcNow() >= ExpiresAt;
 
     /// <summary>
     /// Validates the integrity of the cached content by recomputing its hash.
