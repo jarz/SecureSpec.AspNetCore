@@ -45,6 +45,12 @@ public sealed class ExampleGenerator
     public IOpenApiAny? GenerateDeterministicFallback(OpenApiSchema schema)
     {
         ArgumentNullException.ThrowIfNull(schema);
+
+        if (!_options.GenerateExamples)
+        {
+            return null;
+        }
+
         return GenerateDeterministicFallback(schema, null);
     }
 
