@@ -121,8 +121,8 @@ class SecureSpecApp {
 
   setupFilterInput() {
     const nav = document.getElementById('navigation');
-    // Defensive check: Prevents duplicate filter inputs if setupFilterInput() is called multiple times.
-    // This ensures idempotency and guards against future changes that might trigger multiple calls.
+    // Defensive check: Prevents duplicate filter inputs if setupFilterInput() is called more than once.
+    // This ensures idempotency.
     if (!nav || nav.querySelector('.filter-container')) {
       return;
     }

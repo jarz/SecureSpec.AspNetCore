@@ -178,7 +178,7 @@ public partial class SchemaGenerator
     {
         schema.Extensions["x-enum-virtualized"] = new OpenApiBoolean(true);
         schema.Extensions["x-enum-total-count"] = new OpenApiInteger(totalCount);
-        schema.Extensions["x-enum-truncated-count"] = new OpenApiInteger(totalCount - Math.Min(totalCount, _options.EnumVirtualizationThreshold));
+        schema.Extensions["x-enum-truncated-count"] = new OpenApiInteger(totalCount - _options.EnumVirtualizationThreshold);
 
         // AC 440: Emit VIRT001 diagnostic
         _logger.LogInfo(
