@@ -51,27 +51,46 @@ public sealed class ExampleGenerator
     {
         ArgumentNullException.ThrowIfNull(schema);
 
-        // Create a stopwatch and cancellation token source for time budget enforcement
-        var stopwatch = Stopwatch.StartNew();
         var timeoutMs = _options.ExampleGenerationTimeoutMs;
-
-        CancellationTokenSource? cts = null;
         CancellationToken effectiveToken;
+        Stopwatch? stopwatch = null;
 
         if (cancellationToken.HasValue)
         {
             effectiveToken = cancellationToken.Value;
+            stopwatch = Stopwatch.StartNew();
         }
         else if (timeoutMs > 0)
         {
-            cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs));
+            stopwatch = Stopwatch.StartNew();
+            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs));
             effectiveToken = cts.Token;
+
+            try
+            {
+                return schema.Type switch
+                {
+                    "string" => GenerateStringExample(schema),
+                    "integer" => GenerateIntegerExample(schema),
+                    "number" => GenerateNumberExample(schema),
+                    "boolean" => new OpenApiBoolean(false),
+                    "array" => GenerateArrayExample(schema, stopwatch, timeoutMs, effectiveToken),
+                    "object" => GenerateObjectExample(schema, stopwatch, timeoutMs, effectiveToken),
+                    _ => null
+                };
+            }
+            catch (OperationCanceledException)
+            {
+                OnThrottled(schema, stopwatch.ElapsedMilliseconds);
+                return null;
+            }
         }
         else
         {
             effectiveToken = CancellationToken.None;
         }
 
+        // No timeout scenario - no stopwatch needed
         try
         {
             return schema.Type switch
@@ -80,20 +99,18 @@ public sealed class ExampleGenerator
                 "integer" => GenerateIntegerExample(schema),
                 "number" => GenerateNumberExample(schema),
                 "boolean" => new OpenApiBoolean(false),
-                "array" => GenerateArrayExample(schema, stopwatch, timeoutMs, effectiveToken),
-                "object" => GenerateObjectExample(schema, stopwatch, timeoutMs, effectiveToken),
+                "array" => GenerateArrayExample(schema, stopwatch ?? Stopwatch.StartNew(), timeoutMs, effectiveToken),
+                "object" => GenerateObjectExample(schema, stopwatch ?? Stopwatch.StartNew(), timeoutMs, effectiveToken),
                 _ => null
             };
         }
         catch (OperationCanceledException)
         {
-            // Time budget exceeded - emit diagnostic and return null
-            OnThrottled(schema, stopwatch.ElapsedMilliseconds);
+            if (stopwatch != null)
+            {
+                OnThrottled(schema, stopwatch.ElapsedMilliseconds);
+            }
             return null;
-        }
-        finally
-        {
-            cts?.Dispose();
         }
     }
 
