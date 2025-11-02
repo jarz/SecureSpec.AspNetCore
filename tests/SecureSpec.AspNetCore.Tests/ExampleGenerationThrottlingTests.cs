@@ -141,8 +141,8 @@ public class ExampleGenerationThrottlingTests
 
         // Verify diagnostics were logged (may vary based on timing)
         var events = logger.GetEvents();
-        var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGenerationThrottled).ToList();
-        // Note: Count may vary based on timing, so we just verify it's non-negative
+        // Note: Count may vary based on timing, so we just verify diagnostics are collected
+        _ = events.Where(e => e.Code == DiagnosticCodes.ExampleGenerationThrottled).ToList();
     }
 
     [Fact]

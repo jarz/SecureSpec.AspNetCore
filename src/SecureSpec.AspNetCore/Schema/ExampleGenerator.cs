@@ -63,35 +63,35 @@ public sealed class ExampleGenerator
         else if (timeoutMs > 0)
         {
             stopwatch = Stopwatch.StartNew();
-            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs))
-            {
-                effectiveToken = cts.Token;
+            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs));
+            effectiveToken = cts.Token;
 
-                try
+            try
+            {
+                return schema.Type switch
                 {
-                    return schema.Type switch
-                    {
-                        "string" => GenerateStringExample(schema),
-                        "integer" => GenerateIntegerExample(schema),
-                        "number" => GenerateNumberExample(schema),
-                        "boolean" => new OpenApiBoolean(false),
-                        "array" => GenerateArrayExample(schema, stopwatch, timeoutMs, effectiveToken),
-                        "object" => GenerateObjectExample(schema, stopwatch, timeoutMs, effectiveToken),
-                        _ => null
-                    };
-                }
-                catch (OperationCanceledException)
-                {
-                    OnThrottled(schema, stopwatch.ElapsedMilliseconds);
-                    return null;
-                }
+                    "string" => GenerateStringExample(schema),
+                    "integer" => GenerateIntegerExample(schema),
+                    "number" => GenerateNumberExample(schema),
+                    "boolean" => new OpenApiBoolean(false),
+                    "array" => GenerateArrayExample(schema, stopwatch, timeoutMs, effectiveToken),
+                    "object" => GenerateObjectExample(schema, stopwatch, timeoutMs, effectiveToken),
+                    _ => null
+                };
             }
+            catch (OperationCanceledException)
+            {
+                OnThrottled(schema, stopwatch.ElapsedMilliseconds);
+                return null;
+            }
+        }
         else
         {
             effectiveToken = CancellationToken.None;
+            stopwatch = null;
         }
 
-        // No timeout scenario - no stopwatch needed
+        // External cancellation token or no timeout scenario
         try
         {
             return schema.Type switch
@@ -100,8 +100,8 @@ public sealed class ExampleGenerator
                 "integer" => GenerateIntegerExample(schema),
                 "number" => GenerateNumberExample(schema),
                 "boolean" => new OpenApiBoolean(false),
-                "array" => GenerateArrayExample(schema, null, timeoutMs, effectiveToken),
-                "object" => GenerateObjectExample(schema, null, timeoutMs, effectiveToken),
+                "array" => GenerateArrayExample(schema, stopwatch, timeoutMs, effectiveToken),
+                "object" => GenerateObjectExample(schema, stopwatch, timeoutMs, effectiveToken),
                 _ => null
             };
         }
@@ -177,12 +177,15 @@ public sealed class ExampleGenerator
         return new OpenApiDouble(0.0);
     }
 
-    private OpenApiArray GenerateArrayExample(OpenApiSchema schema, Stopwatch stopwatch, int timeoutMs, CancellationToken cancellationToken)
+    private OpenApiArray GenerateArrayExample(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
     {
         var array = new OpenApiArray();
 
         // Check time budget before generating nested example
-        CheckTimeBudget(stopwatch, timeoutMs, cancellationToken);
+        if (stopwatch != null)
+        {
+            CheckTimeBudget(stopwatch, timeoutMs, cancellationToken);
+        }
 
         // Generate one example item if schema is defined
         if (schema.Items != null)
@@ -197,7 +200,7 @@ public sealed class ExampleGenerator
         return array;
     }
 
-    private OpenApiObject GenerateObjectExample(OpenApiSchema schema, Stopwatch stopwatch, int timeoutMs, CancellationToken cancellationToken)
+    private OpenApiObject GenerateObjectExample(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
     {
         var obj = new OpenApiObject();
 
@@ -207,7 +210,10 @@ public sealed class ExampleGenerator
             foreach (var property in schema.Properties.OrderBy(p => p.Key))
             {
                 // Check time budget before generating each property
-                CheckTimeBudget(stopwatch, timeoutMs, cancellationToken);
+                if (stopwatch != null)
+                {
+                    CheckTimeBudget(stopwatch, timeoutMs, cancellationToken);
+                }
 
                 var propertyExample = GenerateDeterministicFallbackInternal(property.Value, stopwatch, timeoutMs, cancellationToken);
                 if (propertyExample != null)
@@ -223,12 +229,15 @@ public sealed class ExampleGenerator
     /// <summary>
     /// Internal method for recursive generation with time budget tracking.
     /// </summary>
-    private IOpenApiAny? GenerateDeterministicFallbackInternal(OpenApiSchema schema, Stopwatch stopwatch, int timeoutMs, CancellationToken cancellationToken)
+    private IOpenApiAny? GenerateDeterministicFallbackInternal(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(schema);
 
         // Check time budget before processing
-        CheckTimeBudget(stopwatch, timeoutMs, cancellationToken);
+        if (stopwatch != null)
+        {
+            CheckTimeBudget(stopwatch, timeoutMs, cancellationToken);
+        }
 
         return schema.Type switch
         {
@@ -247,8 +256,14 @@ public sealed class ExampleGenerator
     /// </summary>
     private static void CheckTimeBudget(Stopwatch stopwatch, int timeoutMs, CancellationToken cancellationToken)
     {
-        // Check cancellation token (fast path)
+        // Check cancellation token first (fast path)
         cancellationToken.ThrowIfCancellationRequested();
+
+        // Manual time check for external cancellation tokens that don't have built-in timeout
+        if (timeoutMs > 0 && stopwatch.ElapsedMilliseconds >= timeoutMs)
+        {
+            throw new OperationCanceledException();
+        }
     }
 
     /// <summary>
