@@ -50,10 +50,10 @@ public partial class SchemaGenerator
     {
         if (_options.EnumNamingPolicy == null)
         {
-            return enumNames.ToList();
+            return [.. enumNames];
         }
 
-        return enumNames.Select(n => _options.EnumNamingPolicy(n)).ToList();
+        return [.. enumNames.Select(n => _options.EnumNamingPolicy(n))];
     }
 
     private static object[] GetEnumValues(Type enumType)
