@@ -21,7 +21,7 @@ export class Router {
   }
   
   handleHashChange() {
-    const hash = window.location.hash.slice(1) || '/';
+    const hash = globalThis.location.hash.slice(1) || '/';
     this.navigate(hash);
   }
   
@@ -41,8 +41,8 @@ export class Router {
   }
   
   matchRoute(pattern, path) {
-    const patternParts = pattern.split('/').filter(p => p);
-    const pathParts = path.split('/').filter(p => p);
+    const patternParts = pattern.split('/').filter(Boolean);
+    const pathParts = path.split('/').filter(Boolean);
     
     if (patternParts.length !== pathParts.length) {
       return null;

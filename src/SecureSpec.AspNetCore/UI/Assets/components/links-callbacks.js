@@ -211,7 +211,7 @@ export class LinksCallbacksDisplay {
     
     // Check for HTTP methods in the pathItem
     const methods = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
-    methods.forEach(method => {
+    for (const method of methods) {
       if (pathItem[method]) {
         const operation = pathItem[method];
         operations.push({
@@ -219,7 +219,7 @@ export class LinksCallbacksDisplay {
           description: operation.description || operation.summary || ''
         });
       }
-    });
+    }
 
     const operationsHtml = operations.map(op => `
       <div class="callback-operation">
@@ -278,11 +278,11 @@ export class LinksCallbacksDisplay {
     
     // Use string replacement instead of DOM manipulation for better compatibility
     return String(text)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll('\'', '&#39;');
   }
 
   /**

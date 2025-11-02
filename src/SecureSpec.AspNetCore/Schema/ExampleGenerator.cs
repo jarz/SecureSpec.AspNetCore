@@ -46,7 +46,7 @@ public sealed class ExampleGenerator
         };
     }
 
-    private OpenApiString GenerateStringExample(OpenApiSchema schema)
+    private static OpenApiString GenerateStringExample(OpenApiSchema schema)
     {
         // Handle specific formats
         if (!string.IsNullOrEmpty(schema.Format))
@@ -79,7 +79,7 @@ public sealed class ExampleGenerator
         return new OpenApiString("string");
     }
 
-    private OpenApiInteger GenerateIntegerExample(OpenApiSchema schema)
+    private static OpenApiInteger GenerateIntegerExample(OpenApiSchema schema)
     {
         // Use minimum if specified
         if (schema.Minimum.HasValue)
@@ -100,7 +100,7 @@ public sealed class ExampleGenerator
         return new OpenApiInteger(0);
     }
 
-    private OpenApiDouble GenerateNumberExample(OpenApiSchema schema)
+    private static OpenApiDouble GenerateNumberExample(OpenApiSchema schema)
     {
         // Use minimum if specified
         if (schema.Minimum.HasValue)
