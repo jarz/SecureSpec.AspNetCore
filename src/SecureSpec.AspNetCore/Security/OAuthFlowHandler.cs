@@ -175,8 +175,8 @@ public class OAuthFlowHandler
         string codeVerifier,
         Uri redirectUri)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(authorizationCode, nameof(authorizationCode));
-        ArgumentException.ThrowIfNullOrWhiteSpace(codeVerifier, nameof(codeVerifier));
+        ArgumentException.ThrowIfNullOrWhiteSpace(authorizationCode);
+        ArgumentException.ThrowIfNullOrWhiteSpace(codeVerifier);
         ArgumentNullException.ThrowIfNull(redirectUri);
 
         if (_configuration.TokenUrl is null)
@@ -219,7 +219,7 @@ public class OAuthFlowHandler
         string refreshToken,
         IEnumerable<string>? scopes = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(refreshToken, nameof(refreshToken));
+        ArgumentException.ThrowIfNullOrWhiteSpace(refreshToken);
 
         var tokenUrl = _configuration.RefreshUrl ?? _configuration.TokenUrl;
         if (tokenUrl is null)

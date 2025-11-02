@@ -109,7 +109,7 @@ public partial class SchemaGenerator
 
     private static bool IsNullSchema(OpenApiSchema candidate)
     {
-        return string.Equals(candidate.Type, "null", StringComparison.Ordinal)
+        return string.Equals(candidate.Type, SchemaType.Null, StringComparison.Ordinal)
                && candidate.AnyOf.Count == 0
                && candidate.OneOf.Count == 0
                && candidate.AllOf.Count == 0
@@ -120,7 +120,7 @@ public partial class SchemaGenerator
 
     private static OpenApiSchema CreateNullSchema()
     {
-        return new OpenApiSchema { Type = "null" };
+        return new OpenApiSchema { Type = SchemaType.Null };
     }
 
     private static OpenApiSchema CreatePlaceholder(Type type, string kind)
@@ -141,7 +141,7 @@ public partial class SchemaGenerator
 
         var placeholder = new OpenApiSchema
         {
-            Type = "object",
+            Type = SchemaType.Object,
             Description = description
         };
 

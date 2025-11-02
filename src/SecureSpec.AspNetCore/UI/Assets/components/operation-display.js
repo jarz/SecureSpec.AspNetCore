@@ -2,6 +2,8 @@
 import { LinksCallbacksDisplay } from './links-callbacks.js';
 import { sanitizeId, escapeHtml } from './utils.js';
 
+const HTTP_METHODS = ['get', 'post', 'put', 'delete', 'patch', 'options', 'head', 'trace'];
+
 export class OperationDisplay {
   constructor(state) {
     this.state = state;
@@ -15,43 +17,69 @@ export class OperationDisplay {
    * @param {object} openApiDoc - The OpenAPI document
    */
   loadOperations(openApiDoc) {
-    if (!openApiDoc || !openApiDoc.paths) {
-      this.operations = [];
-      this.tags.clear();
+    this.resetOperationsState();
+
+    if (!this.hasPathDefinitions(openApiDoc)) {
       return;
     }
 
-    this.operations = [];
-    this.tags.clear();
-
-    // Extract operations from paths
     for (const [path, pathItem] of Object.entries(openApiDoc.paths)) {
-      const methods = ['get', 'post', 'put', 'delete', 'patch', 'options', 'head', 'trace'];
-      
-      for (const method of methods) {
-        if (pathItem[method]) {
-          const operation = {
-            ...pathItem[method],
-            method: method,
-            path: path,
-            operationId: pathItem[method].operationId || `${method}_${path.replace(/\//g, '_')}`
-          };
-          
-          this.operations.push(operation);
-          
-          // Group by tags
-          const opTags = operation.tags || ['default'];
-          for (const tag of opTags) {
-            if (!this.tags.has(tag)) {
-              this.tags.set(tag, []);
-            }
-            this.tags.get(tag).push(operation);
-          }
-        }
-      }
+      this.processPathItem(path, pathItem);
     }
 
-    // Sort tags alphabetically for deterministic display
+    this.sortTags();
+  }
+
+  resetOperationsState() {
+    this.operations = [];
+    this.tags.clear();
+  }
+
+  hasPathDefinitions(openApiDoc) {
+    return Boolean(openApiDoc?.paths);
+  }
+
+  processPathItem(path, pathItem) {
+    if (!pathItem) {
+      return;
+    }
+
+    for (const method of HTTP_METHODS) {
+      const operationDoc = pathItem[method];
+      if (!operationDoc) {
+        continue;
+      }
+
+      const operation = this.createOperation(path, method, operationDoc);
+      this.addOperation(operation);
+    }
+  }
+
+  createOperation(path, method, operationDoc) {
+    return {
+      ...operationDoc,
+      method,
+      path,
+      operationId: operationDoc.operationId || `${method}_${path.replaceAll('/', '_')}`
+    };
+  }
+
+  addOperation(operation) {
+    this.operations.push(operation);
+    this.groupOperationByTags(operation);
+  }
+
+  groupOperationByTags(operation) {
+    const opTags = operation.tags && operation.tags.length > 0 ? operation.tags : ['default'];
+    for (const tag of opTags) {
+      if (!this.tags.has(tag)) {
+        this.tags.set(tag, []);
+      }
+      this.tags.get(tag).push(operation);
+    }
+  }
+
+  sortTags() {
     this.tags = new Map([...this.tags.entries()].sort((a, b) => a[0].localeCompare(b[0])));
   }
 
@@ -122,7 +150,7 @@ export class OperationDisplay {
         <div class="tag-header ${expandedClass}" data-tag-id="${tagId}">
           <span class="tag-arrow">${arrowIcon}</span>
           <h2 class="tag-name">${escapeHtml(tagName)}</h2>
-          <span class="tag-count">${operations.length} operation${operations.length !== 1 ? 's' : ''}</span>
+          <span class="tag-count">${operations.length} operation${operations.length === 1 ? '' : 's'}</span>
         </div>
         <div class="tag-operations ${expandedClass}">
           ${operations.map(op => this.renderOperation(op)).join('')}

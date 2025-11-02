@@ -1,4 +1,5 @@
 using Microsoft.OpenApi.Models;
+using SecureSpec.AspNetCore.Diagnostics;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 
@@ -50,7 +51,7 @@ public partial class SchemaGenerator
         if (schema.Minimum.HasValue || schema.Maximum.HasValue)
         {
             _logger.LogWarning(
-                "ANN001",
+                DiagnosticCodes.DataAnnotationsConflict,
                 $"DataAnnotations conflict detected on member '{memberName}': Range attribute overrides existing minimum/maximum constraints. Last wins.");
         }
 
@@ -66,7 +67,7 @@ public partial class SchemaGenerator
         if (schema.MinLength.HasValue)
         {
             _logger.LogWarning(
-                "ANN001",
+                DiagnosticCodes.DataAnnotationsConflict,
                 $"DataAnnotations conflict detected on member '{memberName}': MinLength attribute overrides existing minLength constraint. Last wins.");
         }
 
@@ -81,7 +82,7 @@ public partial class SchemaGenerator
         if (schema.MaxLength.HasValue)
         {
             _logger.LogWarning(
-                "ANN001",
+                DiagnosticCodes.DataAnnotationsConflict,
                 $"DataAnnotations conflict detected on member '{memberName}': MaxLength attribute overrides existing maxLength constraint. Last wins.");
         }
 
@@ -96,7 +97,7 @@ public partial class SchemaGenerator
         if (schema.MinLength.HasValue || schema.MaxLength.HasValue)
         {
             _logger.LogWarning(
-                "ANN001",
+                DiagnosticCodes.DataAnnotationsConflict,
                 $"DataAnnotations conflict detected on member '{memberName}': StringLength attribute overrides existing minLength/maxLength constraints. Last wins.");
         }
 
@@ -116,7 +117,7 @@ public partial class SchemaGenerator
         if (!string.IsNullOrEmpty(schema.Pattern))
         {
             _logger.LogWarning(
-                "ANN001",
+                DiagnosticCodes.DataAnnotationsConflict,
                 $"DataAnnotations conflict detected on member '{memberName}': RegularExpression attribute overrides existing pattern constraint. Last wins.");
         }
 

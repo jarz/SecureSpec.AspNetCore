@@ -12,12 +12,11 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_UsesRawExampleWhenProvided()
     {
         // Arrange - AC 457: raw example takes precedence
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema { Type = "string" };
         const string rawExample = "Custom raw example text";
 
         // Act
-        var mediaType = handler.CreateMediaType(schema, rawExample);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema, rawExample);
 
         // Assert
         Assert.NotNull(mediaType);
@@ -30,11 +29,10 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_GeneratesFallbackWhenNoRawExample()
     {
         // Arrange - AC 457: generated fallback when no raw example
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema { Type = "string" };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.NotNull(mediaType);
@@ -46,11 +44,10 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_GeneratesFallbackForStringType()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema { Type = "string" };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.Equal("example string", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
@@ -60,7 +57,6 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_GeneratesFallbackForDateFormat()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema
         {
             Type = "string",
@@ -68,7 +64,7 @@ public class PlainTextContentHandlerTests
         };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.Equal("2025-01-01", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
@@ -78,7 +74,6 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_GeneratesFallbackForDateTimeFormat()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema
         {
             Type = "string",
@@ -86,7 +81,7 @@ public class PlainTextContentHandlerTests
         };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.Equal("2025-01-01T00:00:00Z", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
@@ -96,7 +91,6 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_GeneratesFallbackForUuidFormat()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema
         {
             Type = "string",
@@ -104,7 +98,7 @@ public class PlainTextContentHandlerTests
         };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.Equal("00000000-0000-0000-0000-000000000000", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
@@ -114,11 +108,10 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_GeneratesFallbackForIntegerType()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema { Type = "integer" };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.Equal("0", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
@@ -128,11 +121,10 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_GeneratesFallbackForNumberType()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema { Type = "number" };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.Equal("0.0", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
@@ -142,11 +134,10 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_GeneratesFallbackForBooleanType()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema { Type = "boolean" };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.Equal("true", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
@@ -156,7 +147,6 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_GeneratesFallbackForArrayType()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema
         {
             Type = "array",
@@ -164,7 +154,7 @@ public class PlainTextContentHandlerTests
         };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.NotNull(mediaType.Example);
@@ -176,7 +166,6 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_GeneratesFallbackForObjectType()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema
         {
             Type = "object",
@@ -188,7 +177,7 @@ public class PlainTextContentHandlerTests
         };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.NotNull(mediaType.Example);
@@ -201,7 +190,6 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_UsesSchemaExampleIfAvailable()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema
         {
             Type = "string",
@@ -209,7 +197,7 @@ public class PlainTextContentHandlerTests
         };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.Equal("schema example", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
@@ -219,7 +207,6 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_UsesEnumValueIfAvailable()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema
         {
             Type = "string",
@@ -231,7 +218,7 @@ public class PlainTextContentHandlerTests
         };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.Equal("option1", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
@@ -241,7 +228,6 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_UsesMinimumValueForInteger()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema
         {
             Type = "integer",
@@ -249,7 +235,7 @@ public class PlainTextContentHandlerTests
         };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.Equal("10", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
@@ -259,7 +245,6 @@ public class PlainTextContentHandlerTests
     public void CreateMediaType_UsesMinimumValueForNumber()
     {
         // Arrange
-        var handler = new PlainTextContentHandler();
         var schema = new OpenApiSchema
         {
             Type = "number",
@@ -267,7 +252,7 @@ public class PlainTextContentHandlerTests
         };
 
         // Act
-        var mediaType = handler.CreateMediaType(schema);
+        var mediaType = PlainTextContentHandler.CreateMediaType(schema);
 
         // Assert
         Assert.Equal("5.5", ((Microsoft.OpenApi.Any.OpenApiString?)mediaType.Example)?.Value);
@@ -276,10 +261,7 @@ public class PlainTextContentHandlerTests
     [Fact]
     public void CreateMediaType_ThrowsOnNullSchema()
     {
-        // Arrange
-        var handler = new PlainTextContentHandler();
-
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => handler.CreateMediaType(null!));
+        Assert.Throws<ArgumentNullException>(() => PlainTextContentHandler.CreateMediaType(null!));
     }
 }

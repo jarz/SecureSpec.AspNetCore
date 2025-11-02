@@ -13,7 +13,6 @@ public class MediaTypeContentBuilderTests
     public void CreateContent_SharesSchemaReferenceAcrossMediaTypes()
     {
         // Arrange - AC 453: shared schema uses single $ref
-        var builder = new MediaTypeContentBuilder();
         var schema = new OpenApiSchema
         {
             Reference = new OpenApiReference
@@ -26,7 +25,7 @@ public class MediaTypeContentBuilderTests
         var mediaTypes = new[] { "application/json", "application/xml" };
 
         // Act
-        var content = builder.CreateContent(schema, mediaTypes);
+        var content = MediaTypeContentBuilder.CreateContent(schema, mediaTypes);
 
         // Assert
         Assert.Equal(2, content.Count);
@@ -51,7 +50,6 @@ public class MediaTypeContentBuilderTests
     public void CreateContentWithReference_SharesReferenceAcrossMediaTypes()
     {
         // Arrange
-        var builder = new MediaTypeContentBuilder();
         var reference = new OpenApiReference
         {
             Type = ReferenceType.Schema,
@@ -61,7 +59,7 @@ public class MediaTypeContentBuilderTests
         var mediaTypes = new[] { "application/json", "application/xml", "text/plain" };
 
         // Act
-        var content = builder.CreateContentWithReference(reference, mediaTypes);
+        var content = MediaTypeContentBuilder.CreateContentWithReference(reference, mediaTypes);
 
         // Assert
         Assert.Equal(3, content.Count);
@@ -79,7 +77,6 @@ public class MediaTypeContentBuilderTests
     public void CreateContent_AppliesDeterministicOrdering()
     {
         // Arrange - AC 452: deterministic ordering
-        var builder = new MediaTypeContentBuilder();
         var schema = new OpenApiSchema { Type = "object" };
 
         // Provide unsorted media types
@@ -92,7 +89,7 @@ public class MediaTypeContentBuilderTests
         };
 
         // Act
-        var content = builder.CreateContent(schema, mediaTypes);
+        var content = MediaTypeContentBuilder.CreateContent(schema, mediaTypes);
 
         // Assert - verify deterministic ordering
         var keys = content.Keys.ToList();
@@ -106,7 +103,6 @@ public class MediaTypeContentBuilderTests
     public void CreateContent_HandlesTextPlainSpecially()
     {
         // Arrange - AC 457: text/plain handling
-        var builder = new MediaTypeContentBuilder();
         var schema = new OpenApiSchema { Type = "string" };
         var mediaTypes = new[] { "text/plain" };
         var options = new MediaTypeContentOptions
@@ -115,7 +111,7 @@ public class MediaTypeContentBuilderTests
         };
 
         // Act
-        var content = builder.CreateContent(schema, mediaTypes, options);
+        var content = MediaTypeContentBuilder.CreateContent(schema, mediaTypes, options);
 
         // Assert
         Assert.Single(content);
@@ -128,7 +124,6 @@ public class MediaTypeContentBuilderTests
     public void CreateContent_HandlesXmlSpecially()
     {
         // Arrange - AC 458: XML generation
-        var builder = new MediaTypeContentBuilder();
         var schema = new OpenApiSchema
         {
             Type = "object",
@@ -144,7 +139,7 @@ public class MediaTypeContentBuilderTests
         };
 
         // Act
-        var content = builder.CreateContent(schema, mediaTypes, options);
+        var content = MediaTypeContentBuilder.CreateContent(schema, mediaTypes, options);
 
         // Assert
         Assert.Single(content);
@@ -157,7 +152,6 @@ public class MediaTypeContentBuilderTests
     public void CreateContent_HandlesMultipartEncodings()
     {
         // Arrange
-        var builder = new MediaTypeContentBuilder();
         var schema = new OpenApiSchema { Type = "object" };
         var mediaTypes = new[] { "multipart/form-data" };
         var options = new MediaTypeContentOptions
@@ -172,7 +166,7 @@ public class MediaTypeContentBuilderTests
         };
 
         // Act
-        var content = builder.CreateContent(schema, mediaTypes, options);
+        var content = MediaTypeContentBuilder.CreateContent(schema, mediaTypes, options);
 
         // Assert
         Assert.Single(content);
@@ -185,12 +179,11 @@ public class MediaTypeContentBuilderTests
     public void CreateContent_AllowsNullOptions()
     {
         // Arrange
-        var builder = new MediaTypeContentBuilder();
         var schema = new OpenApiSchema { Type = "string" };
         var mediaTypes = new[] { "application/json" };
 
         // Act
-        var content = builder.CreateContent(schema, mediaTypes, null);
+        var content = MediaTypeContentBuilder.CreateContent(schema, mediaTypes, null);
 
         // Assert
         Assert.Single(content);
@@ -201,12 +194,11 @@ public class MediaTypeContentBuilderTests
     public void CreateContent_HandlesCaseInsensitiveMediaTypes()
     {
         // Arrange
-        var builder = new MediaTypeContentBuilder();
         var schema = new OpenApiSchema { Type = "string" };
         var mediaTypes = new[] { "APPLICATION/JSON", "Text/Plain" };
 
         // Act
-        var content = builder.CreateContent(schema, mediaTypes);
+        var content = MediaTypeContentBuilder.CreateContent(schema, mediaTypes);
 
         // Assert
         Assert.Equal(2, content.Count);
@@ -218,12 +210,11 @@ public class MediaTypeContentBuilderTests
     public void CreateContent_EmptyMediaTypesReturnsEmptyDictionary()
     {
         // Arrange
-        var builder = new MediaTypeContentBuilder();
         var schema = new OpenApiSchema { Type = "string" };
         var mediaTypes = Array.Empty<string>();
 
         // Act
-        var content = builder.CreateContent(schema, mediaTypes);
+        var content = MediaTypeContentBuilder.CreateContent(schema, mediaTypes);
 
         // Assert
         Assert.Empty(content);
@@ -233,43 +224,39 @@ public class MediaTypeContentBuilderTests
     public void CreateContent_ThrowsOnNullSchema()
     {
         // Arrange
-        var builder = new MediaTypeContentBuilder();
         var mediaTypes = new[] { "application/json" };
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            builder.CreateContent(null!, mediaTypes));
+            MediaTypeContentBuilder.CreateContent(null!, mediaTypes));
     }
 
     [Fact]
     public void CreateContent_ThrowsOnNullMediaTypes()
     {
         // Arrange
-        var builder = new MediaTypeContentBuilder();
         var schema = new OpenApiSchema { Type = "string" };
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            builder.CreateContent(schema, null!));
+            MediaTypeContentBuilder.CreateContent(schema, null!));
     }
 
     [Fact]
     public void CreateContentWithReference_ThrowsOnNullReference()
     {
         // Arrange
-        var builder = new MediaTypeContentBuilder();
         var mediaTypes = new[] { "application/json" };
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            builder.CreateContentWithReference(null!, mediaTypes));
+            MediaTypeContentBuilder.CreateContentWithReference(null!, mediaTypes));
     }
 
     [Fact]
     public void CreateContent_PreservesSchemaPropertiesAcrossMediaTypes()
     {
         // Arrange
-        var builder = new MediaTypeContentBuilder();
         var schema = new OpenApiSchema
         {
             Type = "string",
@@ -281,7 +268,7 @@ public class MediaTypeContentBuilderTests
         var mediaTypes = new[] { "application/json", "application/xml" };
 
         // Act
-        var content = builder.CreateContent(schema, mediaTypes);
+        var content = MediaTypeContentBuilder.CreateContent(schema, mediaTypes);
 
         // Assert - verify schema properties are accessible through all media types
         foreach (var mediaType in content.Values)
@@ -298,12 +285,11 @@ public class MediaTypeContentBuilderTests
     public void CreateContent_HandlesTextXmlAsXml()
     {
         // Arrange
-        var builder = new MediaTypeContentBuilder();
         var schema = new OpenApiSchema { Type = "object" };
         var mediaTypes = new[] { "text/xml" };
 
         // Act
-        var content = builder.CreateContent(schema, mediaTypes);
+        var content = MediaTypeContentBuilder.CreateContent(schema, mediaTypes);
 
         // Assert - text/xml should be treated as XML
         Assert.Single(content);
@@ -315,7 +301,6 @@ public class MediaTypeContentBuilderTests
     public void CreateContent_SupportsMultipleMediaTypesWithSharedSchema()
     {
         // Arrange - AC 453: comprehensive test
-        var builder = new MediaTypeContentBuilder();
         var reference = new OpenApiReference
         {
             Type = ReferenceType.Schema,
@@ -337,7 +322,7 @@ public class MediaTypeContentBuilderTests
         };
 
         // Act
-        var content = builder.CreateContent(schema, mediaTypes);
+        var content = MediaTypeContentBuilder.CreateContent(schema, mediaTypes);
 
         // Assert
         Assert.Equal(4, content.Count);

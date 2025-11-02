@@ -91,7 +91,7 @@ public class CsrfTokenManager
     /// </exception>
     public string GenerateToken(string state)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(state, nameof(state));
+        ArgumentException.ThrowIfNullOrWhiteSpace(state);
 
         var tokenBytes = new byte[_tokenLength];
         RandomNumberGenerator.Fill(tokenBytes);

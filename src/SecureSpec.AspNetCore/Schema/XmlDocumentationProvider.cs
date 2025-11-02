@@ -137,7 +137,7 @@ public class XmlDocumentationProvider
         return _memberDocumentation.TryGetValue(memberName, out var doc) ? doc : null;
     }
 
-    private XmlMemberDocumentation ParseMemberDocumentation(XElement memberElement)
+    private static XmlMemberDocumentation ParseMemberDocumentation(XElement memberElement)
     {
         var documentation = new XmlMemberDocumentation();
 
@@ -173,7 +173,7 @@ public class XmlDocumentationProvider
         return documentation;
     }
 
-    private string NormalizeWhitespace(string text)
+    private static string NormalizeWhitespace(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -188,12 +188,12 @@ public class XmlDocumentationProvider
         return string.Join(" ", lines);
     }
 
-    private string GetTypeMemberName(Type type)
+    private static string GetTypeMemberName(Type type)
     {
         return $"T:{type.FullName?.Replace('+', '.')}";
     }
 
-    private string GetMethodMemberName(MethodInfo method)
+    private static string GetMethodMemberName(MethodInfo method)
     {
         var typeName = method.DeclaringType?.FullName?.Replace('+', '.');
         var methodName = method.Name;
@@ -210,7 +210,7 @@ public class XmlDocumentationProvider
         return $"M:{typeName}.{methodName}({paramTypes})";
     }
 
-    private string GetPropertyMemberName(PropertyInfo property)
+    private static string GetPropertyMemberName(PropertyInfo property)
     {
         var typeName = property.DeclaringType?.FullName?.Replace('+', '.');
         return $"P:{typeName}.{property.Name}";

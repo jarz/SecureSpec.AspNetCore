@@ -99,7 +99,7 @@ public class OperationSecurityProcessor
     /// <summary>
     /// Applies inherited security from global requirements when operation has no security defined.
     /// </summary>
-    private void ApplyInheritedSecurity(
+    private static void ApplyInheritedSecurity(
         OpenApiOperation operation,
         IList<OpenApiSecurityRequirement>? globalSecurity)
     {
@@ -136,7 +136,7 @@ public class OperationSecurityProcessor
     {
         operation.Security = OrderSecurityRequirements(operation.Security).ToList();
 
-        if (globalSecurity != null && globalSecurity.Count > 0)
+        if (globalSecurity?.Count > 0)
         {
             LogSecurityMutation(operationId, globalSecurity.Count, operation.Security.Count, "OperationDefined",
                 $"Operation '{operationId}' overrode global security requirements");

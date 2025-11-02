@@ -93,7 +93,7 @@ public static class PkceGenerator
     /// </remarks>
     public static string GenerateCodeChallenge(string codeVerifier)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(codeVerifier, nameof(codeVerifier));
+        ArgumentException.ThrowIfNullOrWhiteSpace(codeVerifier);
 
         if (codeVerifier.Length < MinVerifierLength || codeVerifier.Length > MaxVerifierLength)
         {

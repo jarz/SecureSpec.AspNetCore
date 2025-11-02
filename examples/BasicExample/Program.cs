@@ -123,7 +123,7 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 }).WithName("GetWeatherForecast");
 
-app.Run();
+await app.RunAsync();
 
 /// <summary>
 /// Represents a weather forecast for a specific date.

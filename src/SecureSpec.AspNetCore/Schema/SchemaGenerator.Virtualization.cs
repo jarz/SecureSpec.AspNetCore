@@ -29,9 +29,8 @@ public partial class SchemaGenerator
 
         // Count nested object properties
         var nestedObjectCount = 0;
-        foreach (var prop in properties)
+        foreach (var propType in properties.Select(prop => prop.PropertyType))
         {
-            var propType = prop.PropertyType;
             var underlyingType = Nullable.GetUnderlyingType(propType) ?? propType;
 
             // Check if this is a complex/object type (not primitive, enum, or collection)
