@@ -53,7 +53,7 @@ public class ExampleGenerationThrottlingTests
         var schema = CreateDeeplyNestedSchema(20);
 
         // Act
-        var result = generator.GenerateDeterministicFallback(schema);
+        generator.GenerateDeterministicFallback(schema);
 
         // Assert - Generation should be throttled
         // Result may be null or partial depending on when throttling occurred
@@ -143,7 +143,6 @@ public class ExampleGenerationThrottlingTests
         var events = logger.GetEvents();
         var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGenerationThrottled).ToList();
         // Note: Count may vary based on timing, so we just verify it's non-negative
-        _ = throttledEvents.Count;
     }
 
     [Fact]
