@@ -139,10 +139,11 @@ public class ExampleGenerationThrottlingTests
         var count = generator.ThrottledCount;
         Assert.InRange(count, 0, threadCount * iterationsPerThread);
 
-        // Verify diagnostics were logged (may vary based on timing)
+        // Verify diagnostics were logged if throttling occurred (may vary based on timing)
         var events = logger.GetEvents();
-        // Note: Count may vary based on timing, so we just verify diagnostics are collected
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.ExampleGenerationThrottled);
+        var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGenerationThrottled).ToList();
+        // Diagnostic count should match throttled count
+        Assert.Equal(count, throttledEvents.Count);
     }
 
     [Fact]

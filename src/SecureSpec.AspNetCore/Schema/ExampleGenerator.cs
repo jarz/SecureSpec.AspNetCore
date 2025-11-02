@@ -279,16 +279,7 @@ public sealed class ExampleGenerator
             CheckTimeBudget(stopwatch, timeoutMs, cancellationToken);
         }
 
-        return schema.Type switch
-        {
-            TypeString => GenerateStringExample(schema),
-            TypeInteger => GenerateIntegerExample(schema),
-            TypeNumber => GenerateNumberExample(schema),
-            TypeBoolean => new OpenApiBoolean(false),
-            TypeArray => GenerateArrayExample(schema, stopwatch, timeoutMs, cancellationToken),
-            TypeObject => GenerateObjectExample(schema, stopwatch, timeoutMs, cancellationToken),
-            _ => null
-        };
+        return GenerateByType(schema, stopwatch, timeoutMs, cancellationToken);
     }
 
     /// <summary>
