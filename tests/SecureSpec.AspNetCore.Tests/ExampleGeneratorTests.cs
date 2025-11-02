@@ -1,6 +1,7 @@
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
+using SecureSpec.AspNetCore.Diagnostics;
 using SecureSpec.AspNetCore.Schema;
 
 namespace SecureSpec.AspNetCore.Tests;
@@ -11,7 +12,7 @@ public class ExampleGeneratorTests
 
     public ExampleGeneratorTests()
     {
-        _generator = new ExampleGenerator(new SchemaOptions());
+        _generator = new ExampleGenerator(new SchemaOptions(), new DiagnosticsLogger());
     }
 
     [Fact]

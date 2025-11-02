@@ -20,6 +20,11 @@ public sealed class ExamplePrecedenceEngine
     }
 
     /// <summary>
+    /// Gets the throttled count from the underlying generator (thread-safe atomic counter).
+    /// </summary>
+    public int ThrottledCount => _generator.ThrottledCount;
+
+    /// <summary>
     /// Resolves examples based on the precedence order.
     /// </summary>
     /// <param name="context">The example context containing all available sources.</param>

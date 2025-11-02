@@ -204,11 +204,72 @@ IOpenApiAny? Resolve(ExampleContext ctx)
 - All components are thread-safe
 - No shared mutable state
 - Can be used concurrently
+- Atomic counters for throttle tracking (Interlocked operations)
 
 ### Performance
 - Example generation is fast and deterministic
-- Default 25ms timeout per PRD specification
+- **Default 25ms timeout per PRD specification (AC 304)**
 - Minimal memory allocation
+- Time budget enforcement with cancellation tokens
+- **Thread-safe atomic throttle counter (AC 306)**
+
+## Throttling and Time Budget (AC 304-306)
+
+### Overview
+Example generation includes built-in throttling to prevent excessive time spent generating complex nested examples. This ensures predictable performance even with deeply nested schemas.
+
+### Configuration
+```csharp
+services.AddSecureSpec(options =>
+{
+    // Set time budget for example generation (default: 25ms)
+    options.Schema.ExampleGenerationTimeoutMs = 25;
+});
+```
+
+### Behavior
+- Time budget is enforced per schema generation call
+- Checked before generating each nested property or array item
+- When exceeded, generation returns partial result or null
+- **EXM001 diagnostic** is emitted with context information
+
+### Diagnostic (AC 305)
+When throttling occurs, the **EXM001** diagnostic is logged:
+
+```json
+{
+  "code": "EXM001",
+  "level": "Warn",
+  "message": "Example generation throttled after 26ms (budget: 25ms)",
+  "context": {
+    "schemaType": "object",
+    "elapsedMs": 26,
+    "budgetMs": 25
+  }
+}
+```
+
+**Recommended Action**: Provide explicit examples for complex schemas instead of relying on generated fallbacks.
+
+### Monitoring
+```csharp
+var generator = new ExampleGenerator(options, logger);
+var engine = new ExamplePrecedenceEngine(generator);
+
+// Generate examples...
+generator.GenerateDeterministicFallback(schema);
+
+// Check throttle count (thread-safe atomic counter)
+int throttledCount = generator.ThrottledCount;
+// Or via engine
+int engineCount = engine.ThrottledCount;
+```
+
+### Thread Safety (AC 306)
+The throttle counter uses atomic operations (`Interlocked`) ensuring:
+- No race conditions under concurrent access
+- Accurate count across multiple threads
+- Safe to read from any thread
 
 ## Future Enhancements
 
@@ -216,9 +277,7 @@ Potential future improvements:
 1. Support for `examples` (plural) at operation level
 2. Custom example generators via extensibility hooks
 3. Example validation against schema
-4. Time budget enforcement with EXM001 diagnostic emission
-   - **EXM001**: "Example generation throttled" - Emitted when example synthesis exceeds the configured time budget (ExampleGenerationTimeoutMs). Provides warning that example was truncated or simplified.
-5. Attribute-based example specification
+4. Attribute-based example specification
 
 ## Related Components
 

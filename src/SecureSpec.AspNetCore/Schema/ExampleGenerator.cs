@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
+using SecureSpec.AspNetCore.Diagnostics;
 
 namespace SecureSpec.AspNetCore.Schema;
 
@@ -9,16 +11,31 @@ namespace SecureSpec.AspNetCore.Schema;
 /// </summary>
 public sealed class ExampleGenerator
 {
-    private readonly bool _shouldGenerateExamples;
+    // OpenAPI type constants as defined in the OpenAPI specification
+    private const string TypeString = "string";
+    private const string TypeInteger = "integer";
+    private const string TypeNumber = "number";
+    private const string TypeBoolean = "boolean";
+    private const string TypeArray = "array";
+    private const string TypeObject = "object";
+
+    private readonly SchemaOptions _options;
+    private readonly DiagnosticsLogger _diagnosticsLogger;
+    private int _throttledCount;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExampleGenerator"/> class.
     /// </summary>
-    public ExampleGenerator(SchemaOptions options)
+    public ExampleGenerator(SchemaOptions options, DiagnosticsLogger diagnosticsLogger)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        _shouldGenerateExamples = options.GenerateExamples;
+        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _diagnosticsLogger = diagnosticsLogger ?? throw new ArgumentNullException(nameof(diagnosticsLogger));
     }
+
+    /// <summary>
+    /// Gets the number of times example generation was throttled (thread-safe atomic counter).
+    /// </summary>
+    public int ThrottledCount => Interlocked.CompareExchange(ref _throttledCount, 0, 0);
 
     /// <summary>
     /// Generates a deterministic fallback example for the specified schema.
@@ -28,20 +45,113 @@ public sealed class ExampleGenerator
     public IOpenApiAny? GenerateDeterministicFallback(OpenApiSchema schema)
     {
         ArgumentNullException.ThrowIfNull(schema);
+        return GenerateDeterministicFallback(schema, null);
+    }
 
-        if (!_shouldGenerateExamples)
+    /// <summary>
+    /// Generates a deterministic fallback example for the specified schema with throttling support.
+    /// </summary>
+    /// <param name="schema">The schema to generate an example for.</param>
+    /// <param name="cancellationToken">Optional cancellation token for timeout enforcement.</param>
+    /// <returns>A generated example value, or null if generation is not possible or throttled.</returns>
+    public IOpenApiAny? GenerateDeterministicFallback(OpenApiSchema schema, CancellationToken? cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(schema);
+
+        if (!_options.GenerateExamples)
         {
             return null;
         }
 
+        var timeoutMs = _options.ExampleGenerationTimeoutMs;
+
+        // Scenario 1: External cancellation token provided
+        if (cancellationToken.HasValue)
+        {
+            return GenerateWithExternalToken(schema, timeoutMs, cancellationToken.Value);
+        }
+
+        // Scenario 2: Internal timeout enabled
+        if (timeoutMs > 0)
+        {
+            return GenerateWithTimeout(schema, timeoutMs);
+        }
+
+        // Scenario 3: No timeout or cancellation
+        return GenerateByType(schema, null, 0, CancellationToken.None);
+    }
+
+    /// <summary>
+    /// Generates example with external cancellation token, optionally combined with timeout.
+    /// </summary>
+    private IOpenApiAny? GenerateWithExternalToken(OpenApiSchema schema, int timeoutMs, CancellationToken externalToken)
+    {
+        var stopwatch = Stopwatch.StartNew();
+
+        if (timeoutMs > 0)
+        {
+            // Combine external token with timeout
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
+            linkedCts.CancelAfter(timeoutMs);
+
+            try
+            {
+                return GenerateByType(schema, stopwatch, timeoutMs, linkedCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                OnThrottled(schema, stopwatch.ElapsedMilliseconds);
+                return null;
+            }
+        }
+
+        // External token without timeout
+        try
+        {
+            return GenerateByType(schema, stopwatch, timeoutMs, externalToken);
+        }
+        catch (OperationCanceledException)
+        {
+            OnThrottled(schema, stopwatch.ElapsedMilliseconds);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Generates example with internal timeout.
+    /// </summary>
+    private IOpenApiAny? GenerateWithTimeout(OpenApiSchema schema, int timeoutMs)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs));
+
+        try
+        {
+            return GenerateByType(schema, stopwatch, timeoutMs, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            OnThrottled(schema, stopwatch.ElapsedMilliseconds);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Generates an example value based on the schema type.
+    /// Uses strings for type matching because OpenAPI schema types are defined as strings in the OpenAPI specification.
+    /// </summary>
+    private IOpenApiAny? GenerateByType(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
+    {
+        // OpenAPI defines type as a string property, not an enum
+        // Possible values: "string", "number", "integer", "boolean", "array", "object", "null"
         return schema.Type switch
         {
-            "string" => GenerateStringExample(schema),
-            "integer" => GenerateIntegerExample(schema),
-            "number" => GenerateNumberExample(schema),
-            "boolean" => new OpenApiBoolean(false),
-            "array" => GenerateArrayExample(schema),
-            "object" => GenerateObjectExample(schema),
+            TypeString => GenerateStringExample(schema),
+            TypeInteger => GenerateIntegerExample(schema),
+            TypeNumber => GenerateNumberExample(schema),
+            TypeBoolean => new OpenApiBoolean(false),
+            TypeArray => GenerateArrayExample(schema, stopwatch, timeoutMs, cancellationToken),
+            TypeObject => GenerateObjectExample(schema, stopwatch, timeoutMs, cancellationToken),
             _ => null
         };
     }
@@ -111,14 +221,20 @@ public sealed class ExampleGenerator
         return new OpenApiDouble(0.0);
     }
 
-    private OpenApiArray GenerateArrayExample(OpenApiSchema schema)
+    private OpenApiArray GenerateArrayExample(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
     {
         var array = new OpenApiArray();
+
+        // Check time budget before generating nested example
+        if (stopwatch != null)
+        {
+            CheckTimeBudget(stopwatch, timeoutMs, cancellationToken);
+        }
 
         // Generate one example item if schema is defined
         if (schema.Items != null)
         {
-            var itemExample = GenerateDeterministicFallback(schema.Items);
+            var itemExample = GenerateDeterministicFallbackInternal(schema.Items, stopwatch, timeoutMs, cancellationToken);
             if (itemExample != null)
             {
                 array.Add(itemExample);
@@ -128,7 +244,7 @@ public sealed class ExampleGenerator
         return array;
     }
 
-    private OpenApiObject GenerateObjectExample(OpenApiSchema schema)
+    private OpenApiObject GenerateObjectExample(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
     {
         var obj = new OpenApiObject();
 
@@ -137,7 +253,13 @@ public sealed class ExampleGenerator
         {
             foreach (var property in schema.Properties.OrderBy(p => p.Key))
             {
-                var propertyExample = GenerateDeterministicFallback(property.Value);
+                // Check time budget before generating each property
+                if (stopwatch != null)
+                {
+                    CheckTimeBudget(stopwatch, timeoutMs, cancellationToken);
+                }
+
+                var propertyExample = GenerateDeterministicFallbackInternal(property.Value, stopwatch, timeoutMs, cancellationToken);
                 if (propertyExample != null)
                 {
                     obj[property.Key] = propertyExample;
@@ -146,5 +268,58 @@ public sealed class ExampleGenerator
         }
 
         return obj;
+    }
+
+    /// <summary>
+    /// Internal method for recursive generation with time budget tracking.
+    /// </summary>
+    private IOpenApiAny? GenerateDeterministicFallbackInternal(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(schema);
+
+        // Check time budget before processing
+        if (stopwatch != null)
+        {
+            CheckTimeBudget(stopwatch, timeoutMs, cancellationToken);
+        }
+
+        return GenerateByType(schema, stopwatch, timeoutMs, cancellationToken);
+    }
+
+    /// <summary>
+    /// Checks if the time budget has been exceeded and throws OperationCanceledException if so.
+    /// </summary>
+    private static void CheckTimeBudget(Stopwatch stopwatch, int timeoutMs, CancellationToken cancellationToken)
+    {
+        // Check cancellation token first (fast path)
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Manual time check for external cancellation tokens that don't have built-in timeout
+        if (timeoutMs > 0 && stopwatch.ElapsedMilliseconds >= timeoutMs)
+        {
+            throw new OperationCanceledException();
+        }
+    }
+
+    /// <summary>
+    /// Called when example generation is throttled due to time budget exceeded.
+    /// </summary>
+    private void OnThrottled(OpenApiSchema schema, long elapsedMs)
+    {
+        // Increment atomic counter
+        Interlocked.Increment(ref _throttledCount);
+
+        // Emit EXM001 diagnostic
+        _diagnosticsLogger.LogWarning(
+            DiagnosticCodes.ExampleGenerationThrottled,
+            $"Example generation throttled after {elapsedMs}ms (budget: {_options.ExampleGenerationTimeoutMs}ms)",
+            new
+            {
+                SchemaType = schema.Type,
+                ElapsedMs = elapsedMs,
+                BudgetMs = _options.ExampleGenerationTimeoutMs
+            },
+            sanitized: true
+        );
     }
 }

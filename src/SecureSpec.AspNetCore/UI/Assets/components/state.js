@@ -6,6 +6,7 @@ export class StateManager {
       openApiDocument: null,
       currentOperation: null,
       expandedOperations: new Set(),
+      expandedTags: new Set(),
       searchFilter: '',
       selectedDocument: null
     };
@@ -15,7 +16,8 @@ export class StateManager {
   getState() {
     return { 
       ...this.state, 
-      expandedOperations: new Set(this.state.expandedOperations)
+      expandedOperations: new Set(this.state.expandedOperations),
+      expandedTags: new Set(this.state.expandedTags)
     };
   }
   
@@ -67,6 +69,16 @@ export class StateManager {
       expanded.add(operationId);
     }
     this.setState({ expandedOperations: expanded });
+  }
+
+  toggleTag(tagName) {
+    const expanded = new Set(this.state.expandedTags);
+    if (expanded.has(tagName)) {
+      expanded.delete(tagName);
+    } else {
+      expanded.add(tagName);
+    }
+    this.setState({ expandedTags: expanded });
   }
   
   setSearchFilter(filter) {
