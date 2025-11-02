@@ -60,32 +60,39 @@ public sealed class ExampleGenerator
         ArgumentNullException.ThrowIfNull(schema);
 
         var timeoutMs = _options.ExampleGenerationTimeoutMs;
-        CancellationToken effectiveToken;
-        Stopwatch? stopwatch = null;
 
+        // Scenario 1: External cancellation token provided
         if (cancellationToken.HasValue)
         {
-            stopwatch = Stopwatch.StartNew();
-            if (timeoutMs > 0)
-            {
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Value);
-                linkedCts.CancelAfter(timeoutMs);
-                effectiveToken = linkedCts.Token;
-            }
-            else
-            {
-                effectiveToken = cancellationToken.Value;
-            }
+            return GenerateWithExternalToken(schema, timeoutMs, cancellationToken.Value);
         }
-        else if (timeoutMs > 0)
+
+        // Scenario 2: Internal timeout enabled
+        if (timeoutMs > 0)
         {
-            stopwatch = Stopwatch.StartNew();
-            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs));
-            effectiveToken = cts.Token;
+            return GenerateWithTimeout(schema, timeoutMs);
+        }
+
+        // Scenario 3: No timeout or cancellation
+        return GenerateByType(schema, null, 0, CancellationToken.None);
+    }
+
+    /// <summary>
+    /// Generates example with external cancellation token, optionally combined with timeout.
+    /// </summary>
+    private IOpenApiAny? GenerateWithExternalToken(OpenApiSchema schema, int timeoutMs, CancellationToken externalToken)
+    {
+        var stopwatch = Stopwatch.StartNew();
+
+        if (timeoutMs > 0)
+        {
+            // Combine external token with timeout
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
+            linkedCts.CancelAfter(timeoutMs);
 
             try
             {
-                return GenerateByType(schema, stopwatch, timeoutMs, effectiveToken);
+                return GenerateByType(schema, stopwatch, timeoutMs, linkedCts.Token);
             }
             catch (OperationCanceledException)
             {
@@ -93,20 +100,34 @@ public sealed class ExampleGenerator
                 return null;
             }
         }
-        else
-        {
-            effectiveToken = CancellationToken.None;
-            stopwatch = null;
-        }
 
-        // External cancellation token or no timeout scenario
+        // External token without timeout
         try
         {
-            return GenerateByType(schema, stopwatch, timeoutMs, effectiveToken);
+            return GenerateByType(schema, stopwatch, timeoutMs, externalToken);
         }
         catch (OperationCanceledException)
         {
-            OnThrottled(schema, stopwatch?.ElapsedMilliseconds ?? 0);
+            OnThrottled(schema, stopwatch.ElapsedMilliseconds);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Generates example with internal timeout.
+    /// </summary>
+    private IOpenApiAny? GenerateWithTimeout(OpenApiSchema schema, int timeoutMs)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs));
+
+        try
+        {
+            return GenerateByType(schema, stopwatch, timeoutMs, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            OnThrottled(schema, stopwatch.ElapsedMilliseconds);
             return null;
         }
     }
