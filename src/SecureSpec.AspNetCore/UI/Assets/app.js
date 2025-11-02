@@ -81,20 +81,20 @@ class SecureSpecApp {
 
   attachOperationListeners() {
     const tagHeaders = document.querySelectorAll('.tag-header');
-    tagHeaders.forEach(header => {
+    for (const header of tagHeaders) {
       header.addEventListener('click', event => {
         const tagName = event.currentTarget.closest('.tag-group').dataset.tag;
         this.state.toggleTag(tagName);
       });
-    });
+    }
 
     const operationHeaders = document.querySelectorAll('.operation-header');
-    operationHeaders.forEach(header => {
+    for (const header of operationHeaders) {
       header.addEventListener('click', event => {
         const operationId = event.currentTarget.closest('.operation').dataset.operationId;
         this.state.toggleOperation(operationId);
       });
-    });
+    }
   }
 
   setupStateSubscriptions() {
