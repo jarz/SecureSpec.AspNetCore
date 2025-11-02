@@ -50,10 +50,10 @@ public partial class SchemaGenerator
     {
         if (_options.EnumNamingPolicy == null)
         {
-            return [.. enumNames];
+            return enumNames.ToList();
         }
 
-        return [.. enumNames.Select(n => _options.EnumNamingPolicy(n))];
+        return enumNames.Select(n => _options.EnumNamingPolicy(n)).ToList();
     }
 
     private static object[] GetEnumValues(Type enumType)
@@ -144,7 +144,7 @@ public partial class SchemaGenerator
         }
     }
 
-    private bool TryVirtualizeStringEnum(OpenApiSchema schema, IReadOnlyList<string> values, Type enumType)
+    private bool TryVirtualizeStringEnum(OpenApiSchema schema, List<string> values, Type enumType)
     {
         if (!ShouldVirtualize(values.Count))
         {
@@ -159,7 +159,7 @@ public partial class SchemaGenerator
     /// <summary>
     /// Applies virtualization to an enum schema with string values.
     /// </summary>
-    private void AddVirtualizedStringValues(OpenApiSchema schema, IReadOnlyList<string> values)
+    private void AddVirtualizedStringValues(OpenApiSchema schema, List<string> values)
     {
         // AC 440: Truncate to threshold
         var limit = Math.Min(_options.EnumVirtualizationThreshold, values.Count);
