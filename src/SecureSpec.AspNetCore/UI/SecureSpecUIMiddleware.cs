@@ -78,7 +78,7 @@ public class SecureSpecUIMiddleware
     /// <summary>
     /// Serves static assets (CSS, JS, etc.).
     /// </summary>
-    private async Task ServeAssetAsync(HttpContext context, string subPath)
+    private static async Task ServeAssetAsync(HttpContext context, string subPath)
     {
         var assetContent = AssetProvider.GetAsset(subPath);
 
@@ -105,22 +105,24 @@ public class SecureSpecUIMiddleware
     /// <summary>
     /// Sets security headers on the response.
     /// </summary>
-    private void SetSecurityHeaders(HttpResponse response)
+    private static void SetSecurityHeaders(HttpResponse response)
     {
         // Content Security Policy - strict by default
-        response.Headers["Content-Security-Policy"] =
+        response.Headers.ContentSecurityPolicy =
             "default-src 'none'; " +
             "script-src 'self'; " +
-            "style-src 'self' 'unsafe-inline'; " +
+            "style-src 'self'; " +
             "img-src 'self' data:; " +
             "font-src 'self'; " +
             "connect-src 'self'; " +
             "base-uri 'self'; " +
-            "form-action 'self';";
+            "form-action 'self'; " +
+            "object-src 'none'; " +
+            "frame-ancestors 'none';";
 
         // Additional security headers
-        response.Headers["X-Content-Type-Options"] = "nosniff";
-        response.Headers["X-Frame-Options"] = "DENY";
+        response.Headers.XContentTypeOptions = "nosniff";
+        response.Headers.XFrameOptions = "DENY";
         response.Headers["Referrer-Policy"] = "no-referrer";
     }
 
