@@ -57,8 +57,17 @@ public sealed class ExampleGenerator
 
         if (cancellationToken.HasValue)
         {
-            effectiveToken = cancellationToken.Value;
             stopwatch = Stopwatch.StartNew();
+            if (timeoutMs > 0)
+            {
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Value);
+                linkedCts.CancelAfter(timeoutMs);
+                effectiveToken = linkedCts.Token;
+            }
+            else
+            {
+                effectiveToken = cancellationToken.Value;
+            }
         }
         else if (timeoutMs > 0)
         {
