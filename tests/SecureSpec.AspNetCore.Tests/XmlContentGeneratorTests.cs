@@ -12,11 +12,10 @@ public class XmlContentGeneratorTests
     public void CreateMediaType_ReturnsMediaTypeWithXmlSchema()
     {
         // Arrange
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema { Type = "string" };
 
         // Act
-        var mediaType = generator.CreateMediaType(schema);
+        var mediaType = XmlContentGenerator.CreateMediaType(schema);
 
         // Assert
         Assert.NotNull(mediaType);
@@ -29,11 +28,10 @@ public class XmlContentGeneratorTests
     public void CreateMediaType_UsesCustomRootElementName()
     {
         // Arrange
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema { Type = "string" };
 
         // Act
-        var mediaType = generator.CreateMediaType(schema, "customRoot");
+        var mediaType = XmlContentGenerator.CreateMediaType(schema, "customRoot");
 
         // Assert
         Assert.Equal("customRoot", mediaType.Schema.Xml?.Name);
@@ -43,7 +41,6 @@ public class XmlContentGeneratorTests
     public void CreateMediaType_MirrorsJsonStructureForObject()
     {
         // Arrange - AC 458: mirrors JSON structure
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema
         {
             Type = "object",
@@ -55,7 +52,7 @@ public class XmlContentGeneratorTests
         };
 
         // Act
-        var mediaType = generator.CreateMediaType(schema);
+        var mediaType = XmlContentGenerator.CreateMediaType(schema);
 
         // Assert
         Assert.Equal("object", mediaType.Schema.Type);
@@ -72,7 +69,6 @@ public class XmlContentGeneratorTests
     public void CreateMediaType_MirrorsJsonStructureForArray()
     {
         // Arrange
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema
         {
             Type = "array",
@@ -80,7 +76,7 @@ public class XmlContentGeneratorTests
         };
 
         // Act
-        var mediaType = generator.CreateMediaType(schema, "items");
+        var mediaType = XmlContentGenerator.CreateMediaType(schema, "items");
 
         // Assert
         Assert.Equal("array", mediaType.Schema.Type);
@@ -96,7 +92,6 @@ public class XmlContentGeneratorTests
     public void CreateMediaType_PreservesRequiredProperties()
     {
         // Arrange
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema
         {
             Type = "object",
@@ -109,7 +104,7 @@ public class XmlContentGeneratorTests
         };
 
         // Act
-        var mediaType = generator.CreateMediaType(schema);
+        var mediaType = XmlContentGenerator.CreateMediaType(schema);
 
         // Assert
         Assert.Equal(2, mediaType.Schema.Required.Count);
@@ -121,7 +116,6 @@ public class XmlContentGeneratorTests
     public void CreateMediaType_MirrorsEnumValues()
     {
         // Arrange
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema
         {
             Type = "string",
@@ -134,7 +128,7 @@ public class XmlContentGeneratorTests
         };
 
         // Act
-        var mediaType = generator.CreateMediaType(schema);
+        var mediaType = XmlContentGenerator.CreateMediaType(schema);
 
         // Assert - AC 458: stable ordering
         Assert.Equal(3, mediaType.Schema.Enum.Count);
@@ -147,7 +141,6 @@ public class XmlContentGeneratorTests
     public void CreateMediaType_PreservesSchemaReference()
     {
         // Arrange
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema
         {
             Reference = new OpenApiReference
@@ -158,7 +151,7 @@ public class XmlContentGeneratorTests
         };
 
         // Act
-        var mediaType = generator.CreateMediaType(schema);
+        var mediaType = XmlContentGenerator.CreateMediaType(schema);
 
         // Assert
         Assert.NotNull(mediaType.Schema.Reference);
@@ -170,7 +163,6 @@ public class XmlContentGeneratorTests
     public void GenerateXmlExample_CreatesStableOutput()
     {
         // Arrange - AC 458: stable generation
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema
         {
             Type = "object",
@@ -182,8 +174,8 @@ public class XmlContentGeneratorTests
         };
 
         // Act
-        var xml1 = generator.GenerateXmlExample(schema);
-        var xml2 = generator.GenerateXmlExample(schema);
+        var xml1 = XmlContentGenerator.GenerateXmlExample(schema);
+        var xml2 = XmlContentGenerator.GenerateXmlExample(schema);
 
         // Assert - stable across invocations
         Assert.Equal(xml1, xml2);
@@ -193,7 +185,6 @@ public class XmlContentGeneratorTests
     public void GenerateXmlExample_SortsPropertiesLexically()
     {
         // Arrange
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema
         {
             Type = "object",
@@ -206,7 +197,7 @@ public class XmlContentGeneratorTests
         };
 
         // Act
-        var xml = generator.GenerateXmlExample(schema, "root");
+        var xml = XmlContentGenerator.GenerateXmlExample(schema, "root");
 
         // Assert - properties should appear in lexical order
         Assert.NotNull(xml);
@@ -222,7 +213,6 @@ public class XmlContentGeneratorTests
     public void GenerateXmlExample_EscapesXmlCharacters()
     {
         // Arrange
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema
         {
             Type = "string",
@@ -230,7 +220,7 @@ public class XmlContentGeneratorTests
         };
 
         // Act
-        var xml = generator.GenerateXmlExample(schema, "value");
+        var xml = XmlContentGenerator.GenerateXmlExample(schema, "value");
 
         // Assert - special characters should be escaped
         Assert.NotNull(xml);
@@ -244,7 +234,6 @@ public class XmlContentGeneratorTests
     public void GenerateXmlExample_SingularizesArrayItemNames()
     {
         // Arrange
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema
         {
             Type = "array",
@@ -252,7 +241,7 @@ public class XmlContentGeneratorTests
         };
 
         // Act
-        var xml = generator.GenerateXmlExample(schema, "users");
+        var xml = XmlContentGenerator.GenerateXmlExample(schema, "users");
 
         // Assert - "users" should become "user" for items
         Assert.NotNull(xml);
@@ -266,7 +255,6 @@ public class XmlContentGeneratorTests
     public void GenerateXmlExample_HandlesIrregularPlurals()
     {
         // Arrange
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema
         {
             Type = "array",
@@ -274,7 +262,7 @@ public class XmlContentGeneratorTests
         };
 
         // Act - "categories" should become "category"
-        var xml = generator.GenerateXmlExample(schema, "categories");
+        var xml = XmlContentGenerator.GenerateXmlExample(schema, "categories");
 
         // Assert
         Assert.NotNull(xml);
@@ -286,7 +274,6 @@ public class XmlContentGeneratorTests
     public void CreateMediaType_MirrorsOneOfPolymorphism()
     {
         // Arrange
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema
         {
             OneOf = new List<OpenApiSchema>
@@ -297,7 +284,7 @@ public class XmlContentGeneratorTests
         };
 
         // Act
-        var mediaType = generator.CreateMediaType(schema);
+        var mediaType = XmlContentGenerator.CreateMediaType(schema);
 
         // Assert
         Assert.Equal(2, mediaType.Schema.OneOf.Count);
@@ -307,22 +294,18 @@ public class XmlContentGeneratorTests
     [Fact]
     public void CreateMediaType_ThrowsOnNullSchema()
     {
-        // Arrange
-        var generator = new XmlContentGenerator();
-
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => generator.CreateMediaType(null!));
+        Assert.Throws<ArgumentNullException>(() => XmlContentGenerator.CreateMediaType(null!));
     }
 
     [Fact]
     public void GenerateXmlExample_ReturnsNullForNullType()
     {
         // Arrange
-        var generator = new XmlContentGenerator();
         var schema = new OpenApiSchema(); // No type set
 
         // Act
-        var xml = generator.GenerateXmlExample(schema);
+        var xml = XmlContentGenerator.GenerateXmlExample(schema);
 
         // Assert
         Assert.Null(xml);

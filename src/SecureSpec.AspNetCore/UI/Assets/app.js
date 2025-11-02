@@ -11,46 +11,43 @@ class SecureSpecApp {
     this.operationDisplay = new OperationDisplay(this.state);
     this.schemaViewer = new SchemaViewer(this.state);
     this.router = new Router(this.state, this.operationDisplay);
-
-    this.initialize();
   }
-  
+
   loadConfig() {
     const configElement = document.getElementById('ui-config');
     if (configElement) {
       try {
         return JSON.parse(configElement.textContent);
-      } catch (e) {
-        console.error('Failed to parse UI configuration:', e);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn('SecureSpec UI configuration is not valid JSON, falling back to defaults.', error);
       }
     }
+
     return {};
   }
-  
+
   async initialize() {
-    // Initialize components
     await this.loadOpenAPIDocument();
     this.setupEventListeners();
     this.setupStateSubscriptions();
     this.router.initialize();
   }
-  
+
   async loadOpenAPIDocument() {
     try {
-      // Try to load OpenAPI document from the first available endpoint
-      // This should match the configured document names
       const response = await fetch('/openapi/v1.json');
-      
+
       if (response.ok) {
         const document = await response.json();
         this.state.setOpenApiDocument(document);
         this.operationDisplay.loadOperations(document);
         this.renderOperations();
       } else {
-        // Fallback: show placeholder
         this.showPlaceholder();
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to load OpenAPI document:', error);
       this.showPlaceholder();
     }
@@ -71,79 +68,72 @@ class SecureSpecApp {
 
   renderOperations() {
     const content = document.getElementById('content');
-    if (!content) return;
+    if (!content) {
+      return;
+    }
 
     const filter = this.state.getState().searchFilter || '';
     const html = this.operationDisplay.renderAll(filter);
     content.innerHTML = html;
 
-    // Attach event listeners to operation headers and tag headers
     this.attachOperationListeners();
   }
 
   attachOperationListeners() {
-    // Tag header click handlers
     const tagHeaders = document.querySelectorAll('.tag-header');
-    tagHeaders.forEach(header => {
-      header.addEventListener('click', (e) => {
-        const tagName = e.currentTarget.closest('.tag-group').dataset.tag;
+    for (const header of tagHeaders) {
+      header.addEventListener('click', event => {
+        const tagName = event.currentTarget.closest('.tag-group').dataset.tag;
         this.state.toggleTag(tagName);
       });
-    });
+    }
 
-    // Operation header click handlers
     const operationHeaders = document.querySelectorAll('.operation-header');
-    operationHeaders.forEach(header => {
-      header.addEventListener('click', (e) => {
-        const operationId = e.currentTarget.closest('.operation').dataset.operationId;
+    for (const header of operationHeaders) {
+      header.addEventListener('click', event => {
+        const operationId = event.currentTarget.closest('.operation').dataset.operationId;
         this.state.toggleOperation(operationId);
       });
-    });
+    }
   }
 
   setupStateSubscriptions() {
-    // Re-render when expanded operations change
-    this.state.subscribe('expandedOperations', () => {
+    const rerender = () => {
       this.renderOperations();
-    });
+    };
 
-    // Re-render when expanded tags change
-    this.state.subscribe('expandedTags', () => {
-      this.renderOperations();
-    });
-
-    // Re-render when search filter changes
-    this.state.subscribe('searchFilter', () => {
-      this.renderOperations();
-    });
+    this.state.subscribe('expandedOperations', rerender);
+    this.state.subscribe('expandedTags', rerender);
+    this.state.subscribe('searchFilter', rerender);
   }
-  
+
   setupEventListeners() {
-    // Setup hash change listener for deep linking
     if (this.config.deepLinking) {
-      window.addEventListener('hashchange', () => {
+      globalThis.addEventListener('hashchange', () => {
         this.router.handleHashChange();
       });
     }
 
-    // Setup filter input if filtering is enabled
     if (this.config.enableFiltering) {
       this.setupFilterInput();
     }
   }
 
   setupFilterInput() {
-    // Create filter input in navigation area
     const nav = document.getElementById('navigation');
-    if (!nav) return;
+    // Defensive check: Prevents duplicate filter inputs if setupFilterInput() is called more than once.
+    // This ensures idempotency.
+    if (!nav || nav.querySelector('.filter-container')) {
+      return;
+    }
 
     const filterContainer = document.createElement('div');
     filterContainer.className = 'filter-container';
     filterContainer.innerHTML = `
-      <input 
-        type="text" 
-        id="operation-filter" 
-        class="filter-input" 
+      <input
+        type="text"
+        id="operation-filter"
+        class="filter-input"
         placeholder="Filter operations..."
         aria-label="Filter operations"
       />
@@ -152,23 +142,36 @@ class SecureSpecApp {
 
     const filterInput = document.getElementById('operation-filter');
     if (filterInput) {
-      // Debounce filter input
       let debounceTimer;
-      filterInput.addEventListener('input', (e) => {
+      filterInput.addEventListener('input', event => {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
-          this.state.setSearchFilter(e.target.value);
-        }, 150); // 150ms debounce as per AC 484
+          this.state.setSearchFilter(event.target.value);
+        }, 150);
       });
     }
   }
 }
 
-// Initialize the application when DOM is ready
+async function bootstrapApp() {
+  const app = new SecureSpecApp();
+  await app.initialize();
+  return app;
+}
+
+const attachApp = () => {
+  bootstrapApp()
+    .then(instance => {
+      globalThis.secureSpecApp = instance;
+    })
+    .catch(error => {
+      // eslint-disable-next-line no-console
+      console.error('SecureSpec UI failed to initialize', error);
+    });
+};
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    window.secureSpecApp = new SecureSpecApp();
-  });
+  document.addEventListener('DOMContentLoaded', attachApp);
 } else {
-  window.secureSpecApp = new SecureSpecApp();
+  attachApp();
 }

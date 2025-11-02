@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Time.Testing;
 using SecureSpec.AspNetCore.Diagnostics;
 
 namespace SecureSpec.AspNetCore.Tests;
@@ -94,15 +95,16 @@ public class DiagnosticsIntegrationTests
     public void MultipleEvents_MaintainChronologicalOrder()
     {
         // Arrange
-        var logger = new DiagnosticsLogger();
+        var fakeTime = new FakeTimeProvider();
+        var logger = new DiagnosticsLogger(fakeTime);
 
         // Act - Log multiple events in sequence
         logger.LogInfo(DiagnosticCodes.SchemaIdCollision, "First event");
-        Thread.Sleep(10); // Ensure timestamp difference
+        fakeTime.Advance(TimeSpan.FromMilliseconds(1));
         logger.LogWarning(DiagnosticCodes.DataAnnotationsConflict, "Second event");
-        Thread.Sleep(10);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(1));
         logger.LogError(DiagnosticCodes.NullabilityMismatch, "Third event");
-        Thread.Sleep(10);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(1));
         logger.LogCritical(DiagnosticCodes.IntegrityCheckFailed, "Fourth event");
 
         // Assert

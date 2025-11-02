@@ -24,7 +24,7 @@ export class Router {
   }
 
   handleHashChange() {
-    const hash = window.location.hash.slice(1) || '/';
+    const hash = globalThis.location.hash.slice(1) || '/';
     this.navigate(hash);
   }
 
@@ -44,9 +44,8 @@ export class Router {
   }
 
   matchRoute(pattern, path) {
-    const patternParts = pattern.split('/').filter(p => p);
-    const pathParts = path.split('/').filter(p => p);
-
+    const patternParts = pattern.split('/').filter(Boolean);
+    const pathParts = path.split('/').filter(Boolean);
     if (patternParts.length !== pathParts.length) {
       return null;
     }
@@ -118,7 +117,9 @@ export class Router {
   highlightOperation(element) {
     // Remove previous highlights
     const previousHighlights = document.querySelectorAll('.operation.highlighted');
-    previousHighlights.forEach(el => el.classList.remove('highlighted'));
+    for (const highlighted of previousHighlights) {
+      highlighted.classList.remove('highlighted');
+    }
 
     // Add highlight class
     element.classList.add('highlighted');

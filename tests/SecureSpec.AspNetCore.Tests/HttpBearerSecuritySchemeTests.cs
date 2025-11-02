@@ -170,7 +170,6 @@ public class HttpBearerSecuritySchemeTests
     public void SanitizeHeaderName_WithValidName_ReturnsUnchanged()
     {
         // Arrange
-        var builder = new HttpBearerSchemeBuilder();
         const string validName = "Authorization";
 
         // Act
@@ -290,8 +289,11 @@ public class HttpBearerSecuritySchemeTests
         // Arrange
         var options = new SecurityOptions();
 
-        // Act & Assert - Should not throw
+        // Act
         options.BlockBasicAuthInference();
+
+        // Assert
+        Assert.Empty(options.Schemes);
     }
 
     [Fact]

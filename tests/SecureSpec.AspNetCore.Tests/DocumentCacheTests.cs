@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Time.Testing;
 using SecureSpec.AspNetCore.Core;
 using SecureSpec.AspNetCore.Diagnostics;
 
@@ -8,7 +9,7 @@ namespace SecureSpec.AspNetCore.Tests;
 /// </summary>
 public class DocumentCacheTests
 {
-    private DiagnosticsLogger CreateLogger() => new DiagnosticsLogger();
+    private static DiagnosticsLogger CreateLogger(TimeProvider? timeProvider = null) => new DiagnosticsLogger(timeProvider);
 
     [Fact]
     public void Constructor_SetsDefaultExpiration()
@@ -175,12 +176,13 @@ public class DocumentCacheTests
     public void TryGet_WithExpiredEntry_ReturnsFalse()
     {
         // Arrange
-        using var cache = new DocumentCache(CreateLogger(), TimeSpan.FromMilliseconds(50));
+        var fakeTime = new FakeTimeProvider();
+        using var cache = new DocumentCache(CreateLogger(fakeTime), TimeSpan.FromMilliseconds(50), fakeTime);
         const string key = "doc1";
         cache.Set(key, "content", Serialization.CanonicalSerializer.GenerateHash("content"));
 
         // Act
-        Thread.Sleep(100); // Wait for expiration
+        fakeTime.Advance(TimeSpan.FromMilliseconds(100));
         var result = cache.TryGet(key, out var content, out var hash);
 
         // Assert
@@ -193,12 +195,13 @@ public class DocumentCacheTests
     public void EvictExpired_RemovesExpiredEntries()
     {
         // Arrange
-        using var cache = new DocumentCache(CreateLogger(), TimeSpan.FromMilliseconds(50));
+        var fakeTime = new FakeTimeProvider();
+        using var cache = new DocumentCache(CreateLogger(fakeTime), TimeSpan.FromMilliseconds(50), fakeTime);
         cache.Set("doc1", "content1", Serialization.CanonicalSerializer.GenerateHash("content1"));
         cache.Set("doc2", "content2", Serialization.CanonicalSerializer.GenerateHash("content2"));
 
         // Act
-        Thread.Sleep(100); // Wait for expiration
+        fakeTime.Advance(TimeSpan.FromMilliseconds(100));
         var evictedCount = cache.EvictExpired();
 
         // Assert
@@ -225,13 +228,14 @@ public class DocumentCacheTests
     public void EvictExpired_WithMixedEntries_RemovesOnlyExpired()
     {
         // Arrange
-        using var cache = new DocumentCache(CreateLogger());
+        var fakeTime = new FakeTimeProvider();
+        using var cache = new DocumentCache(CreateLogger(fakeTime), timeProvider: fakeTime);
 
         // Add an entry with short expiration
         cache.Set("doc1", "content1", Serialization.CanonicalSerializer.GenerateHash("content1"), TimeSpan.FromMilliseconds(50));
 
         // Wait a bit
-        Thread.Sleep(100);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(100));
 
         // Add an entry with long expiration (after the first has expired)
         cache.Set("doc2", "content2", Serialization.CanonicalSerializer.GenerateHash("content2"), TimeSpan.FromMinutes(10));

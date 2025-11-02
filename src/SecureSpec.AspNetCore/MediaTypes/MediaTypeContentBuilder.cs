@@ -9,7 +9,6 @@ namespace SecureSpec.AspNetCore.MediaTypes;
 public class MediaTypeContentBuilder
 {
     private readonly PlainTextContentHandler _plainTextHandler;
-    private readonly XmlContentGenerator _xmlGenerator;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MediaTypeContentBuilder"/> class.
@@ -17,7 +16,6 @@ public class MediaTypeContentBuilder
     public MediaTypeContentBuilder()
     {
         _plainTextHandler = new PlainTextContentHandler();
-        _xmlGenerator = new XmlContentGenerator();
     }
 
     /// <summary>
@@ -89,9 +87,9 @@ public class MediaTypeContentBuilder
     /// <summary>
     /// Creates an application/xml media type that mirrors JSON structure (AC 458).
     /// </summary>
-    private OpenApiMediaType CreateXmlMediaType(OpenApiSchema schema, MediaTypeContentOptions options)
+    private static OpenApiMediaType CreateXmlMediaType(OpenApiSchema schema, MediaTypeContentOptions options)
     {
-        return _xmlGenerator.CreateMediaType(schema, options.XmlRootElementName);
+        return XmlContentGenerator.CreateMediaType(schema, options.XmlRootElementName);
     }
 
     /// <summary>

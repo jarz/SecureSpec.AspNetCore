@@ -11,6 +11,7 @@ public sealed class DocumentCache : IDisposable
     private readonly Dictionary<string, CacheEntry> _cache = new(StringComparer.Ordinal);
     private readonly DiagnosticsLogger _logger;
     private readonly TimeSpan _defaultExpiration;
+    private readonly TimeProvider _timeProvider;
     private bool _disposed;
 
     /// <summary>
@@ -18,10 +19,12 @@ public sealed class DocumentCache : IDisposable
     /// </summary>
     /// <param name="logger">The diagnostics logger.</param>
     /// <param name="defaultExpiration">The default expiration time for cache entries. Defaults to 5 minutes.</param>
-    public DocumentCache(DiagnosticsLogger logger, TimeSpan? defaultExpiration = null)
+    /// <param name="timeProvider">Optional time provider used to determine cache entry lifetimes.</param>
+    public DocumentCache(DiagnosticsLogger logger, TimeSpan? defaultExpiration = null, TimeProvider? timeProvider = null)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _defaultExpiration = defaultExpiration ?? TimeSpan.FromMinutes(5);
+        _timeProvider = timeProvider ?? TimeProvider.System;
 
         if (_defaultExpiration <= TimeSpan.Zero)
         {
@@ -54,7 +57,7 @@ public sealed class DocumentCache : IDisposable
             }
 
             // Check expiration
-            if (entry.IsExpired)
+            if (entry.IsExpired(_timeProvider))
             {
                 _logger.LogInfo("CACHE003", $"Cache entry expired for document '{key}'", new { DocumentKey = key, ExpiresAt = entry.ExpiresAt });
                 return false;
@@ -102,7 +105,7 @@ public sealed class DocumentCache : IDisposable
             throw new ArgumentOutOfRangeException(nameof(expiration), "Expiration time must be positive.");
         }
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _timeProvider.GetUtcNow();
         var entry = new CacheEntry(content, hash, now, now.Add(expirationTime));
 
         _lock.EnterWriteLock();
@@ -175,7 +178,7 @@ public sealed class DocumentCache : IDisposable
         try
         {
             var expiredKeys = _cache
-                .Where(kvp => kvp.Value.IsExpired)
+                .Where(kvp => kvp.Value.IsExpired(_timeProvider))
                 .Select(kvp => kvp.Key)
                 .ToList();
 

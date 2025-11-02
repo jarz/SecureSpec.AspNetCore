@@ -198,11 +198,12 @@ public class CsrfTokenManagerTests
     {
         // Arrange
         var shortLifetime = TimeSpan.FromMilliseconds(50);
-        var manager = new CsrfTokenManager(tokenLifetime: shortLifetime);
+        var fakeTime = new FakeTimeProvider();
+        var manager = new CsrfTokenManager(tokenLifetime: shortLifetime, timeProvider: fakeTime);
         var token = manager.GenerateToken("test-state");
 
         // Act - Wait for token to expire
-        Thread.Sleep(100);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(100));
         var isValid = manager.ValidateAndRotateToken(token, out var state);
 
         // Assert
@@ -283,11 +284,12 @@ public class CsrfTokenManagerTests
     {
         // Arrange
         var shortLifetime = TimeSpan.FromMilliseconds(50);
-        var manager = new CsrfTokenManager(tokenLifetime: shortLifetime);
+        var fakeTime = new FakeTimeProvider();
+        var manager = new CsrfTokenManager(tokenLifetime: shortLifetime, timeProvider: fakeTime);
         var token = manager.GenerateToken("test-state");
 
         // Act - Wait for token to expire
-        Thread.Sleep(100);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(100));
         var isValid = manager.ValidateToken(token, out var state);
 
         // Assert
@@ -385,13 +387,14 @@ public class CsrfTokenManagerTests
     public void ActiveTokenCount_AutomaticallyCleanupExpiredTokens()
     {
         // Arrange
-        var manager = new CsrfTokenManager(tokenLifetime: TimeSpan.FromMilliseconds(50));
+        var fakeTime = new FakeTimeProvider();
+        var manager = new CsrfTokenManager(tokenLifetime: TimeSpan.FromMilliseconds(50), timeProvider: fakeTime);
         manager.GenerateToken("state1");
         manager.GenerateToken("state2");
         Assert.Equal(2, manager.ActiveTokenCount);
 
         // Act - Wait for tokens to expire
-        Thread.Sleep(100);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(100));
         var count = manager.ActiveTokenCount;
 
         // Assert

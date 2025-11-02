@@ -208,9 +208,17 @@ public class PerformanceMonitorTests
 
         // Act
         monitor.Dispose();
+        var eventsAfterFirstDispose = logger.GetEvents();
 
-        // Assert - should not throw
-        monitor.Dispose(); // Second dispose should be safe
+        // Assert
+        Assert.Contains(eventsAfterFirstDispose, e => e.Code == DiagnosticCodes.PerformanceMetrics);
+        var totalEventsAfterFirstDispose = eventsAfterFirstDispose.Count;
+
+        // Second dispose should be a no-op with no additional diagnostics
+        monitor.Dispose();
+        var eventsAfterSecondDispose = logger.GetEvents();
+        Assert.Equal(totalEventsAfterFirstDispose, eventsAfterSecondDispose.Count);
+        Assert.Equal(1, eventsAfterSecondDispose.Count(e => e.Code == DiagnosticCodes.PerformanceMetrics));
     }
 
     [Fact]

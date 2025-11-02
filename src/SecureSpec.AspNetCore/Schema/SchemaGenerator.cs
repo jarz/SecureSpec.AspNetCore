@@ -119,12 +119,9 @@ public partial class SchemaGenerator
     private void ApplyXmlDocumentation(OpenApiSchema schema, Type type)
     {
         var documentation = _xmlDocumentation.GetTypeDocumentation(type);
-        if (documentation != null)
+        if (!string.IsNullOrEmpty(documentation?.Summary))
         {
-            if (!string.IsNullOrEmpty(documentation.Summary))
-            {
-                schema.Description = documentation.Summary;
-            }
+            schema.Description = documentation.Summary;
         }
 
         // If the schema is for an object type, also try to apply documentation to properties
@@ -145,7 +142,7 @@ public partial class SchemaGenerator
         }
     }
 
-    private string GetPropertyName(PropertyInfo property)
+    private static string GetPropertyName(PropertyInfo property)
     {
         // Use camelCase by default (standard JSON serialization convention)
         var name = property.Name;

@@ -58,77 +58,99 @@ public partial class SchemaGenerator
             return null;
         }
 
-        if (type.IsArray)
+        if (TryGetArrayElementType(type, out var arrayElement))
         {
-            return type.GetElementType();
+            return arrayElement;
         }
 
-        if (type.IsGenericType)
+        var genericElement = GetGenericEnumerableElementType(type);
+        return genericElement ?? GetInterfaceEnumerableElementType(type);
+    }
+
+    private static bool TryGetArrayElementType(Type type, out Type? elementType)
+    {
+        if (!type.IsArray)
         {
-            var genericDefinition = type.GetGenericTypeDefinition();
-            if (genericDefinition == typeof(IEnumerable<>) ||
-                genericDefinition == typeof(ICollection<>) ||
-                genericDefinition == typeof(IList<>) ||
-                genericDefinition == typeof(List<>) ||
-                genericDefinition == typeof(IReadOnlyCollection<>) ||
-                genericDefinition == typeof(IReadOnlyList<>))
-            {
-                var candidate = type.GetGenericArguments()[0];
-                return IsKeyValuePair(candidate) ? null : candidate;
-            }
+            elementType = null;
+            return false;
         }
 
-        foreach (var iface in type.GetInterfaces())
-        {
-            if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-            {
-                var candidate = iface.GetGenericArguments()[0];
-                if (!IsKeyValuePair(candidate))
-                {
-                    return candidate;
-                }
-            }
-        }
+        elementType = type.GetElementType();
+        return true;
+    }
 
-        return null;
+    private static Type? GetGenericEnumerableElementType(Type type)
+    {
+        return !type.IsGenericType
+            ? null
+            : TryGetEnumerableElementFromDefinition(type.GetGenericTypeDefinition(), type.GetGenericArguments());
+    }
+
+    private static Type? GetInterfaceEnumerableElementType(Type type)
+    {
+        return type
+            .GetInterfaces()
+            .Select(GetGenericEnumerableElementType)
+            .FirstOrDefault(elementType => elementType != null);
+    }
+
+    private static Type? TryGetEnumerableElementFromDefinition(Type definition, Type[] arguments)
+    {
+        return IsSupportedEnumerableDefinition(definition) && !IsKeyValuePair(arguments[0])
+            ? arguments[0]
+            : null;
+    }
+
+    private static bool IsSupportedEnumerableDefinition(Type definition)
+    {
+        return definition == typeof(IEnumerable<>) ||
+               definition == typeof(ICollection<>) ||
+               definition == typeof(IList<>) ||
+               definition == typeof(List<>) ||
+               definition == typeof(IReadOnlyCollection<>) ||
+               definition == typeof(IReadOnlyList<>);
     }
 
     private static bool TryGetDictionaryValueType(Type type, out Type valueType)
     {
-        if (type.IsGenericType && TryGetDictionaryValueTypeCore(type, out valueType))
+        var directMatch = TryResolveDictionaryValueType(type);
+        var interfaceMatch = directMatch ?? type
+            .GetInterfaces()
+            .Select(TryResolveDictionaryValueType)
+            .FirstOrDefault(candidate => candidate != null);
+
+        if (interfaceMatch is null)
         {
-            return true;
+            valueType = null!;
+            return false;
         }
 
-        foreach (var iface in type.GetInterfaces())
-        {
-            if (iface.IsGenericType && TryGetDictionaryValueTypeCore(iface, out valueType))
-            {
-                return true;
-            }
-        }
-
-        valueType = null!;
-        return false;
+        valueType = interfaceMatch;
+        return true;
     }
 
-    private static bool TryGetDictionaryValueTypeCore(Type candidate, out Type valueType)
+    private static Type? TryResolveDictionaryValueType(Type candidate)
     {
-        var definition = candidate.GetGenericTypeDefinition();
-        if (definition == typeof(Dictionary<,>) ||
-            definition == typeof(IDictionary<,>) ||
-            definition == typeof(IReadOnlyDictionary<,>))
+        if (!candidate.IsGenericType)
         {
-            var arguments = candidate.GetGenericArguments();
-            if (arguments[0] == typeof(string))
-            {
-                valueType = arguments[1];
-                return true;
-            }
+            return null;
         }
 
-        valueType = null!;
-        return false;
+        var definition = candidate.GetGenericTypeDefinition();
+        if (!IsSupportedDictionaryDefinition(definition))
+        {
+            return null;
+        }
+
+        var arguments = candidate.GetGenericArguments();
+        return arguments[0] == typeof(string) ? arguments[1] : null;
+    }
+
+    private static bool IsSupportedDictionaryDefinition(Type definition)
+    {
+        return definition == typeof(Dictionary<,>) ||
+               definition == typeof(IDictionary<,>) ||
+               definition == typeof(IReadOnlyDictionary<,>);
     }
 
     private static bool IsKeyValuePair(Type candidate)
