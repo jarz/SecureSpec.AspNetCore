@@ -7,7 +7,7 @@ namespace SecureSpec.AspNetCore.MediaTypes;
 /// Generates stable application/xml content that mirrors JSON structure.
 /// Implements AC 458: application/xml generation stable and mirrors JSON structure where representable.
 /// </summary>
-public class XmlContentGenerator
+public static class XmlContentGenerator
 {
     /// <summary>
     /// Creates an application/xml media type object with a schema that mirrors JSON structure.
@@ -15,18 +15,16 @@ public class XmlContentGenerator
     /// <param name="schema">The base schema to mirror in XML.</param>
     /// <param name="rootElementName">Optional root element name. Defaults to "root".</param>
     /// <returns>An OpenApiMediaType configured for application/xml content.</returns>
-    public OpenApiMediaType CreateMediaType(OpenApiSchema schema, string? rootElementName = null)
+    public static OpenApiMediaType CreateMediaType(OpenApiSchema schema, string? rootElementName = null)
     {
         ArgumentNullException.ThrowIfNull(schema);
 
         var xmlSchema = CreateXmlSchema(schema, rootElementName ?? "root");
 
-        var mediaType = new OpenApiMediaType
+        return new OpenApiMediaType
         {
             Schema = xmlSchema
         };
-
-        return mediaType;
     }
 
     /// <summary>
@@ -35,7 +33,7 @@ public class XmlContentGenerator
     /// <param name="schema">The base schema.</param>
     /// <param name="elementName">The XML element name.</param>
     /// <returns>A schema configured with XML metadata.</returns>
-    private OpenApiSchema CreateXmlSchema(OpenApiSchema schema, string elementName)
+    private static OpenApiSchema CreateXmlSchema(OpenApiSchema schema, string elementName)
     {
         ArgumentNullException.ThrowIfNull(schema);
         ArgumentNullException.ThrowIfNull(elementName);
@@ -52,7 +50,7 @@ public class XmlContentGenerator
         return xmlSchema;
     }
 
-    private void ApplyXmlStructure(OpenApiSchema source, OpenApiSchema target, string elementName)
+    private static void ApplyXmlStructure(OpenApiSchema source, OpenApiSchema target, string elementName)
     {
         CopyObjectProperties(source, target);
         CopyArraySchema(source, target, elementName);
@@ -82,7 +80,7 @@ public class XmlContentGenerator
         };
     }
 
-    private void CopyObjectProperties(OpenApiSchema source, OpenApiSchema target)
+    private static void CopyObjectProperties(OpenApiSchema source, OpenApiSchema target)
     {
         if (source.Properties == null || source.Properties.Count == 0)
         {
@@ -101,7 +99,7 @@ public class XmlContentGenerator
         }
     }
 
-    private void CopyArraySchema(OpenApiSchema source, OpenApiSchema target, string elementName)
+    private static void CopyArraySchema(OpenApiSchema source, OpenApiSchema target, string elementName)
     {
         if (source.Items == null)
         {
@@ -124,7 +122,7 @@ public class XmlContentGenerator
         target.Enum = new List<Microsoft.OpenApi.Any.IOpenApiAny>(source.Enum);
     }
 
-    private void CopyComposedSchemas(OpenApiSchema source, OpenApiSchema target, string elementName)
+    private static void CopyComposedSchemas(OpenApiSchema source, OpenApiSchema target, string elementName)
     {
         AssignComposition(CloneSchemaList(source.OneOf, elementName), composition => target.OneOf = composition);
         AssignComposition(CloneSchemaList(source.AllOf, elementName), composition => target.AllOf = composition);
@@ -139,7 +137,7 @@ public class XmlContentGenerator
         }
     }
 
-    private List<OpenApiSchema>? CloneSchemaList(IList<OpenApiSchema>? source, string elementName)
+    private static List<OpenApiSchema>? CloneSchemaList(IList<OpenApiSchema>? source, string elementName)
     {
         if (source == null || source.Count == 0)
         {
@@ -178,7 +176,7 @@ public class XmlContentGenerator
     /// <param name="schema">The schema to generate an example for.</param>
     /// <param name="elementName">The root element name.</param>
     /// <returns>An XML string example, or null if generation is not applicable.</returns>
-    public string? GenerateXmlExample(OpenApiSchema schema, string elementName = "root")
+    public static string? GenerateXmlExample(OpenApiSchema schema, string elementName = "root")
     {
         ArgumentNullException.ThrowIfNull(schema);
 
@@ -192,7 +190,7 @@ public class XmlContentGenerator
         return builder.ToString();
     }
 
-    private void GenerateXmlElement(StringBuilder builder, OpenApiSchema schema, string elementName, int indent)
+    private static void GenerateXmlElement(StringBuilder builder, OpenApiSchema schema, string elementName, int indent)
     {
         var indentStr = new string(' ', indent * 2);
         switch (GetNodeKind(schema))
@@ -224,7 +222,7 @@ public class XmlContentGenerator
         return XmlNodeKind.Scalar;
     }
 
-    private void WriteObjectElement(StringBuilder builder, OpenApiSchema schema, string elementName, int indent, string indentStr)
+    private static void WriteObjectElement(StringBuilder builder, OpenApiSchema schema, string elementName, int indent, string indentStr)
     {
         builder.Append(indentStr).Append('<').Append(elementName).AppendLine(">");
 
@@ -236,7 +234,7 @@ public class XmlContentGenerator
         builder.Append(indentStr).Append("</").Append(elementName).AppendLine(">");
     }
 
-    private void WriteArrayElement(StringBuilder builder, OpenApiSchema schema, string elementName, int indent, string indentStr)
+    private static void WriteArrayElement(StringBuilder builder, OpenApiSchema schema, string elementName, int indent, string indentStr)
     {
         var itemName = GetArrayItemElementName(elementName);
         builder.Append(indentStr).Append('<').Append(elementName).AppendLine(">");
