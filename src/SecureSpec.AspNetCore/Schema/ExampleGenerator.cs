@@ -77,16 +77,7 @@ public sealed class ExampleGenerator
 
             try
             {
-                return schema.Type switch
-                {
-                    "string" => GenerateStringExample(schema),
-                    "integer" => GenerateIntegerExample(schema),
-                    "number" => GenerateNumberExample(schema),
-                    "boolean" => new OpenApiBoolean(false),
-                    "array" => GenerateArrayExample(schema, stopwatch, timeoutMs, effectiveToken),
-                    "object" => GenerateObjectExample(schema, stopwatch, timeoutMs, effectiveToken),
-                    _ => null
-                };
+                return GenerateByType(schema, stopwatch, timeoutMs, effectiveToken);
             }
             catch (OperationCanceledException)
             {
@@ -103,22 +94,33 @@ public sealed class ExampleGenerator
         // External cancellation token or no timeout scenario
         try
         {
-            return schema.Type switch
-            {
-                "string" => GenerateStringExample(schema),
-                "integer" => GenerateIntegerExample(schema),
-                "number" => GenerateNumberExample(schema),
-                "boolean" => new OpenApiBoolean(false),
-                "array" => GenerateArrayExample(schema, stopwatch, timeoutMs, effectiveToken),
-                "object" => GenerateObjectExample(schema, stopwatch, timeoutMs, effectiveToken),
-                _ => null
-            };
+            return GenerateByType(schema, stopwatch, timeoutMs, effectiveToken);
         }
         catch (OperationCanceledException)
         {
             OnThrottled(schema, stopwatch?.ElapsedMilliseconds ?? 0);
             return null;
         }
+    }
+
+    /// <summary>
+    /// Generates an example value based on the schema type.
+    /// Uses strings for type matching because OpenAPI schema types are defined as strings in the OpenAPI specification.
+    /// </summary>
+    private IOpenApiAny? GenerateByType(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
+    {
+        // OpenAPI defines type as a string property, not an enum
+        // Possible values: "string", "number", "integer", "boolean", "array", "object", "null"
+        return schema.Type switch
+        {
+            "string" => GenerateStringExample(schema),
+            "integer" => GenerateIntegerExample(schema),
+            "number" => GenerateNumberExample(schema),
+            "boolean" => new OpenApiBoolean(false),
+            "array" => GenerateArrayExample(schema, stopwatch, timeoutMs, cancellationToken),
+            "object" => GenerateObjectExample(schema, stopwatch, timeoutMs, cancellationToken),
+            _ => null
+        };
     }
 
     private OpenApiString GenerateStringExample(OpenApiSchema schema)
