@@ -213,13 +213,13 @@ main {
   text-align: center;
 }
 
-.method-get { background-color: #10b981; color: white; }
-.method-post { background-color: #3b82f6; color: white; }
-.method-put { background-color: #f59e0b; color: white; }
-.method-delete { background-color: #ef4444; color: white; }
-.method-patch { background-color: #8b5cf6; color: white; }
-.method-options { background-color: #6366f1; color: white; }
-.method-head { background-color: #06b6d4; color: white; }
+.method-get { background-color: #047857; color: #ffffff; }
+.method-post { background-color: #1e40af; color: #ffffff; }
+.method-put { background-color: #b45309; color: #ffffff; }
+.method-delete { background-color: #b91c1c; color: #ffffff; }
+.method-patch { background-color: #6d28d9; color: #ffffff; }
+.method-options { background-color: #3730a3; color: #ffffff; }
+.method-head { background-color: #0e7490; color: #ffffff; }
 
 .operation-path {
   font-family: 'Courier New', Courier, monospace;

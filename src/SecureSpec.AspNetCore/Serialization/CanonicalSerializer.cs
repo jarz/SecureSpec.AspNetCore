@@ -109,8 +109,7 @@ public static class CanonicalSerializer
     /// <returns>The SRI attribute value (e.g., "sha256-abc123...").</returns>
     public static string GenerateSri(string content)
     {
-        var validator = new IntegrityValidator();
-        return validator.GenerateSri(content);
+        return IntegrityValidator.GenerateSri(content);
     }
 
     /// <summary>

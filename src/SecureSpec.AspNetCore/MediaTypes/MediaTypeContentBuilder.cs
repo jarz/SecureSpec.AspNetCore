@@ -6,18 +6,8 @@ namespace SecureSpec.AspNetCore.MediaTypes;
 /// Builds OpenAPI content objects with shared schema references across media types.
 /// Implements AC 453: Shared schema across media types uses single $ref (no duplication).
 /// </summary>
-public class MediaTypeContentBuilder
+public static class MediaTypeContentBuilder
 {
-    private readonly PlainTextContentHandler _plainTextHandler;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MediaTypeContentBuilder"/> class.
-    /// </summary>
-    public MediaTypeContentBuilder()
-    {
-        _plainTextHandler = new PlainTextContentHandler();
-    }
-
     /// <summary>
     /// Creates a content dictionary with multiple media types sharing the same schema reference.
     /// </summary>
@@ -25,7 +15,7 @@ public class MediaTypeContentBuilder
     /// <param name="mediaTypes">The media types to include.</param>
     /// <param name="options">Optional configuration for specific media type handling.</param>
     /// <returns>A dictionary of media type content objects.</returns>
-    public IDictionary<string, OpenApiMediaType> CreateContent(
+    public static IDictionary<string, OpenApiMediaType> CreateContent(
         OpenApiSchema schema,
         IEnumerable<string> mediaTypes,
         MediaTypeContentOptions? options = null)
@@ -57,7 +47,7 @@ public class MediaTypeContentBuilder
     /// <param name="mediaType">The media type string.</param>
     /// <param name="options">Configuration options.</param>
     /// <returns>An OpenApiMediaType object.</returns>
-    private OpenApiMediaType CreateMediaTypeObject(
+    private static OpenApiMediaType CreateMediaTypeObject(
         OpenApiSchema schema,
         string mediaType,
         MediaTypeContentOptions options)
@@ -79,9 +69,9 @@ public class MediaTypeContentBuilder
     /// <summary>
     /// Creates a text/plain media type with raw example or fallback (AC 457).
     /// </summary>
-    private OpenApiMediaType CreateTextPlainMediaType(OpenApiSchema schema, MediaTypeContentOptions options)
+    private static OpenApiMediaType CreateTextPlainMediaType(OpenApiSchema schema, MediaTypeContentOptions options)
     {
-        return _plainTextHandler.CreateMediaType(schema, options.PlainTextExample);
+        return PlainTextContentHandler.CreateMediaType(schema, options.PlainTextExample);
     }
 
     /// <summary>
@@ -95,7 +85,7 @@ public class MediaTypeContentBuilder
     /// <summary>
     /// Creates a default media type object with shared schema reference.
     /// </summary>
-    private OpenApiMediaType CreateDefaultMediaType(OpenApiSchema schema, MediaTypeContentOptions options)
+    private static OpenApiMediaType CreateDefaultMediaType(OpenApiSchema schema, MediaTypeContentOptions options)
     {
         var mediaType = new OpenApiMediaType
         {
@@ -119,7 +109,7 @@ public class MediaTypeContentBuilder
     /// <param name="mediaTypes">The media types to include.</param>
     /// <param name="options">Optional configuration.</param>
     /// <returns>A dictionary of media type content objects all sharing the same reference.</returns>
-    public IDictionary<string, OpenApiMediaType> CreateContentWithReference(
+    public static IDictionary<string, OpenApiMediaType> CreateContentWithReference(
         OpenApiReference schemaReference,
         IEnumerable<string> mediaTypes,
         MediaTypeContentOptions? options = null)

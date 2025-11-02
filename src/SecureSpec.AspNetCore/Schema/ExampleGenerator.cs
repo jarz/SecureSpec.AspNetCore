@@ -146,7 +146,7 @@ public sealed class ExampleGenerator
     /// Generates an example value based on the schema type.
     /// Uses strings for type matching because OpenAPI schema types are defined as strings in the OpenAPI specification.
     /// </summary>
-    private IOpenApiAny? GenerateByType(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
+    private static IOpenApiAny? GenerateByType(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
     {
         // OpenAPI defines type as a string property, not an enum
         // Possible values: "string", "number", "integer", "boolean", "array", "object", "null"
@@ -227,7 +227,7 @@ public sealed class ExampleGenerator
         return new OpenApiDouble(0.0);
     }
 
-    private OpenApiArray GenerateArrayExample(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
+    private static OpenApiArray GenerateArrayExample(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
     {
         var array = new OpenApiArray();
 
@@ -250,7 +250,7 @@ public sealed class ExampleGenerator
         return array;
     }
 
-    private OpenApiObject GenerateObjectExample(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
+    private static OpenApiObject GenerateObjectExample(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
     {
         var obj = new OpenApiObject();
 
@@ -279,7 +279,7 @@ public sealed class ExampleGenerator
     /// <summary>
     /// Internal method for recursive generation with time budget tracking.
     /// </summary>
-    private IOpenApiAny? GenerateDeterministicFallbackInternal(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
+    private static IOpenApiAny? GenerateDeterministicFallbackInternal(OpenApiSchema schema, Stopwatch? stopwatch, int timeoutMs, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(schema);
 

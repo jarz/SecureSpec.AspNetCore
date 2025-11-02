@@ -6,7 +6,7 @@ namespace SecureSpec.AspNetCore.MediaTypes;
 /// Handles text/plain content generation for OpenAPI requests and responses.
 /// Implements AC 457: text/plain request uses raw example or generated fallback correctly.
 /// </summary>
-public class PlainTextContentHandler
+public static class PlainTextContentHandler
 {
     /// <summary>
     /// Creates a text/plain media type object with appropriate example or fallback.
@@ -14,7 +14,7 @@ public class PlainTextContentHandler
     /// <param name="schema">The schema for the content.</param>
     /// <param name="rawExample">Optional raw example string to use directly.</param>
     /// <returns>An OpenApiMediaType configured for text/plain content.</returns>
-    public OpenApiMediaType CreateMediaType(OpenApiSchema schema, string? rawExample = null)
+    public static OpenApiMediaType CreateMediaType(OpenApiSchema schema, string? rawExample = null)
     {
         ArgumentNullException.ThrowIfNull(schema);
 
@@ -46,7 +46,7 @@ public class PlainTextContentHandler
     /// </summary>
     /// <param name="schema">The schema to generate an example for.</param>
     /// <returns>A generated example string, or null if no suitable example can be generated.</returns>
-    private string? GenerateFallbackExample(OpenApiSchema schema)
+    private static string? GenerateFallbackExample(OpenApiSchema schema)
     {
         ArgumentNullException.ThrowIfNull(schema);
 
@@ -69,7 +69,7 @@ public class PlainTextContentHandler
         };
     }
 
-    private string? GenerateStringExample(OpenApiSchema schema)
+    private static string? GenerateStringExample(OpenApiSchema schema)
     {
         // Use default if provided
         if (schema.Default != null)
@@ -98,7 +98,7 @@ public class PlainTextContentHandler
         };
     }
 
-    private string GenerateIntegerExample(OpenApiSchema schema)
+    private static string GenerateIntegerExample(OpenApiSchema schema)
     {
         if (schema.Default != null)
         {
@@ -113,7 +113,7 @@ public class PlainTextContentHandler
         return "0";
     }
 
-    private string GenerateNumberExample(OpenApiSchema schema)
+    private static string GenerateNumberExample(OpenApiSchema schema)
     {
         if (schema.Default != null)
         {
@@ -128,7 +128,7 @@ public class PlainTextContentHandler
         return "0.0";
     }
 
-    private string GenerateArrayExample(OpenApiSchema schema)
+    private static string GenerateArrayExample(OpenApiSchema schema)
     {
         if (schema.Items == null)
         {
@@ -139,7 +139,7 @@ public class PlainTextContentHandler
         return itemExample != null ? $"[{itemExample}]" : "[]";
     }
 
-    private string GenerateObjectExample(OpenApiSchema schema)
+    private static string GenerateObjectExample(OpenApiSchema schema)
     {
         if (schema.Properties == null || schema.Properties.Count == 0)
         {

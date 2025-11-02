@@ -6,7 +6,7 @@
  * @returns {string} Sanitized ID
  */
 export function sanitizeId(id) {
-  return id.replace(/[^a-zA-Z0-9_-]/g, '_');
+  return id.replaceAll(/[^a-zA-Z0-9_-]/g, '_');
 }
 
 /**

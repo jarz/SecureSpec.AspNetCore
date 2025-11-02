@@ -13,6 +13,29 @@ public partial class SchemaGenerator
 {
     private const string PlaceholderExtensionKey = "x-securespec-placeholder";
 
+    private static class SchemaType
+    {
+        public const string Array = "array";
+        public const string Boolean = "boolean";
+        public const string Integer = "integer";
+        public const string Null = "null";
+        public const string Number = "number";
+        public const string Object = "object";
+        public const string String = "string";
+    }
+
+    private static class SchemaFormat
+    {
+        public const string Binary = "binary";
+        public const string Byte = "byte";
+        public const string Date = "date";
+        public const string DateTime = "date-time";
+        public const string Double = "double";
+        public const string Float = "float";
+        public const string Time = "time";
+        public const string Uuid = "uuid";
+    }
+
     private readonly SchemaOptions _options;
     private readonly DiagnosticsLogger _logger;
     private readonly Dictionary<string, List<Type>> _schemaIdMap = [];
@@ -125,7 +148,7 @@ public partial class SchemaGenerator
         }
 
         // If the schema is for an object type, also try to apply documentation to properties
-        if (schema.Type == "object" && schema.Properties != null)
+        if (schema.Type == SchemaType.Object && schema.Properties != null)
         {
             foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
@@ -155,24 +178,26 @@ public partial class SchemaGenerator
 
     private OpenApiSchema CreateSchemaForPrimitiveOrObject(Type type)
     {
+        // Microsoft.OpenApi.OpenApiTypeMapper has very similar code.
+        // However, it's only in v2+ which requires ASP.NET Core 10+.
         return type switch
         {
-            Type t when t == typeof(Guid) => new OpenApiSchema { Type = "string", Format = "uuid" },
-            Type t when t == typeof(DateTime) || t == typeof(DateTimeOffset) => new OpenApiSchema { Type = "string", Format = "date-time" },
-            Type t when t == typeof(DateOnly) => new OpenApiSchema { Type = "string", Format = "date" },
-            Type t when t == typeof(TimeOnly) => new OpenApiSchema { Type = "string", Format = "time" },
-            Type t when t == typeof(byte[]) => new OpenApiSchema { Type = "string", Format = "byte" },
-            Type t when t == typeof(IFormFile) => new OpenApiSchema { Type = "string", Format = "binary" },
-            Type t when t == typeof(decimal) => new OpenApiSchema { Type = "number" },
-            Type t when t == typeof(char) => new OpenApiSchema { Type = "string", MinLength = 1, MaxLength = 1 },
+            Type t when t == typeof(Guid) => new OpenApiSchema { Type = SchemaType.String, Format = SchemaFormat.Uuid },
+            Type t when t == typeof(DateTime) || t == typeof(DateTimeOffset) => new OpenApiSchema { Type = SchemaType.String, Format = SchemaFormat.DateTime },
+            Type t when t == typeof(DateOnly) => new OpenApiSchema { Type = SchemaType.String, Format = SchemaFormat.Date },
+            Type t when t == typeof(TimeOnly) => new OpenApiSchema { Type = SchemaType.String, Format = SchemaFormat.Time },
+            Type t when t == typeof(byte[]) => new OpenApiSchema { Type = SchemaType.String, Format = SchemaFormat.Byte },
+            Type t when t == typeof(IFormFile) => new OpenApiSchema { Type = SchemaType.String, Format = SchemaFormat.Binary },
+            Type t when t == typeof(decimal) => new OpenApiSchema { Type = SchemaType.Number },
+            Type t when t == typeof(char) => new OpenApiSchema { Type = SchemaType.String, MinLength = 1, MaxLength = 1 },
             Type t when t == typeof(int) || t == typeof(long) ||
                         t == typeof(short) || t == typeof(byte) ||
                         t == typeof(sbyte) || t == typeof(uint) ||
-                        t == typeof(ulong) || t == typeof(ushort) => new OpenApiSchema { Type = "integer", Format = GetIntegerFormat(t) },
-            Type t when t == typeof(float) => new OpenApiSchema { Type = "number", Format = "float" },
-            Type t when t == typeof(double) => new OpenApiSchema { Type = "number", Format = "double" },
-            Type t when t == typeof(bool) => new OpenApiSchema { Type = "boolean" },
-            Type t when t == typeof(string) => new OpenApiSchema { Type = "string" },
+                        t == typeof(ulong) || t == typeof(ushort) => new OpenApiSchema { Type = SchemaType.Integer, Format = GetIntegerFormat(t) },
+            Type t when t == typeof(float) => new OpenApiSchema { Type = SchemaType.Number, Format = SchemaFormat.Float },
+            Type t when t == typeof(double) => new OpenApiSchema { Type = SchemaType.Number, Format = SchemaFormat.Double },
+            Type t when t == typeof(bool) => new OpenApiSchema { Type = SchemaType.Boolean },
+            Type t when t == typeof(string) => new OpenApiSchema { Type = SchemaType.String },
             Type t when t.IsEnum => GenerateEnumSchema(t),
             _ => CreateObjectSchema(type)
         };
@@ -183,7 +208,7 @@ public partial class SchemaGenerator
     /// </summary>
     private OpenApiSchema CreateObjectSchema(Type type)
     {
-        var schema = new OpenApiSchema { Type = "object" };
+        var schema = new OpenApiSchema { Type = SchemaType.Object };
 
         // AC 301-303: Check if schema requires virtualization
         var analysis = AnalyzeSchemaForVirtualization(type);

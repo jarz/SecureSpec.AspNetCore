@@ -9,6 +9,8 @@ namespace SecureSpec.AspNetCore.Security;
 /// </summary>
 public class IntegrityValidator
 {
+    private const string RedactedPlaceholder = "[REDACTED]";
+
     private readonly DiagnosticsLogger? _logger;
 
     /// <summary>
@@ -33,7 +35,7 @@ public class IntegrityValidator
     /// </summary>
     /// <param name="content">The content to hash.</param>
     /// <returns>The SHA256 hash as a lowercase hexadecimal string.</returns>
-    public string ComputeHash(string content)
+    public static string ComputeHash(string content)
     {
         ArgumentNullException.ThrowIfNull(content);
 
@@ -51,7 +53,7 @@ public class IntegrityValidator
     /// </summary>
     /// <param name="content">The content to generate SRI for.</param>
     /// <returns>The SRI attribute value (e.g., "sha256-abc123...").</returns>
-    public string GenerateSri(string content)
+    public static string GenerateSri(string content)
     {
         ArgumentNullException.ThrowIfNull(content);
 
@@ -93,7 +95,7 @@ public class IntegrityValidator
                 {
                     Expected = partialExpected + "...",
                     Actual = partialHash + "...",
-                    ResourcePathRedacted = resourcePath != null ? "[REDACTED]" : null
+                    ResourcePathRedacted = resourcePath != null ? RedactedPlaceholder : null
                 });
         }
 
@@ -117,9 +119,9 @@ public class IntegrityValidator
         if (parts.Length != 2)
         {
             _logger?.LogCritical(
-                "SEC001",
+                DiagnosticCodes.IntegrityCheckFailed,
                 "Invalid SRI format",
-                new { SriValue = sriValue, ResourcePathRedacted = resourcePath != null ? "[REDACTED]" : null });
+                new { SriValue = sriValue, ResourcePathRedacted = resourcePath != null ? RedactedPlaceholder : null });
             return false;
         }
 
@@ -130,9 +132,9 @@ public class IntegrityValidator
         if (!string.Equals(algorithm, "sha256", StringComparison.OrdinalIgnoreCase))
         {
             _logger?.LogCritical(
-                "SEC001",
+                DiagnosticCodes.IntegrityCheckFailed,
                 "Unsupported SRI algorithm",
-                new { Algorithm = algorithm, Supported = "sha256", ResourcePathRedacted = resourcePath != null ? "[REDACTED]" : null });
+                new { Algorithm = algorithm, Supported = "sha256", ResourcePathRedacted = resourcePath != null ? RedactedPlaceholder : null });
             return false;
         }
 
@@ -151,13 +153,13 @@ public class IntegrityValidator
             var partialActual = actualBase64Hash.Length >= 12 ? actualBase64Hash[..12] : actualBase64Hash;
 
             _logger?.LogCritical(
-                "SEC001",
+                DiagnosticCodes.IntegrityCheckFailed,
                 "SRI integrity check failed",
                 new
                 {
                     Expected = partialExpected + "...",
                     Actual = partialActual + "...",
-                    ResourcePathRedacted = resourcePath != null ? "[REDACTED]" : null
+                    ResourcePathRedacted = resourcePath != null ? RedactedPlaceholder : null
                 });
         }
 

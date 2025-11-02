@@ -20,7 +20,7 @@ public partial class SchemaGenerator
         {
             schema = new OpenApiSchema
             {
-                Type = "array",
+                Type = SchemaType.Array,
                 Items = GenerateSchemaRecursive(elementType, isNullable: false, context, depth + 1)
             };
 
@@ -40,7 +40,7 @@ public partial class SchemaGenerator
         {
             schema = new OpenApiSchema
             {
-                Type = "object",
+                Type = SchemaType.Object,
                 AdditionalProperties = GenerateSchemaRecursive(valueType, isNullable: false, context, depth + 1)
             };
 

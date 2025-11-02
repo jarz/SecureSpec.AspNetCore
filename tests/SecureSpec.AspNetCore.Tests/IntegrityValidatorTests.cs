@@ -9,11 +9,10 @@ public class IntegrityValidatorTests
     public void ComputeHash_WithSimpleContent_ReturnsValidSha256Hash()
     {
         // Arrange
-        var validator = new IntegrityValidator();
         const string content = "Hello, World!";
 
         // Act
-        var hash = validator.ComputeHash(content);
+        var hash = IntegrityValidator.ComputeHash(content);
 
         // Assert
         Assert.NotNull(hash);
@@ -25,13 +24,12 @@ public class IntegrityValidatorTests
     public void ComputeHash_WithCrlfContent_NormalizesToLf()
     {
         // Arrange
-        var validator = new IntegrityValidator();
         const string contentWithCrlf = "Line 1\r\nLine 2\r\nLine 3";
         const string contentWithLf = "Line 1\nLine 2\nLine 3";
 
         // Act
-        var hashCrlf = validator.ComputeHash(contentWithCrlf);
-        var hashLf = validator.ComputeHash(contentWithLf);
+        var hashCrlf = IntegrityValidator.ComputeHash(contentWithCrlf);
+        var hashLf = IntegrityValidator.ComputeHash(contentWithLf);
 
         // Assert - AC 499: SHA256 hashing performed after normalization (LF, UTF-8)
         Assert.Equal(hashLf, hashCrlf);
@@ -41,11 +39,10 @@ public class IntegrityValidatorTests
     public void ComputeHash_WithUtf8Content_HandlesCorrectly()
     {
         // Arrange
-        var validator = new IntegrityValidator();
         const string content = "Hello 世界! 🌍";
 
         // Act
-        var hash = validator.ComputeHash(content);
+        var hash = IntegrityValidator.ComputeHash(content);
 
         // Assert
         Assert.NotNull(hash);
@@ -56,11 +53,10 @@ public class IntegrityValidatorTests
     public void ComputeHash_WithEmptyString_ReturnsHash()
     {
         // Arrange
-        var validator = new IntegrityValidator();
         const string content = "";
 
         // Act
-        var hash = validator.ComputeHash(content);
+        var hash = IntegrityValidator.ComputeHash(content);
 
         // Assert
         Assert.NotNull(hash);
@@ -73,11 +69,10 @@ public class IntegrityValidatorTests
     public void GenerateSri_WithSimpleContent_ReturnsValidSriFormat()
     {
         // Arrange
-        var validator = new IntegrityValidator();
         const string content = "Hello, World!";
 
         // Act
-        var sri = validator.GenerateSri(content);
+        var sri = IntegrityValidator.GenerateSri(content);
 
         // Assert
         Assert.NotNull(sri);
@@ -93,13 +88,12 @@ public class IntegrityValidatorTests
     public void GenerateSri_WithCrlfContent_NormalizesToLf()
     {
         // Arrange
-        var validator = new IntegrityValidator();
         const string contentWithCrlf = "Line 1\r\nLine 2\r\nLine 3";
         const string contentWithLf = "Line 1\nLine 2\nLine 3";
 
         // Act
-        var sriCrlf = validator.GenerateSri(contentWithCrlf);
-        var sriLf = validator.GenerateSri(contentWithLf);
+        var sriCrlf = IntegrityValidator.GenerateSri(contentWithCrlf);
+        var sriLf = IntegrityValidator.GenerateSri(contentWithLf);
 
         // Assert - AC 499: SHA256 hashing performed after normalization
         Assert.Equal(sriLf, sriCrlf);
@@ -109,11 +103,10 @@ public class IntegrityValidatorTests
     public void GenerateSri_WithUtf8Content_HandlesCorrectly()
     {
         // Arrange
-        var validator = new IntegrityValidator();
         const string content = "Hello 世界! 🌍";
 
         // Act
-        var sri = validator.GenerateSri(content);
+        var sri = IntegrityValidator.GenerateSri(content);
 
         // Assert
         Assert.NotNull(sri);
@@ -126,7 +119,7 @@ public class IntegrityValidatorTests
         // Arrange
         var validator = new IntegrityValidator();
         const string content = "Hello, World!";
-        var expectedHash = validator.ComputeHash(content);
+        var expectedHash = IntegrityValidator.ComputeHash(content);
 
         // Act
         var result = validator.VerifyIntegrity(content, expectedHash);
@@ -200,7 +193,7 @@ public class IntegrityValidatorTests
         // Arrange
         var validator = new IntegrityValidator();
         const string content = "Hello, World!";
-        var expectedHash = validator.ComputeHash(content);
+        var expectedHash = IntegrityValidator.ComputeHash(content);
         var upperCaseHash = expectedHash.ToUpperInvariant();
 
         // Act
@@ -216,7 +209,7 @@ public class IntegrityValidatorTests
         // Arrange
         var validator = new IntegrityValidator();
         const string content = "Hello, World!";
-        var expectedSri = validator.GenerateSri(content);
+        var expectedSri = IntegrityValidator.GenerateSri(content);
 
         // Act
         var result = validator.VerifySri(content, expectedSri);
@@ -299,7 +292,7 @@ public class IntegrityValidatorTests
         var validator = new IntegrityValidator();
         const string contentWithCrlf = "Line 1\r\nLine 2\r\nLine 3";
         const string contentWithLf = "Line 1\nLine 2\nLine 3";
-        var sri = validator.GenerateSri(contentWithLf);
+        var sri = IntegrityValidator.GenerateSri(contentWithLf);
 
         // Act
         var result = validator.VerifySri(contentWithCrlf, sri);
@@ -340,13 +333,12 @@ public class IntegrityValidatorTests
     public void ComputeHash_Deterministic_SameContentProducesSameHash()
     {
         // Arrange
-        var validator = new IntegrityValidator();
         const string content = "Test content for determinism";
 
         // Act
-        var hash1 = validator.ComputeHash(content);
-        var hash2 = validator.ComputeHash(content);
-        var hash3 = validator.ComputeHash(content);
+        var hash1 = IntegrityValidator.ComputeHash(content);
+        var hash2 = IntegrityValidator.ComputeHash(content);
+        var hash3 = IntegrityValidator.ComputeHash(content);
 
         // Assert
         Assert.Equal(hash1, hash2);
@@ -357,13 +349,12 @@ public class IntegrityValidatorTests
     public void GenerateSri_Deterministic_SameContentProducesSameSri()
     {
         // Arrange
-        var validator = new IntegrityValidator();
         const string content = "Test content for determinism";
 
         // Act
-        var sri1 = validator.GenerateSri(content);
-        var sri2 = validator.GenerateSri(content);
-        var sri3 = validator.GenerateSri(content);
+        var sri1 = IntegrityValidator.GenerateSri(content);
+        var sri2 = IntegrityValidator.GenerateSri(content);
+        var sri3 = IntegrityValidator.GenerateSri(content);
 
         // Assert
         Assert.Equal(sri1, sri2);
@@ -374,22 +365,16 @@ public class IntegrityValidatorTests
     [InlineData(null)]
     public void ComputeHash_WithNullContent_ThrowsArgumentNullException(string? content)
     {
-        // Arrange
-        var validator = new IntegrityValidator();
-
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => validator.ComputeHash(content!));
+        Assert.Throws<ArgumentNullException>(() => IntegrityValidator.ComputeHash(content!));
     }
 
     [Theory]
     [InlineData(null)]
     public void GenerateSri_WithNullContent_ThrowsArgumentNullException(string? content)
     {
-        // Arrange
-        var validator = new IntegrityValidator();
-
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => validator.GenerateSri(content!));
+        Assert.Throws<ArgumentNullException>(() => IntegrityValidator.GenerateSri(content!));
     }
 
     [Theory]

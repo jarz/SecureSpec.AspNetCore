@@ -39,23 +39,18 @@ public partial class SchemaGenerator
 
         // Also resolve named examples if any
         var namedExamples = _precedenceEngine.ResolveNamedExamples(context);
-        if (namedExamples.Count > 0)
+        if (namedExamples.Count > 0 && (namedExamples.Count > 1 || !namedExamples.ContainsKey("generated")))
         {
-            // OpenAPI 3.0 supports both 'example' (single) and 'examples' (named map)
-            // We only set examples if we have named examples
-            if (namedExamples.Count > 1 || namedExamples.ContainsKey("generated") == false)
-            {
-                // Clear the single example in favor of named examples
-                schema.Example = null;
+            // Clear the single example in favor of named examples
+            schema.Example = null;
 
-                // Note: OpenApiSchema doesn't have an Examples property in Microsoft.OpenApi 1.6.22
-                // This would be added at the operation level, not schema level
-                // For now, we keep the single example approach
-                var firstExample = namedExamples.Values.FirstOrDefault();
-                if (firstExample?.Value != null)
-                {
-                    schema.Example = firstExample.Value;
-                }
+            // Note: OpenApiSchema doesn't have an Examples property in Microsoft.OpenApi 1.6.22
+            // This would be added at the operation level, not schema level
+            // For now, we keep the single example approach
+            var firstExample = namedExamples.Values.FirstOrDefault();
+            if (firstExample?.Value != null)
+            {
+                schema.Example = firstExample.Value;
             }
         }
     }
