@@ -11,6 +11,14 @@ namespace SecureSpec.AspNetCore.Schema;
 /// </summary>
 public sealed class ExampleGenerator
 {
+    // OpenAPI type constants as defined in the OpenAPI specification
+    private const string TypeString = "string";
+    private const string TypeInteger = "integer";
+    private const string TypeNumber = "number";
+    private const string TypeBoolean = "boolean";
+    private const string TypeArray = "array";
+    private const string TypeObject = "object";
+
     private readonly SchemaOptions _options;
     private readonly DiagnosticsLogger _diagnosticsLogger;
     private int _throttledCount;
@@ -113,12 +121,12 @@ public sealed class ExampleGenerator
         // Possible values: "string", "number", "integer", "boolean", "array", "object", "null"
         return schema.Type switch
         {
-            "string" => GenerateStringExample(schema),
-            "integer" => GenerateIntegerExample(schema),
-            "number" => GenerateNumberExample(schema),
-            "boolean" => new OpenApiBoolean(false),
-            "array" => GenerateArrayExample(schema, stopwatch, timeoutMs, cancellationToken),
-            "object" => GenerateObjectExample(schema, stopwatch, timeoutMs, cancellationToken),
+            TypeString => GenerateStringExample(schema),
+            TypeInteger => GenerateIntegerExample(schema),
+            TypeNumber => GenerateNumberExample(schema),
+            TypeBoolean => new OpenApiBoolean(false),
+            TypeArray => GenerateArrayExample(schema, stopwatch, timeoutMs, cancellationToken),
+            TypeObject => GenerateObjectExample(schema, stopwatch, timeoutMs, cancellationToken),
             _ => null
         };
     }
@@ -252,12 +260,12 @@ public sealed class ExampleGenerator
 
         return schema.Type switch
         {
-            "string" => GenerateStringExample(schema),
-            "integer" => GenerateIntegerExample(schema),
-            "number" => GenerateNumberExample(schema),
-            "boolean" => new OpenApiBoolean(false),
-            "array" => GenerateArrayExample(schema, stopwatch, timeoutMs, cancellationToken),
-            "object" => GenerateObjectExample(schema, stopwatch, timeoutMs, cancellationToken),
+            TypeString => GenerateStringExample(schema),
+            TypeInteger => GenerateIntegerExample(schema),
+            TypeNumber => GenerateNumberExample(schema),
+            TypeBoolean => new OpenApiBoolean(false),
+            TypeArray => GenerateArrayExample(schema, stopwatch, timeoutMs, cancellationToken),
+            TypeObject => GenerateObjectExample(schema, stopwatch, timeoutMs, cancellationToken),
             _ => null
         };
     }
