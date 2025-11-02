@@ -63,28 +63,29 @@ public sealed class ExampleGenerator
         else if (timeoutMs > 0)
         {
             stopwatch = Stopwatch.StartNew();
-            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs));
-            effectiveToken = cts.Token;
+            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeoutMs))
+            {
+                effectiveToken = cts.Token;
 
-            try
-            {
-                return schema.Type switch
+                try
                 {
-                    "string" => GenerateStringExample(schema),
-                    "integer" => GenerateIntegerExample(schema),
-                    "number" => GenerateNumberExample(schema),
-                    "boolean" => new OpenApiBoolean(false),
-                    "array" => GenerateArrayExample(schema, stopwatch, timeoutMs, effectiveToken),
-                    "object" => GenerateObjectExample(schema, stopwatch, timeoutMs, effectiveToken),
-                    _ => null
-                };
+                    return schema.Type switch
+                    {
+                        "string" => GenerateStringExample(schema),
+                        "integer" => GenerateIntegerExample(schema),
+                        "number" => GenerateNumberExample(schema),
+                        "boolean" => new OpenApiBoolean(false),
+                        "array" => GenerateArrayExample(schema, stopwatch, timeoutMs, effectiveToken),
+                        "object" => GenerateObjectExample(schema, stopwatch, timeoutMs, effectiveToken),
+                        _ => null
+                    };
+                }
+                catch (OperationCanceledException)
+                {
+                    OnThrottled(schema, stopwatch.ElapsedMilliseconds);
+                    return null;
+                }
             }
-            catch (OperationCanceledException)
-            {
-                OnThrottled(schema, stopwatch.ElapsedMilliseconds);
-                return null;
-            }
-        }
         else
         {
             effectiveToken = CancellationToken.None;
@@ -99,17 +100,14 @@ public sealed class ExampleGenerator
                 "integer" => GenerateIntegerExample(schema),
                 "number" => GenerateNumberExample(schema),
                 "boolean" => new OpenApiBoolean(false),
-                "array" => GenerateArrayExample(schema, stopwatch ?? Stopwatch.StartNew(), timeoutMs, effectiveToken),
-                "object" => GenerateObjectExample(schema, stopwatch ?? Stopwatch.StartNew(), timeoutMs, effectiveToken),
+                "array" => GenerateArrayExample(schema, null, timeoutMs, effectiveToken),
+                "object" => GenerateObjectExample(schema, null, timeoutMs, effectiveToken),
                 _ => null
             };
         }
         catch (OperationCanceledException)
         {
-            if (stopwatch != null)
-            {
-                OnThrottled(schema, stopwatch.ElapsedMilliseconds);
-            }
+            OnThrottled(schema, stopwatch?.ElapsedMilliseconds ?? 0);
             return null;
         }
     }
@@ -249,14 +247,8 @@ public sealed class ExampleGenerator
     /// </summary>
     private static void CheckTimeBudget(Stopwatch stopwatch, int timeoutMs, CancellationToken cancellationToken)
     {
-        // Check cancellation token first (fast path)
+        // Check cancellation token (fast path)
         cancellationToken.ThrowIfCancellationRequested();
-
-        // Also check elapsed time manually in case token wasn't used
-        if (timeoutMs > 0 && stopwatch.ElapsedMilliseconds >= timeoutMs)
-        {
-            throw new OperationCanceledException();
-        }
     }
 
     /// <summary>
