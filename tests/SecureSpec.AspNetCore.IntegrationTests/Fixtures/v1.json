@@ -1,0 +1,59 @@
+{
+  "components": {},
+  "info": {
+    "description": "SecureSpec integration testing surface",
+    "title": "SecureSpec Integration API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.0.1",
+  "paths": {
+    "/weatherforecast": {
+      "get": {
+        "description": "Retrieves a 5-day weather forecast",
+        "operationId": "GetWeatherForecast",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "date": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "summary": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "temperatureC": {
+                        "format": "int32",
+                        "type": "integer"
+                      },
+                      "temperatureF": {
+                        "format": "int32",
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "temperatureC",
+                      "temperatureF"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Get weather forecast",
+        "tags": [
+          "Weather"
+        ]
+      }
+    }
+  }
+}

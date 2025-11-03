@@ -31,6 +31,7 @@ class SecureSpecApp {
     await this.loadOpenAPIDocument();
     this.setupEventListeners();
     this.setupStateSubscriptions();
+    this.ensureNavigationVisible();
     this.router.initialize();
   }
 
@@ -57,7 +58,7 @@ class SecureSpecApp {
     const content = document.getElementById('content');
     if (content) {
       content.innerHTML = `
-        <div class="loading">
+        <div class="loading" data-testid="securespec-loading">
           <h2>SecureSpec API Documentation</h2>
           <p>Loading API documentation...</p>
           <p class="hint">Make sure your API is properly configured with SecureSpec.</p>
@@ -117,6 +118,8 @@ class SecureSpecApp {
     if (this.config.enableFiltering) {
       this.setupFilterInput();
     }
+
+    this.ensureNavigationVisible();
   }
 
   setupFilterInput() {
@@ -150,6 +153,19 @@ class SecureSpecApp {
         }, 150);
       });
     }
+
+    this.ensureNavigationVisible();
+  }
+
+  ensureNavigationVisible() {
+    const nav = document.getElementById('navigation');
+    if (!nav) {
+      return;
+    }
+
+    nav.hidden = false;
+    nav.style.removeProperty('visibility');
+    nav.style.removeProperty('display');
   }
 }
 

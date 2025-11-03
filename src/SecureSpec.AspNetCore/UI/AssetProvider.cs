@@ -47,7 +47,9 @@ public static class AssetProvider
             ["assets/components/router.js"] = "SecureSpec.AspNetCore.UI.Assets.components.router.js",
             ["assets/components/state.js"] = "SecureSpec.AspNetCore.UI.Assets.components.state.js",
             ["assets/components/operation-display.js"] = "SecureSpec.AspNetCore.UI.Assets.components.operation-display.js",
-            ["assets/components/schema-viewer.js"] = "SecureSpec.AspNetCore.UI.Assets.components.schema-viewer.js"
+            ["assets/components/schema-viewer.js"] = "SecureSpec.AspNetCore.UI.Assets.components.schema-viewer.js",
+            ["assets/components/utils.js"] = "SecureSpec.AspNetCore.UI.Assets.components.utils.js",
+            ["assets/components/links-callbacks.js"] = "SecureSpec.AspNetCore.UI.Assets.components.links-callbacks.js"
         };
 
         foreach (var (logicalPath, resourceName) in assetMappings)

@@ -37,6 +37,13 @@ public class SecureSpecUIMiddleware
 
         var path = httpContext.Request.Path.Value?.TrimStart('/') ?? string.Empty;
 
+        // Allow asset retrieval both under the UI prefix and at application root for relative asset paths.
+        if (path.StartsWith("assets/", StringComparison.OrdinalIgnoreCase))
+        {
+            await ServeAssetAsync(httpContext, path);
+            return;
+        }
+
         // Check if the request is for the UI
         if (path.StartsWith(_routePrefix, StringComparison.OrdinalIgnoreCase))
         {

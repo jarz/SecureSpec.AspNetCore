@@ -73,6 +73,14 @@ jobs:
       
     - name: Build solution
       run: dotnet build --configuration Release --no-restore
+
+    - name: Install Playwright CLI
+      if: matrix.os == 'ubuntu-latest'
+      run: dotnet tool update --global Microsoft.Playwright.CLI
+
+    - name: Install Playwright browsers
+      if: matrix.os == 'ubuntu-latest'
+      run: ~/.dotnet/tools/playwright install --with-deps chromium
       
     - name: Run tests
       run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
@@ -114,6 +122,25 @@ jobs:
       
     - name: Build solution
       run: dotnet build --configuration Release --no-restore /warnaserror
+
+    - name: Install Playwright CLI
+      run: dotnet tool update --global Microsoft.Playwright.CLI
+
+    - name: Install Playwright browsers
+      run: ~/.dotnet/tools/playwright install --with-deps chromium
+
+    - name: Regenerate schema fixtures
+      run: dotnet run --configuration Release --no-build --project tests/SecureSpec.AspNetCore.IntegrationTests/SecureSpec.AspNetCore.IntegrationTests.csproj -- regenerate-fixtures
+
+    - name: Verify schema fixtures committed
+      run: |
+        changes=$(git status --porcelain=v1 -- tests/SecureSpec.AspNetCore.IntegrationTests/Fixtures)
+        if [ -n "$changes" ]; then
+          echo "::error::Schema fixtures differ from the committed snapshots."
+          git status --short -- tests/SecureSpec.AspNetCore.IntegrationTests/Fixtures
+          git diff -- tests/SecureSpec.AspNetCore.IntegrationTests/Fixtures || true
+          exit 1
+        fi
       
     - name: Run tests with coverage threshold
       run: dotnet test --configuration Release --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=TestResults/Coverage/ /p:Threshold=70 /p:ThresholdType=line

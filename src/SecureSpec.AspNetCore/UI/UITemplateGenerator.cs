@@ -35,14 +35,14 @@ public static class UITemplateGenerator
         html.AppendLine("  <link rel=\"stylesheet\" href=\"assets/styles.css\">");
         html.AppendLine("</head>");
         html.AppendLine("<body>");
-        html.AppendLine("  <div id=\"securespec-ui\">");
-        html.AppendLine("    <header>");
+        html.AppendLine("  <div id=\"securespec-ui\" data-testid=\"securespec-root\">");
+        html.AppendLine("    <header data-testid=\"securespec-header\">");
         html.AppendLine(CultureInfo.InvariantCulture, $"      <h1>{EscapeHtml(title)}</h1>");
         html.AppendLine("    </header>");
-        html.AppendLine("    <nav id=\"navigation\">");
+        html.AppendLine("    <nav id=\"navigation\" data-testid=\"securespec-navigation\">");
         html.AppendLine("      <!-- Navigation will be populated by JavaScript -->");
         html.AppendLine("    </nav>");
-        html.AppendLine("    <main id=\"content\">");
+        html.AppendLine("    <main id=\"content\" data-testid=\"securespec-content\">");
         html.AppendLine("      <!-- Content will be populated by JavaScript -->");
         html.AppendLine("    </main>");
         html.AppendLine("  </div>");
