@@ -1,4 +1,3 @@
-using System.Globalization;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Configuration;
@@ -54,6 +53,12 @@ public static class SecureSpecIntegrationApplication
                         .Build(),
                     new SecurityRequirementBuilder()
                         .AddScheme("apiKeyHeader")
+                        .Build(),
+                    new SecurityRequirementBuilder()
+                        .AddScheme("oauth2", "api")
+                        .Build(),
+                    new SecurityRequirementBuilder()
+                        .AddScheme("mutualTLS")
                         .Build()
                 };
             });
@@ -151,13 +156,13 @@ public static class SecureSpecIntegrationApplication
                 ? formatValues.ToString()
                 : null);
 
-            var simulateLimit = context.Request.Query.ContainsKey("simulateLimit");
+            var simulation = ResolveGenerationSimulation(context.Request.Query);
             var expirationSeconds = ParseExpirationSeconds(context.Request.Query.TryGetValue("expireSeconds", out var expirationValues)
                 ? expirationValues.ToString()
                 : null);
 
             var document = generator.GenerateWithGuards(documentName, () =>
-                GenerateDocument(optionsAccessor.Value, documentName, simulateLimit));
+                GenerateDocument(optionsAccessor.Value, documentName, simulation));
 
             var (content, hash, sri) = CanonicalSerializer.SerializeWithIntegrity(document, serializationFormat);
 
@@ -167,6 +172,8 @@ public static class SecureSpecIntegrationApplication
             context.Response.Headers.ETag = CanonicalSerializer.GenerateETag(hash);
             context.Response.Headers["X-SecureSpec-Sri"] = sri;
             context.Response.Headers["X-SecureSpec-Cache-Key"] = cacheKey;
+            var schemeCount = ComputeSecuritySchemeCount(document, optionsAccessor.Value);
+            context.Response.Headers["X-SecureSpec-Security-Scheme-Count"] = schemeCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
             context.Response.Headers["X-SecureSpec-Fallback"] = document.Info.Description?.Contains("fallback", StringComparison.OrdinalIgnoreCase) == true
                 ? "true"
                 : "false";
@@ -268,7 +275,7 @@ public static class SecureSpecIntegrationApplication
             return 30;
         }
 
-        if (double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var value) && value > 0)
+        if (double.TryParse(raw, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value) && value > 0)
         {
             return value;
         }
@@ -276,67 +283,96 @@ public static class SecureSpecIntegrationApplication
         return 0.5;
     }
 
-    private static OpenApiDocument GenerateDocument(SecureSpecOptions options, string documentName, bool simulateLimit)
+    private static OpenApiDocument GenerateDocument(SecureSpecOptions options, string documentName, GenerationSimulation simulation)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentException.ThrowIfNullOrWhiteSpace(documentName);
 
-        if (simulateLimit)
+        if (simulation.Limit)
         {
             throw new ResourceLimitExceededException($"Simulated limit for document '{documentName}'");
         }
 
-        if (!options.Documents.TryGetValue(documentName, out var documentTemplate))
+        if (simulation.Delay > TimeSpan.Zero)
         {
-            documentTemplate = new OpenApiDocument
-            {
-                Info = new OpenApiInfo
-                {
-                    Title = documentName,
-                    Version = "1.0.0"
-                },
-                Paths = new OpenApiPaths(),
-                Components = new OpenApiComponents()
-            };
+            System.Threading.Thread.Sleep(simulation.Delay);
         }
 
-        var document = new OpenApiDocument
+        byte[]? allocation = null;
+        if (simulation.AllocatedBytes > 0)
         {
-            Info = documentTemplate.Info,
-            Components = documentTemplate.Components,
-            Paths = documentTemplate.Paths,
-            SecurityRequirements = documentTemplate.SecurityRequirements ?? new List<OpenApiSecurityRequirement>()
-        };
+            var length = (int)Math.Min(simulation.AllocatedBytes, int.MaxValue);
+            allocation = GC.AllocateArray<byte>(length, pinned: false);
 
-        if (!document.Paths.ContainsKey("/weatherforecast"))
-        {
-            document.Paths["/weatherforecast"] = new OpenApiPathItem
+            // Touch allocated pages to ensure the guard observes memory growth.
+            for (var offset = 0; offset < allocation.Length; offset += 4096)
             {
-                Operations = new Dictionary<OperationType, OpenApiOperation>
+                allocation[offset] = 1;
+            }
+        }
+
+        try
+        {
+            if (!options.Documents.TryGetValue(documentName, out var documentTemplate))
+            {
+                documentTemplate = new OpenApiDocument
                 {
-                    [OperationType.Get] = new OpenApiOperation
+                    Info = new OpenApiInfo
                     {
-                        Tags = new List<OpenApiTag> { new OpenApiTag { Name = "Weather" } },
-                        Summary = "Get weather forecast",
-                        OperationId = "GetWeatherForecast",
-                        Responses = new OpenApiResponses
+                        Title = documentName,
+                        Version = "1.0.0"
+                    },
+                    Paths = new OpenApiPaths(),
+                    Components = new OpenApiComponents()
+                };
+            }
+
+            var document = new OpenApiDocument
+            {
+                Info = documentTemplate.Info,
+                Components = documentTemplate.Components,
+                Paths = documentTemplate.Paths,
+                SecurityRequirements = documentTemplate.SecurityRequirements ?? new List<OpenApiSecurityRequirement>()
+            };
+
+            document.Components ??= new OpenApiComponents();
+            document.Components.SecuritySchemes ??= new Dictionary<string, OpenApiSecurityScheme>();
+
+            foreach (var scheme in options.Security.Schemes)
+            {
+                document.Components.SecuritySchemes[scheme.Key] = scheme.Value;
+            }
+
+            if (!document.Paths.ContainsKey("/weatherforecast"))
+            {
+                document.Paths["/weatherforecast"] = new OpenApiPathItem
+                {
+                    Operations = new Dictionary<OperationType, OpenApiOperation>
+                    {
+                        [OperationType.Get] = new OpenApiOperation
                         {
-                            ["200"] = new OpenApiResponse
+                            Tags = new List<OpenApiTag> { new OpenApiTag { Name = "Weather" } },
+                            Summary = "Get weather forecast",
+                            OperationId = "GetWeatherForecast",
+                            Responses = new OpenApiResponses
                             {
-                                Description = "Success",
-                                Content = new Dictionary<string, OpenApiMediaType>
+                                ["200"] = new OpenApiResponse
                                 {
-                                    ["application/json"] = new OpenApiMediaType
+                                    Description = "Success",
+                                    Content = new Dictionary<string, OpenApiMediaType>
                                     {
-                                        Schema = new OpenApiSchema
+                                        ["application/json"] = new OpenApiMediaType
                                         {
-                                            Type = "array",
-                                            Items = new OpenApiSchema
+                                            Schema = new OpenApiSchema
                                             {
-                                                Reference = new OpenApiReference
+                                                Type = "array",
+                                                Items = new OpenApiSchema
                                                 {
-                                                    Type = ReferenceType.Schema,
-                                                    Id = "WeatherForecast"
+                                                    Reference = new OpenApiReference
+                                                    {
+                                                        Type = ReferenceType.Schema,
+                                                        Id = "WeatherForecast"
+                                                    }
                                                 }
                                             }
                                         }
@@ -345,28 +381,122 @@ public static class SecureSpecIntegrationApplication
                             }
                         }
                     }
-                }
-            };
-        }
+                };
+            }
 
-        if (!document.Components.Schemas.ContainsKey("WeatherForecast"))
-        {
-            document.Components.Schemas["WeatherForecast"] = new OpenApiSchema
+            if (!document.Components.Schemas.ContainsKey("WeatherForecast"))
             {
-                Type = "object",
-                Properties = new Dictionary<string, OpenApiSchema>
+                document.Components.Schemas["WeatherForecast"] = new OpenApiSchema
                 {
-                    ["date"] = new OpenApiSchema { Type = "string", Format = "date" },
-                    ["temperatureC"] = new OpenApiSchema { Type = "integer", Format = "int32" },
-                    ["temperatureF"] = new OpenApiSchema { Type = "integer", Format = "int32" },
-                    ["summary"] = new OpenApiSchema { Type = "string", Nullable = true }
-                },
-                Required = new HashSet<string> { "date", "temperatureC", "temperatureF" }
-            };
+                    Type = "object",
+                    Properties = new Dictionary<string, OpenApiSchema>
+                    {
+                        ["date"] = new OpenApiSchema { Type = "string", Format = "date" },
+                        ["temperatureC"] = new OpenApiSchema { Type = "integer", Format = "int32" },
+                        ["temperatureF"] = new OpenApiSchema { Type = "integer", Format = "int32" },
+                        ["summary"] = new OpenApiSchema { Type = "string", Nullable = true }
+                    },
+                    Required = new HashSet<string> { "date", "temperatureC", "temperatureF" }
+                };
+            }
+
+            return document;
+        }
+        finally
+        {
+            if (allocation is not null)
+            {
+                GC.KeepAlive(allocation);
+            }
+        }
+    }
+
+    private static GenerationSimulation ResolveGenerationSimulation(IQueryCollection query)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        var limit = query.ContainsKey("simulateLimit");
+
+        var delay = TimeSpan.Zero;
+        if (query.TryGetValue("simulateDelayMs", out var delayValues) &&
+            double.TryParse(delayValues.ToString(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var delayMs) &&
+            delayMs > 0)
+        {
+            delay = TimeSpan.FromMilliseconds(delayMs);
         }
 
-        return document;
+        long allocatedBytes = 0;
+        if (query.TryGetValue("simulateMemoryBytes", out var memoryValues) &&
+            long.TryParse(memoryValues.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var memoryBytes) &&
+            memoryBytes > 0)
+        {
+            allocatedBytes = memoryBytes;
+        }
+
+        return new GenerationSimulation(limit, delay, allocatedBytes);
     }
 
     private sealed record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary);
+
+    private sealed record GenerationSimulation(bool Limit, TimeSpan Delay, long AllocatedBytes);
+
+    private static int ComputeSecuritySchemeCount(OpenApiDocument document, SecureSpecOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(options);
+
+        var schemeNames = new HashSet<string>(StringComparer.Ordinal);
+
+        AddComponentSchemes(document, schemeNames);
+        AddRequirementSchemes(document, schemeNames);
+        AddConfiguredSchemesIfEmpty(options, schemeNames);
+
+        return schemeNames.Count;
+    }
+
+    private static void AddComponentSchemes(OpenApiDocument document, HashSet<string> schemeNames)
+    {
+        if (document.Components?.SecuritySchemes is not { Count: > 0 })
+        {
+            return;
+        }
+
+        foreach (var key in document.Components.SecuritySchemes.Keys)
+        {
+            schemeNames.Add(key);
+        }
+    }
+
+    private static void AddRequirementSchemes(OpenApiDocument document, HashSet<string> schemeNames)
+    {
+        if (document.SecurityRequirements is not { Count: > 0 })
+        {
+            return;
+        }
+
+        foreach (var requirement in document.SecurityRequirements)
+        {
+            foreach (var scheme in requirement.Keys)
+            {
+                var id = scheme.Reference?.Id;
+                if (!string.IsNullOrEmpty(id))
+                {
+                    schemeNames.Add(id);
+                }
+            }
+        }
+    }
+
+    private static void AddConfiguredSchemesIfEmpty(SecureSpecOptions options, HashSet<string> schemeNames)
+    {
+        if (schemeNames.Count > 0 || options.Security.Schemes.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var key in options.Security.Schemes.Keys)
+        {
+            schemeNames.Add(key);
+        }
+    }
 }
