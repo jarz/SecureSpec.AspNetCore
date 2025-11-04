@@ -63,7 +63,7 @@ public class ExampleGenerationThrottlingTests
         var events = logger.GetEvents();
         if (generator.ThrottledCount > 0)
         {
-            var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGenerationThrottled).ToList();
+            var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGeneration.ExampleGenerationThrottled).ToList();
             Assert.NotEmpty(throttledEvents);
             Assert.All(throttledEvents, e => Assert.Equal(DiagnosticLevel.Warn, e.Level));
         }
@@ -87,7 +87,7 @@ public class ExampleGenerationThrottlingTests
         Assert.Null(result); // Should return null when cancelled
         Assert.True(generator.ThrottledCount > 0); // Should increment counter
         var events = logger.GetEvents();
-        var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGenerationThrottled).ToList();
+        var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGeneration.ExampleGenerationThrottled).ToList();
         Assert.NotEmpty(throttledEvents);
     }
 
@@ -141,7 +141,7 @@ public class ExampleGenerationThrottlingTests
 
         // Verify diagnostics were logged if throttling occurred (may vary based on timing)
         var events = logger.GetEvents();
-        var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGenerationThrottled).ToList();
+        var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGeneration.ExampleGenerationThrottled).ToList();
         // Diagnostic count should match throttled count
         Assert.Equal(count, throttledEvents.Count);
     }
@@ -162,7 +162,7 @@ public class ExampleGenerationThrottlingTests
         if (generator.ThrottledCount > 0)
         {
             var events = logger.GetEvents();
-            var throttledEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.ExampleGenerationThrottled);
+            var throttledEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.ExampleGeneration.ExampleGenerationThrottled);
             Assert.NotNull(throttledEvent);
             Assert.Equal(DiagnosticLevel.Warn, throttledEvent.Level);
             Assert.Contains("throttled", throttledEvent.Message, StringComparison.OrdinalIgnoreCase);
@@ -213,7 +213,7 @@ public class ExampleGenerationThrottlingTests
         if (generator.ThrottledCount > 0)
         {
             var events = logger.GetEvents();
-            var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGenerationThrottled).ToList();
+            var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGeneration.ExampleGenerationThrottled).ToList();
             Assert.NotEmpty(throttledEvents);
         }
     }
@@ -247,7 +247,7 @@ public class ExampleGenerationThrottlingTests
         if (generator.ThrottledCount > 0)
         {
             var events = logger.GetEvents();
-            var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGenerationThrottled).ToList();
+            var throttledEvents = events.Where(e => e.Code == DiagnosticCodes.ExampleGeneration.ExampleGenerationThrottled).ToList();
             Assert.NotEmpty(throttledEvents);
         }
     }
@@ -291,7 +291,7 @@ public class ExampleGenerationThrottlingTests
         if (generator.ThrottledCount > 0)
         {
             var events = logger.GetEvents();
-            var exm001Events = events.Where(e => e.Code == DiagnosticCodes.ExampleGenerationThrottled).ToList();
+            var exm001Events = events.Where(e => e.Code == DiagnosticCodes.ExampleGeneration.ExampleGenerationThrottled).ToList();
             Assert.NotEmpty(exm001Events);
             Assert.All(exm001Events, e =>
             {

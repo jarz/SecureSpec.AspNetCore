@@ -188,27 +188,18 @@ public class ApiDiscoveryEngine
         reason = string.Empty;
 
         // For controller endpoints
-        if (endpoint.ControllerType != null)
+        // Check if [ApiController] is required and present
+        if (endpoint.ControllerType != null && options.IncludeOnlyApiControllers && !endpoint.ControllerType.GetCustomAttributes<ApiControllerAttribute>().Any())
         {
-            // Check if [ApiController] is required and present
-            if (options.IncludeOnlyApiControllers)
-            {
-                if (!endpoint.ControllerType.GetCustomAttributes<ApiControllerAttribute>().Any())
-                {
-                    reason = "Controller missing [ApiController] attribute";
-                    return false;
-                }
-            }
+            reason = "Controller missing [ApiController] attribute";
+            return false;
         }
 
         // For minimal API endpoints
-        if (endpoint.RouteEndpoint != null)
+        if (endpoint.RouteEndpoint != null && !options.IncludeMinimalApis)
         {
-            if (!options.IncludeMinimalApis)
-            {
-                reason = "Minimal APIs are disabled";
-                return false;
-            }
+            reason = "Minimal APIs are disabled";
+            return false;
         }
 
         // Check obsolete status

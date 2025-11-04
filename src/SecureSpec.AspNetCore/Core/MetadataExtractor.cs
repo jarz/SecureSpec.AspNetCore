@@ -83,7 +83,7 @@ public class MetadataExtractor
         }
     }
 
-    private void ExtractTags(EndpointMetadata metadata)
+    private static void ExtractTags(EndpointMetadata metadata)
     {
         // Use controller name as default tag for controller endpoints
         if (metadata.ControllerType != null)
@@ -191,13 +191,13 @@ public class MetadataExtractor
         }
     }
 
-    private void ExtractDeprecationStatus(EndpointMetadata metadata)
+    private static void ExtractDeprecationStatus(EndpointMetadata metadata)
     {
         var methodInfo = metadata.MethodInfo!;
         metadata.Deprecated = methodInfo.GetCustomAttribute<ObsoleteAttribute>() != null;
     }
 
-    private void ExtractOperationId(EndpointMetadata metadata)
+    private static void ExtractOperationId(EndpointMetadata metadata)
     {
         // Use method name as default operation ID if not already set
         if (string.IsNullOrEmpty(metadata.OperationId) && metadata.MethodInfo != null)

@@ -127,7 +127,7 @@ public class PerformanceMonitorTests
 
         // Assert
         var events = logger.GetEvents();
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.PerformanceTargetMet);
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.Performance.PerformanceTargetMet);
     }
 
     [Fact]
@@ -150,7 +150,7 @@ public class PerformanceMonitorTests
 
         // Assert
         var events = logger.GetEvents();
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.PerformanceDegraded);
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.Performance.PerformanceDegraded);
     }
 
     [Fact]
@@ -173,7 +173,7 @@ public class PerformanceMonitorTests
 
         // Assert
         var events = logger.GetEvents();
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.PerformanceFailure);
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.Performance.PerformanceFailure);
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public class PerformanceMonitorTests
 
         // Assert
         var events = logger.GetEvents();
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.PerformanceMetrics);
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.Performance.PerformanceMetrics);
     }
 
     [Fact]
@@ -207,18 +207,20 @@ public class PerformanceMonitorTests
         var monitor = new PerformanceMonitor(options, logger, "test-operation");
 
         // Act
+    #pragma warning disable CA2202 // Intentional double dispose for idempotence verification
         monitor.Dispose();
         var eventsAfterFirstDispose = logger.GetEvents();
 
         // Assert
-        Assert.Contains(eventsAfterFirstDispose, e => e.Code == DiagnosticCodes.PerformanceMetrics);
+        Assert.Contains(eventsAfterFirstDispose, e => e.Code == DiagnosticCodes.Performance.PerformanceMetrics);
         var totalEventsAfterFirstDispose = eventsAfterFirstDispose.Count;
 
         // Second dispose should be a no-op with no additional diagnostics
         monitor.Dispose();
         var eventsAfterSecondDispose = logger.GetEvents();
         Assert.Equal(totalEventsAfterFirstDispose, eventsAfterSecondDispose.Count);
-        Assert.Equal(1, eventsAfterSecondDispose.Count(e => e.Code == DiagnosticCodes.PerformanceMetrics));
+        Assert.Equal(1, eventsAfterSecondDispose.Count(e => e.Code == DiagnosticCodes.Performance.PerformanceMetrics));
+    #pragma warning restore CA2202
     }
 
     [Fact]
@@ -246,7 +248,7 @@ public class PerformanceMonitorTests
 
         // Assert
         var events = logger.GetEvents();
-        var metricsEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.PerformanceMetrics);
+        var metricsEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.Performance.PerformanceMetrics);
         Assert.NotNull(metricsEvent);
 
         // Verify elapsed time is tracked
@@ -336,7 +338,7 @@ public class DocumentGenerationPerformanceTests
         // Assert
         Assert.NotNull(doc);
         var events = logger.GetEvents();
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.PerformanceMetrics);
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.Performance.PerformanceMetrics);
     }
 
     [Fact]
@@ -364,7 +366,7 @@ public class DocumentGenerationPerformanceTests
         // Assert
         Assert.NotNull(doc);
         var events = logger.GetEvents();
-        Assert.DoesNotContain(events, e => e.Code == DiagnosticCodes.PerformanceMetrics);
+        Assert.DoesNotContain(events, e => e.Code == DiagnosticCodes.Performance.PerformanceMetrics);
     }
 
     [Fact]
@@ -395,7 +397,7 @@ public class DocumentGenerationPerformanceTests
         var events = logger.GetEvents();
 
         // Should emit target met (PERF002) for fast operations
-        var targetMetEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.PerformanceTargetMet);
+        var targetMetEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.Performance.PerformanceTargetMet);
         Assert.NotNull(targetMetEvent);
     }
 
@@ -438,7 +440,7 @@ public class DocumentGenerationPerformanceTests
         var events = logger.GetEvents();
 
         // Should emit degraded warning (PERF003)
-        var degradedEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.PerformanceDegraded);
+        var degradedEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.Performance.PerformanceDegraded);
         Assert.NotNull(degradedEvent);
     }
 
@@ -481,7 +483,7 @@ public class DocumentGenerationPerformanceTests
         var events = logger.GetEvents();
 
         // Should emit failure error (PERF004)
-        var failureEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.PerformanceFailure);
+        var failureEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.Performance.PerformanceFailure);
         Assert.NotNull(failureEvent);
     }
 
@@ -512,7 +514,7 @@ public class DocumentGenerationPerformanceTests
         var events = logger.GetEvents();
 
         // Should always emit metrics (PERF005)
-        var metricsEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.PerformanceMetrics);
+        var metricsEvent = events.FirstOrDefault(e => e.Code == DiagnosticCodes.Performance.PerformanceMetrics);
         Assert.NotNull(metricsEvent);
 
         // Verify metrics include expected fields using reflection

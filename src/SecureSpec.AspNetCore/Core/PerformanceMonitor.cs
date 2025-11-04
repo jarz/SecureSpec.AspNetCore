@@ -112,21 +112,21 @@ public sealed class PerformanceMonitor : IDisposable
         {
             case PerformanceStatus.Target:
                 _logger.LogInfo(
-                    DiagnosticCodes.PerformanceTargetMet,
+                    DiagnosticCodes.Performance.PerformanceTargetMet,
                     $"Performance target met for '{_operationName}': {elapsedMs}ms <= {_options.TargetGenerationTimeMs}ms target",
                     context);
                 break;
 
             case PerformanceStatus.Degraded:
                 _logger.LogWarning(
-                    DiagnosticCodes.PerformanceDegraded,
+                    DiagnosticCodes.Performance.PerformanceDegraded,
                     $"Performance degraded for '{_operationName}': {elapsedMs}ms > {_options.TargetGenerationTimeMs}ms target",
                     context);
                 break;
 
             case PerformanceStatus.Failure:
                 _logger.LogError(
-                    DiagnosticCodes.PerformanceFailure,
+                    DiagnosticCodes.Performance.PerformanceFailure,
                     $"Performance failure for '{_operationName}': {elapsedMs}ms > {_options.DegradedThresholdMs}ms threshold",
                     context);
                 break;
@@ -138,7 +138,7 @@ public sealed class PerformanceMonitor : IDisposable
 
         // Emit metrics for tracking
         _logger.LogInfo(
-            DiagnosticCodes.PerformanceMetrics,
+            DiagnosticCodes.Performance.PerformanceMetrics,
             $"Performance metrics collected for '{_operationName}'",
             context);
     }

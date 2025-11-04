@@ -65,64 +65,34 @@ public static class SecureSpecServiceCollectionExtensions
         services.AddSingleton(sp =>
         {
             var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
-
-            // Register all schema filters
-            foreach (var filterType in options.Filters.SchemaFilters)
-            {
-                if (!services.Any(d => d.ServiceType == filterType))
-                {
-                    services.AddSingleton(filterType);
-                }
-            }
-
-            // Register all operation filters
-            foreach (var filterType in options.Filters.OperationFilters)
-            {
-                if (!services.Any(d => d.ServiceType == filterType))
-                {
-                    services.AddSingleton(filterType);
-                }
-            }
-
-            // Register all parameter filters
-            foreach (var filterType in options.Filters.ParameterFilters)
-            {
-                if (!services.Any(d => d.ServiceType == filterType))
-                {
-                    services.AddSingleton(filterType);
-                }
-            }
-
-            // Register all request body filters
-            foreach (var filterType in options.Filters.RequestBodyFilters)
-            {
-                if (!services.Any(d => d.ServiceType == filterType))
-                {
-                    services.AddSingleton(filterType);
-                }
-            }
-
-            // Register all document filters
-            foreach (var filterType in options.Filters.DocumentFilters)
-            {
-                if (!services.Any(d => d.ServiceType == filterType))
-                {
-                    services.AddSingleton(filterType);
-                }
-            }
-
-            // Register all pre-serialize filters
-            foreach (var filterType in options.Filters.PreSerializeFilters)
-            {
-                if (!services.Any(d => d.ServiceType == filterType))
-                {
-                    services.AddSingleton(filterType);
-                }
-            }
+            RegisterConfiguredFilters(services, options.Filters);
 
             return new object(); // Dummy return for build action
         });
 
         return services;
+    }
+
+    private static void RegisterConfiguredFilters(IServiceCollection services, FilterCollection filters)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(filters);
+
+        var registeredTypes = new HashSet<Type>(services.Select(descriptor => descriptor.ServiceType));
+
+        foreach (var filterType in GetConfiguredFilterTypes(filters).Where(filterType => registeredTypes.Add(filterType)))
+        {
+            services.AddSingleton(filterType);
+        }
+    }
+
+    private static IEnumerable<Type> GetConfiguredFilterTypes(FilterCollection filters)
+    {
+        return filters.SchemaFilters
+            .Concat(filters.OperationFilters)
+            .Concat(filters.ParameterFilters)
+            .Concat(filters.RequestBodyFilters)
+            .Concat(filters.DocumentFilters)
+            .Concat(filters.PreSerializeFilters);
     }
 }

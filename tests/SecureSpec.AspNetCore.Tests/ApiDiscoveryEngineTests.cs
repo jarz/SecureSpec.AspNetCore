@@ -75,7 +75,7 @@ public class ApiDiscoveryEngineTests
         Assert.Empty(result);
 
         var events = diagnosticsLogger.GetEvents();
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.EndpointFiltered);
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.Discovery.EndpointFiltered);
     }
 
     [Fact]
@@ -249,7 +249,7 @@ public class ApiDiscoveryEngineTests
 
         // Assert
         var events = diagnosticsLogger.GetEvents();
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.EndpointsDiscovered);
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.Discovery.EndpointsDiscovered);
     }
 
     [Fact]
