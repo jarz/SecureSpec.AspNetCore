@@ -112,7 +112,8 @@ public class MinimalApiDiscoveryStrategy : IEndpointDiscoveryStrategy
             RoutePattern = routePattern,
             OperationName = routeEndpoint.DisplayName,
             MethodInfo = methodInfo,
-            RouteEndpoint = routeEndpoint
+            RouteEndpoint = routeEndpoint,
+            IsMinimalApi = true
         };
     }
 }

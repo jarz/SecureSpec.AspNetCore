@@ -5,6 +5,8 @@ using SecureSpec.AspNetCore.Core;
 using SecureSpec.AspNetCore.Core.Attributes;
 using SecureSpec.AspNetCore.Diagnostics;
 using System.Reflection;
+using OpenApiParameter = Microsoft.OpenApi.Models.OpenApiParameter;
+using OpenApiSecurityRequirement = Microsoft.OpenApi.Models.OpenApiSecurityRequirement;
 
 namespace SecureSpec.AspNetCore.Tests;
 
@@ -26,6 +28,9 @@ public class ApiDiscoveryEngineTests
 
         // Assert
         Assert.Empty(result);
+
+        var events = diagnosticsLogger.GetEvents();
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.Discovery.EndpointFiltered && e.Message.Contains("No discovery strategies", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -111,7 +116,7 @@ public class ApiDiscoveryEngineTests
     }
 
     [Fact]
-    public async Task DiscoverEndpointsAsync_WithCustomPredicate_FiltersCorrectly()
+    public async Task DiscoverEndpointsAsync_WithIncludePredicate_AddsNonApiController()
     {
         // Arrange
         var diagnosticsLogger = new DiagnosticsLogger();
@@ -120,16 +125,15 @@ public class ApiDiscoveryEngineTests
         {
             Discovery =
             {
-                IncludePredicate = endpoint => endpoint.RoutePattern.Contains("/api/v2", StringComparison.Ordinal)
+                IncludePredicate = endpoint => endpoint.ControllerType == typeof(NonApiController)
             }
         };
         var options = Options.Create(secureSpecOptions);
 
-        var endpoint1 = CreateTestEndpoint("GET", "/api/v1/test");
-        var endpoint2 = CreateTestEndpoint("GET", "/api/v2/test");
-        var endpoint3 = CreateTestEndpoint("GET", "/api/v2/another");
+        var apiEndpoint = CreateTestEndpoint("GET", "/api/test", controllerType: typeof(TestController));
+        var nonApiEndpoint = CreateTestEndpoint("GET", "/special/nonapi", controllerType: typeof(NonApiController));
 
-        var strategy = new MockDiscoveryStrategy(new[] { endpoint1, endpoint2, endpoint3 });
+        var strategy = new MockDiscoveryStrategy(new[] { apiEndpoint, nonApiEndpoint });
         var strategies = new IEndpointDiscoveryStrategy[] { strategy };
 
         var engine = new ApiDiscoveryEngine(strategies, metadataExtractor, options, diagnosticsLogger);
@@ -139,7 +143,40 @@ public class ApiDiscoveryEngineTests
 
         // Assert
         Assert.Equal(2, result.Count());
-        Assert.All(result, e => Assert.Contains("/api/v2", e.RoutePattern, StringComparison.Ordinal));
+        Assert.Contains(result, e => e.RoutePattern == "/api/test");
+        Assert.Contains(result, e => e.RoutePattern == "/special/nonapi");
+    }
+
+    [Fact]
+    public async Task DiscoverEndpointsAsync_WithIncludePredicate_DoesNotExcludeConventionalMatches()
+    {
+        // Arrange
+        var diagnosticsLogger = new DiagnosticsLogger();
+        var metadataExtractor = CreateMetadataExtractor();
+        var secureSpecOptions = new SecureSpecOptions
+        {
+            Discovery =
+            {
+                IncludePredicate = endpoint => endpoint.RoutePattern.Contains("special", StringComparison.Ordinal)
+            }
+        };
+        var options = Options.Create(secureSpecOptions);
+
+        var matchingEndpoint = CreateTestEndpoint("GET", "/api/controller/special", controllerType: typeof(TestController));
+        var conventionalEndpoint = CreateTestEndpoint("GET", "/api/controller/regular", controllerType: typeof(TestController));
+
+        var strategy = new MockDiscoveryStrategy(new[] { matchingEndpoint, conventionalEndpoint });
+        var strategies = new IEndpointDiscoveryStrategy[] { strategy };
+
+        var engine = new ApiDiscoveryEngine(strategies, metadataExtractor, options, diagnosticsLogger);
+
+        // Act
+        var result = await engine.DiscoverEndpointsAsync();
+
+        // Assert
+        Assert.Equal(2, result.Count());
+        Assert.Contains(result, e => e.RoutePattern == "/api/controller/special");
+        Assert.Contains(result, e => e.RoutePattern == "/api/controller/regular");
     }
 
     [Fact]
@@ -253,6 +290,31 @@ public class ApiDiscoveryEngineTests
     }
 
     [Fact]
+    public async Task DiscoverEndpointsAsync_ReturnsReadOnlyMetadataCollections()
+    {
+        // Arrange
+        var diagnosticsLogger = new DiagnosticsLogger();
+        var metadataExtractor = CreateMetadataExtractor();
+        var options = Options.Create(new SecureSpecOptions());
+
+        var endpoint = CreateTestEndpoint("GET", "/api/test", controllerType: typeof(TestController));
+        endpoint.Tags.Add("custom");
+
+        var strategy = new MockDiscoveryStrategy(new[] { endpoint });
+        var engine = new ApiDiscoveryEngine(new[] { strategy }, metadataExtractor, options, diagnosticsLogger);
+
+        // Act
+        var result = await engine.DiscoverEndpointsAsync();
+        var metadata = Assert.Single(result);
+
+        // Assert
+        Assert.True(((ICollection<string>)metadata.Tags).IsReadOnly);
+        Assert.True(((ICollection<OpenApiParameter>)metadata.Parameters).IsReadOnly);
+        Assert.True(((ICollection<OpenApiSecurityRequirement>)metadata.Security).IsReadOnly);
+        Assert.True(metadata.Responses.IsReadOnly);
+    }
+
+    [Fact]
     public async Task DiscoverEndpointsAsync_WithMinimalApiDisabled_FiltersMinimalEndpoints()
     {
         // Arrange
@@ -268,7 +330,7 @@ public class ApiDiscoveryEngineTests
         var options = Options.Create(secureSpecOptions);
 
         var controllerEndpoint = CreateTestEndpoint("GET", "/api/controller", controllerType: typeof(TestController));
-        var minimalEndpoint = CreateTestEndpoint("GET", "/api/minimal");
+        var minimalEndpoint = CreateTestEndpoint("GET", "/api/minimal", isMinimalApi: true);
         minimalEndpoint.RouteEndpoint = new Microsoft.AspNetCore.Routing.RouteEndpoint(
             _ => Task.CompletedTask,
             Microsoft.AspNetCore.Routing.Patterns.RoutePatternFactory.Parse("/api/minimal"),
@@ -277,6 +339,42 @@ public class ApiDiscoveryEngineTests
             null);
 
         var strategy = new MockDiscoveryStrategy(new[] { controllerEndpoint, minimalEndpoint });
+        var strategies = new IEndpointDiscoveryStrategy[] { strategy };
+
+        var engine = new ApiDiscoveryEngine(strategies, metadataExtractor, options, diagnosticsLogger);
+
+        // Act
+        var result = await engine.DiscoverEndpointsAsync();
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("/api/controller", result.First().RoutePattern);
+    }
+
+    [Fact]
+    public async Task DiscoverEndpointsAsync_WithControllerRouteEndpoint_NotExcludedWhenMinimalApisDisabled()
+    {
+        // Arrange
+        var diagnosticsLogger = new DiagnosticsLogger();
+        var metadataExtractor = CreateMetadataExtractor();
+        var secureSpecOptions = new SecureSpecOptions
+        {
+            Discovery =
+            {
+                IncludeMinimalApis = false
+            }
+        };
+        var options = Options.Create(secureSpecOptions);
+
+        var controllerEndpoint = CreateTestEndpoint("GET", "/api/controller", controllerType: typeof(TestController));
+        controllerEndpoint.RouteEndpoint = new Microsoft.AspNetCore.Routing.RouteEndpoint(
+            _ => Task.CompletedTask,
+            Microsoft.AspNetCore.Routing.Patterns.RoutePatternFactory.Parse("/api/controller"),
+            0,
+            null,
+            null);
+
+        var strategy = new MockDiscoveryStrategy(new[] { controllerEndpoint });
         var strategies = new IEndpointDiscoveryStrategy[] { strategy };
 
         var engine = new ApiDiscoveryEngine(strategies, metadataExtractor, options, diagnosticsLogger);
@@ -303,7 +401,8 @@ public class ApiDiscoveryEngineTests
         string httpMethod,
         string routePattern,
         MethodInfo? methodInfo = null,
-        Type? controllerType = null)
+        Type? controllerType = null,
+        bool isMinimalApi = false)
     {
         return new EndpointMetadata
         {
@@ -311,7 +410,8 @@ public class ApiDiscoveryEngineTests
             RoutePattern = routePattern,
             OperationName = methodInfo?.Name,
             MethodInfo = methodInfo,
-            ControllerType = controllerType
+            ControllerType = controllerType,
+            IsMinimalApi = isMinimalApi
         };
     }
 
@@ -336,20 +436,35 @@ public class ApiDiscoveryEngineTests
     private sealed class TestController
     {
         [ExcludeFromSpec("Test exclusion")]
-        public void ExcludedMethod() { }
+        public void ExcludedMethod()
+        {
+            // Intentionally empty: invoked via reflection only.
+        }
 
         [Obsolete("This is obsolete")]
-        public void ObsoleteMethod() { }
+        public void ObsoleteMethod()
+        {
+            // Intentionally empty: invoked via reflection only.
+        }
 
-        public void NormalMethod() { }
+        public void NormalMethod()
+        {
+            // Intentionally empty: invoked via reflection only.
+        }
     }
 
 #pragma warning disable CA1812, CA1852
     private sealed class NonApiController
     {
         [IncludeInSpec]
-        public void IncludedMethod() { }
+        public void IncludedMethod()
+        {
+            // Intentionally empty: invoked via reflection only.
+        }
 
-        public void NotIncludedMethod() { }
+        public void NotIncludedMethod()
+        {
+            // Intentionally empty: invoked via reflection only.
+        }
     }
 }
