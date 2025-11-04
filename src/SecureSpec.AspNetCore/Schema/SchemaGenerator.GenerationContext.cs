@@ -90,7 +90,7 @@ public partial class SchemaGenerator
 
             if (_depthLogged.Add(type))
             {
-                _logger.LogWarning("SCH001-DEPTH", $"Schema generation for type '{type.FullName ?? type.Name}' exceeded maximum depth of {_maxDepth}.");
+                _logger.LogWarning("SCH002", $"Schema generation for type '{type.FullName ?? type.Name}' exceeded maximum depth of {_maxDepth}.");
             }
 
             return placeholder;

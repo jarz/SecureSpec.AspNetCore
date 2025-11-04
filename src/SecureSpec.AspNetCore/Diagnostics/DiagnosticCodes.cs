@@ -1,4 +1,34 @@
+using System.Reflection;
+
 namespace SecureSpec.AspNetCore.Diagnostics;
+
+/// <summary>
+/// Attribute to define metadata for diagnostic codes.
+/// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="DiagnosticCodeAttribute"/> class.
+/// </remarks>
+/// <param name="description">Human-readable description of the diagnostic.</param>
+/// <param name="level">Severity level of the diagnostic.</param>
+/// <param name="recommendedAction">Recommended action to address the diagnostic.</param>
+[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+public sealed class DiagnosticCodeAttribute(string description, DiagnosticLevel level, string recommendedAction) : Attribute
+{
+    /// <summary>
+    /// Human-readable description of the diagnostic.
+    /// </summary>
+    public string Description { get; } = description;
+
+    /// <summary>
+    /// Severity level of the diagnostic.
+    /// </summary>
+    public DiagnosticLevel Level { get; } = level;
+
+    /// <summary>
+    /// Recommended action to address the diagnostic.
+    /// </summary>
+    public string RecommendedAction { get; } = recommendedAction;
+}
 
 /// <summary>
 /// Defines all diagnostic error codes used throughout SecureSpec.
@@ -6,6 +36,8 @@ namespace SecureSpec.AspNetCore.Diagnostics;
 /// </summary>
 public static class DiagnosticCodes
 {
+    private static readonly Lazy<Dictionary<string, DiagnosticCodeMetadata>> _metadataCache =
+        new(BuildMetadataCache);
     // ============================================
     // Discovery Codes (DISC)
     // ============================================
@@ -17,30 +49,26 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Endpoints discovered successfully.
-        /// Severity: Info
-        /// Action: None
         /// </summary>
+        [DiagnosticCode("Endpoints discovered successfully", DiagnosticLevel.Info, "None")]
         public const string EndpointsDiscovered = "DISC001";
 
         /// <summary>
         /// Metadata extraction failed for endpoint.
-        /// Severity: Error
-        /// Action: Review endpoint configuration
         /// </summary>
+        [DiagnosticCode("Metadata extraction failed for endpoint", DiagnosticLevel.Error, "Review endpoint configuration")]
         public const string MetadataExtractionFailed = "DISC002";
 
         /// <summary>
         /// Endpoint filtered (excluded/included).
-        /// Severity: Info
-        /// Action: Review filtering configuration
         /// </summary>
+        [DiagnosticCode("Endpoint filtered (excluded/included)", DiagnosticLevel.Info, "Review filtering configuration")]
         public const string EndpointFiltered = "DISC003";
 
         /// <summary>
         /// Filter execution completed.
-        /// Severity: Info
-        /// Action: None
         /// </summary>
+        [DiagnosticCode("Filter execution completed", DiagnosticLevel.Info, "None")]
         public const string FilterExecutionCompleted = "DISC004";
     }
 
@@ -55,16 +83,14 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Integrity check failed.
-        /// Severity: Critical
-        /// Action: Abort load
         /// </summary>
+        [DiagnosticCode("Integrity check failed", DiagnosticLevel.Critical, "Abort load")]
         public const string IntegrityCheckFailed = "SEC001";
 
         /// <summary>
         /// Operation security requirements mutated (overridden from global).
-        /// Severity: Info
-        /// Action: Review security configuration
         /// </summary>
+        [DiagnosticCode("Operation security requirements mutated", DiagnosticLevel.Info, "Review security configuration")]
         public const string SecurityRequirementsMutated = "SEC002";
     }
 
@@ -79,9 +105,8 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// CSP mismatch or missing directives.
-        /// Severity: Error
-        /// Action: Review policy
         /// </summary>
+        [DiagnosticCode("CSP mismatch or missing directives", DiagnosticLevel.Error, "Review policy")]
         public const string CspMismatch = "CSP001";
     }
 
@@ -96,17 +121,15 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// SchemaId collision suffix applied.
-        /// Severity: Info
-        /// Action: Confirm stability
         /// </summary>
+        [DiagnosticCode("SchemaId collision suffix applied", DiagnosticLevel.Info, "Confirm stability")]
         public const string SchemaIdCollision = "SCH001";
 
         /// <summary>
         /// Schema generation exceeded maximum depth.
-        /// Severity: Warn
-        /// Action: Review schema structure
         /// </summary>
-        public const string SchemaDepthExceeded = "SCH001-DEPTH";
+        [DiagnosticCode("Schema generation exceeded maximum depth", DiagnosticLevel.Warn, "Review schema structure")]
+        public const string SchemaDepthExceeded = "SCH002";
     }
 
     // ============================================
@@ -120,9 +143,8 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// DataAnnotations conflict (last wins).
-        /// Severity: Warn
-        /// Action: Harmonize constraints
         /// </summary>
+        [DiagnosticCode("DataAnnotations conflict (last wins)", DiagnosticLevel.Warn, "Harmonize constraints")]
         public const string DataAnnotationsConflict = "ANN001";
     }
 
@@ -137,16 +159,14 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Rate limit bucket enforced.
-        /// Severity: Info
-        /// Action: Evaluate thresholds
         /// </summary>
+        [DiagnosticCode("Rate limit bucket enforced", DiagnosticLevel.Info, "Evaluate thresholds")]
         public const string RateLimitEnforced = "LIM001";
 
         /// <summary>
         /// Rate limit reset anomaly.
-        /// Severity: Warn
-        /// Action: Check time source
         /// </summary>
+        [DiagnosticCode("Rate limit reset anomaly", DiagnosticLevel.Warn, "Check time source")]
         public const string RateLimitResetAnomaly = "LIM002";
     }
 
@@ -161,9 +181,8 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// MapType override applied.
-        /// Severity: Info
-        /// Action: Validate mapping correctness
         /// </summary>
+        [DiagnosticCode("MapType override applied", DiagnosticLevel.Info, "Validate mapping correctness")]
         public const string MapTypeOverride = "MAP001";
     }
 
@@ -178,9 +197,8 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Nullability mismatch.
-        /// Severity: Error
-        /// Action: Adjust NRT config
         /// </summary>
+        [DiagnosticCode("Nullability mismatch", DiagnosticLevel.Error, "Adjust NRT config")]
         public const string NullabilityMismatch = "NRT001";
     }
 
@@ -195,37 +213,32 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Resource limit exceeded (time or memory).
-        /// Severity: Warn
-        /// Action: Review resource configuration
         /// </summary>
+        [DiagnosticCode("Resource limit exceeded (time or memory)", DiagnosticLevel.Warn, "Review resource configuration")]
         public const string ResourceLimitExceeded = "PERF001";
 
         /// <summary>
         /// Performance target met (&lt;500ms for 1000 operations).
-        /// Severity: Info
-        /// Action: None
         /// </summary>
+        [DiagnosticCode("Performance target met (<500ms for 1000 operations)", DiagnosticLevel.Info, "None")]
         public const string PerformanceTargetMet = "PERF002";
 
         /// <summary>
         /// Performance degraded (500-2000ms for 1000 operations).
-        /// Severity: Warn
-        /// Action: Review performance optimizations
         /// </summary>
+        [DiagnosticCode("Performance degraded (500-2000ms for 1000 operations)", DiagnosticLevel.Warn, "Review performance optimizations")]
         public const string PerformanceDegraded = "PERF003";
 
         /// <summary>
         /// Performance failure (&gt;2000ms for 1000 operations).
-        /// Severity: Error
-        /// Action: Immediate optimization required
         /// </summary>
+        [DiagnosticCode("Performance failure (>2000ms for 1000 operations)", DiagnosticLevel.Error, "Immediate optimization required")]
         public const string PerformanceFailure = "PERF004";
 
         /// <summary>
         /// Performance monitoring metrics collected.
-        /// Severity: Info
-        /// Action: Review performance trends
         /// </summary>
+        [DiagnosticCode("Performance monitoring metrics collected", DiagnosticLevel.Info, "Review performance trends")]
         public const string PerformanceMetrics = "PERF005";
     }
 
@@ -240,9 +253,8 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Example generation throttled.
-        /// Severity: Warn
-        /// Action: Provide explicit example
         /// </summary>
+        [DiagnosticCode("Example generation throttled", DiagnosticLevel.Warn, "Provide explicit example")]
         public const string ExampleGenerationThrottled = "EXM001";
     }
 
@@ -257,9 +269,8 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Virtualization threshold triggered.
-        /// Severity: Info
-        /// Action: Performance expectation
         /// </summary>
+        [DiagnosticCode("Virtualization threshold triggered", DiagnosticLevel.Info, "Performance expectation")]
         public const string VirtualizationThresholdTriggered = "VIRT001";
     }
 
@@ -274,16 +285,14 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Retention size purge executed.
-        /// Severity: Info
-        /// Action: Monitor volume
         /// </summary>
+        [DiagnosticCode("Retention size purge executed", DiagnosticLevel.Info, "Monitor volume")]
         public const string RetentionSizePurge = "RET001";
 
         /// <summary>
         /// Retention age purge executed.
-        /// Severity: Info
-        /// Action: Confirm retentionDays
         /// </summary>
+        [DiagnosticCode("Retention age purge executed", DiagnosticLevel.Info, "Confirm retentionDays")]
         public const string RetentionAgePurge = "RET002";
     }
 
@@ -298,9 +307,8 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// PolicyToScope mapping applied.
-        /// Severity: Info
-        /// Action: Validate scopes
         /// </summary>
+        [DiagnosticCode("PolicyToScope mapping applied", DiagnosticLevel.Info, "Validate scopes")]
         public const string PolicyToScopeMapping = "POL001";
     }
 
@@ -315,9 +323,8 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Invalid per-doc route template attempt.
-        /// Severity: Info
-        /// Action: Use global template
         /// </summary>
+        [DiagnosticCode("Invalid per-doc route template attempt", DiagnosticLevel.Info, "Use global template")]
         public const string InvalidPerDocRouteTemplate = "CFG001";
     }
 
@@ -332,16 +339,14 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Disallowed head injection.
-        /// Severity: Warn
-        /// Action: Restrict to meta/link
         /// </summary>
+        [DiagnosticCode("Disallowed head injection", DiagnosticLevel.Warn, "Restrict to meta/link")]
         public const string DisallowedHeadInjection = "SAN001";
 
         /// <summary>
         /// Disallowed head injection attempt.
-        /// Severity: Warn
-        /// Action: Use local meta/link
         /// </summary>
+        [DiagnosticCode("Disallowed head injection attempt", DiagnosticLevel.Warn, "Use local meta/link")]
         public const string DisallowedHeadInjectionAttempt = "HD001";
     }
 
@@ -356,9 +361,8 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Multipart field count limit exceeded.
-        /// Severity: Warn
-        /// Action: Review field count limits
         /// </summary>
+        [DiagnosticCode("Multipart field count limit exceeded", DiagnosticLevel.Warn, "Review field count limits")]
         public const string MultipartFieldCountExceeded = "BND001";
     }
 
@@ -373,37 +377,32 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Circular link detection.
-        /// Severity: Warn
-        /// Action: Review link structure
         /// </summary>
+        [DiagnosticCode("Circular link detection", DiagnosticLevel.Warn, "Review link structure")]
         public const string CircularLinkDetected = "LNK001";
 
         /// <summary>
         /// Missing operationId but operationRef present.
-        /// Severity: Info
-        /// Action: Using operationRef fallback
         /// </summary>
+        [DiagnosticCode("Missing operationId but operationRef present", DiagnosticLevel.Info, "Using operationRef fallback")]
         public const string LinkOperationRefFallback = "LNK002";
 
         /// <summary>
         /// Missing both operationId and operationRef.
-        /// Severity: Warn
-        /// Action: Provide operationId or operationRef
         /// </summary>
+        [DiagnosticCode("Missing both operationId and operationRef", DiagnosticLevel.Warn, "Provide operationId or operationRef")]
         public const string LinkMissingReference = "LNK003";
 
         /// <summary>
         /// Broken $ref in link.
-        /// Severity: Error
-        /// Action: Fix reference path
         /// </summary>
+        [DiagnosticCode("Broken $ref in link", DiagnosticLevel.Error, "Fix reference path")]
         public const string LinkBrokenReference = "LNK004";
 
         /// <summary>
         /// External or unsupported reference in link.
-        /// Severity: Warn
-        /// Action: Use internal references only
         /// </summary>
+        [DiagnosticCode("External or unsupported reference in link", DiagnosticLevel.Warn, "Use internal references only")]
         public const string LinkExternalReference = "LNK005";
     }
 
@@ -418,16 +417,14 @@ public static class DiagnosticCodes
     {
         /// <summary>
         /// Callback section rendered read-only.
-        /// Severity: Info
-        /// Action: Callbacks do not support Try It Out
         /// </summary>
+        [DiagnosticCode("Callback section rendered read-only", DiagnosticLevel.Info, "Callbacks do not support Try It Out")]
         public const string CallbackReadOnly = "CBK001";
 
         /// <summary>
         /// Broken $ref in callback.
-        /// Severity: Error
-        /// Action: Fix reference path
         /// </summary>
+        [DiagnosticCode("Broken $ref in callback", DiagnosticLevel.Error, "Fix reference path")]
         public const string CallbackBrokenReference = "CBK002";
     }
 
@@ -438,45 +435,7 @@ public static class DiagnosticCodes
     /// <returns>Metadata for the code, or null if not found.</returns>
     public static DiagnosticCodeMetadata? GetMetadata(string code)
     {
-        return code switch
-        {
-            Discovery.EndpointsDiscovered => new("Endpoints discovered successfully", DiagnosticLevel.Info, "None"),
-            Discovery.MetadataExtractionFailed => new("Metadata extraction failed for endpoint", DiagnosticLevel.Error, "Review endpoint configuration"),
-            Discovery.EndpointFiltered => new("Endpoint filtered (excluded/included)", DiagnosticLevel.Info, "Review filtering configuration"),
-            Discovery.FilterExecutionCompleted => new("Filter execution completed", DiagnosticLevel.Info, "None"),
-            Security.IntegrityCheckFailed => new("Integrity check failed", DiagnosticLevel.Critical, "Abort load"),
-            Security.SecurityRequirementsMutated => new("Operation security requirements mutated", DiagnosticLevel.Info, "Review security configuration"),
-            Csp.CspMismatch => new("CSP mismatch or missing directives", DiagnosticLevel.Error, "Review policy"),
-            Schema.SchemaIdCollision => new("SchemaId collision suffix applied", DiagnosticLevel.Info, "Confirm stability"),
-            Schema.SchemaDepthExceeded => new("Schema generation exceeded maximum depth", DiagnosticLevel.Warn, "Review schema structure"),
-            Annotations.DataAnnotationsConflict => new("DataAnnotations conflict (last wins)", DiagnosticLevel.Warn, "Harmonize constraints"),
-            RateLimit.RateLimitEnforced => new("Rate limit bucket enforced", DiagnosticLevel.Info, "Evaluate thresholds"),
-            RateLimit.RateLimitResetAnomaly => new("Rate limit reset anomaly", DiagnosticLevel.Warn, "Check time source"),
-            TypeMapping.MapTypeOverride => new("MapType override applied", DiagnosticLevel.Info, "Validate mapping correctness"),
-            Nullability.NullabilityMismatch => new("Nullability mismatch", DiagnosticLevel.Error, "Adjust NRT config"),
-            Performance.ResourceLimitExceeded => new("Resource limit exceeded", DiagnosticLevel.Warn, "Review resource configuration"),
-            Performance.PerformanceTargetMet => new("Performance target met", DiagnosticLevel.Info, "None"),
-            Performance.PerformanceDegraded => new("Performance degraded", DiagnosticLevel.Warn, "Review performance optimizations"),
-            Performance.PerformanceFailure => new("Performance failure", DiagnosticLevel.Error, "Immediate optimization required"),
-            Performance.PerformanceMetrics => new("Performance monitoring metrics collected", DiagnosticLevel.Info, "Review performance trends"),
-            ExampleGeneration.ExampleGenerationThrottled => new("Example generation throttled", DiagnosticLevel.Warn, "Provide explicit example"),
-            Virtualization.VirtualizationThresholdTriggered => new("Virtualization threshold triggered", DiagnosticLevel.Info, "Performance expectation"),
-            Retention.RetentionSizePurge => new("Retention size purge executed", DiagnosticLevel.Info, "Monitor volume"),
-            Retention.RetentionAgePurge => new("Retention age purge executed", DiagnosticLevel.Info, "Confirm retentionDays"),
-            Policy.PolicyToScopeMapping => new("PolicyToScope mapping applied", DiagnosticLevel.Info, "Validate scopes"),
-            Configuration.InvalidPerDocRouteTemplate => new("Invalid per-doc route template attempt", DiagnosticLevel.Info, "Use global template"),
-            Sanitization.DisallowedHeadInjection => new("Disallowed head injection", DiagnosticLevel.Warn, "Restrict to meta/link"),
-            Sanitization.DisallowedHeadInjectionAttempt => new("Disallowed head injection attempt", DiagnosticLevel.Warn, "Use local meta/link"),
-            Boundary.MultipartFieldCountExceeded => new("Multipart field count limit exceeded", DiagnosticLevel.Warn, "Review field count limits"),
-            Link.CircularLinkDetected => new("Circular link detection", DiagnosticLevel.Warn, "Review link structure"),
-            Link.LinkOperationRefFallback => new("Missing operationId but operationRef present", DiagnosticLevel.Info, "Using operationRef fallback"),
-            Link.LinkMissingReference => new("Missing both operationId and operationRef", DiagnosticLevel.Warn, "Provide operationId or operationRef"),
-            Link.LinkBrokenReference => new("Broken $ref in link", DiagnosticLevel.Error, "Fix reference path"),
-            Link.LinkExternalReference => new("External or unsupported reference in link", DiagnosticLevel.Warn, "Use internal references only"),
-            Callback.CallbackReadOnly => new("Callback section rendered read-only", DiagnosticLevel.Info, "Callbacks do not support Try It Out"),
-            Callback.CallbackBrokenReference => new("Broken $ref in callback", DiagnosticLevel.Error, "Fix reference path"),
-            _ => null
-        };
+        return _metadataCache.Value.TryGetValue(code, out var metadata) ? metadata : null;
     }
 
     /// <summary>
@@ -486,7 +445,7 @@ public static class DiagnosticCodes
     /// <returns>True if the code is recognized, false otherwise.</returns>
     public static bool IsValidCode(string code)
     {
-        return GetMetadata(code) != null;
+        return _metadataCache.Value.ContainsKey(code);
     }
 
     /// <summary>
@@ -495,44 +454,37 @@ public static class DiagnosticCodes
     /// <returns>An array of all defined diagnostic codes.</returns>
     public static string[] GetAllCodes()
     {
-        return new[]
+        return _metadataCache.Value.Keys.ToArray();
+    }
+
+    private static Dictionary<string, DiagnosticCodeMetadata> BuildMetadataCache()
+    {
+        var cache = new Dictionary<string, DiagnosticCodeMetadata>();
+
+        // Get all nested static classes within DiagnosticCodes
+        var nestedTypes = typeof(DiagnosticCodes).GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+
+        foreach (var nestedType in nestedTypes)
         {
-            Discovery.EndpointsDiscovered,
-            Discovery.MetadataExtractionFailed,
-            Discovery.EndpointFiltered,
-            Discovery.FilterExecutionCompleted,
-            Security.IntegrityCheckFailed,
-            Security.SecurityRequirementsMutated,
-            Csp.CspMismatch,
-            Schema.SchemaIdCollision,
-            Schema.SchemaDepthExceeded,
-            Annotations.DataAnnotationsConflict,
-            RateLimit.RateLimitEnforced,
-            RateLimit.RateLimitResetAnomaly,
-            TypeMapping.MapTypeOverride,
-            Nullability.NullabilityMismatch,
-            Performance.ResourceLimitExceeded,
-            Performance.PerformanceTargetMet,
-            Performance.PerformanceDegraded,
-            Performance.PerformanceFailure,
-            Performance.PerformanceMetrics,
-            ExampleGeneration.ExampleGenerationThrottled,
-            Virtualization.VirtualizationThresholdTriggered,
-            Retention.RetentionSizePurge,
-            Retention.RetentionAgePurge,
-            Policy.PolicyToScopeMapping,
-            Configuration.InvalidPerDocRouteTemplate,
-            Sanitization.DisallowedHeadInjection,
-            Sanitization.DisallowedHeadInjectionAttempt,
-            Boundary.MultipartFieldCountExceeded,
-            Link.CircularLinkDetected,
-            Link.LinkOperationRefFallback,
-            Link.LinkMissingReference,
-            Link.LinkBrokenReference,
-            Link.LinkExternalReference,
-            Callback.CallbackReadOnly,
-            Callback.CallbackBrokenReference
-        };
+            // Get all const string fields in each nested class
+            var fields = nestedType.GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Where(f => f.IsLiteral && f.FieldType == typeof(string));
+
+            foreach (var field in fields)
+            {
+                var attribute = field.GetCustomAttribute<DiagnosticCodeAttribute>();
+                if (attribute != null)
+                {
+                    var code = (string)field.GetValue(null)!;
+                    cache[code] = new DiagnosticCodeMetadata(
+                        attribute.Description,
+                        attribute.Level,
+                        attribute.RecommendedAction);
+                }
+            }
+        }
+
+        return cache;
     }
 }
 

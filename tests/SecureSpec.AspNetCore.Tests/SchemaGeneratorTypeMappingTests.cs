@@ -407,7 +407,7 @@ public class SchemaGeneratorTypeMappingTests
         Assert.Equal("depth", Assert.IsType<OpenApiString>(metadata["kind"]).Value);
 
         var events = logger.GetEvents();
-        var depthEvent = Assert.Single(events, e => e.Code == "SCH001-DEPTH");
+        var depthEvent = Assert.Single(events, e => e.Code == "SCH002");
         Assert.Equal(DiagnosticLevel.Warn, depthEvent.Level);
     }
 
@@ -429,7 +429,7 @@ public class SchemaGeneratorTypeMappingTests
 
         Assert.NotNull(limitedPlaceholder);
         Assert.Null(relaxedPlaceholder);
-        Assert.DoesNotContain(logger.GetEvents(), e => e.Code == "SCH001-DEPTH");
+        Assert.DoesNotContain(logger.GetEvents(), e => e.Code == "SCH002");
     }
 
     [Fact]

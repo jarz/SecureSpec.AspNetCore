@@ -101,7 +101,7 @@ Implement cycle detection and maximum traversal depth (default 32) with proper d
 
 **Acceptance Criteria:**
 - AC 427: Max depth constant enforces cut-off at level 32
-- AC 428: Depth exceed logs SCH001-DEPTH diagnostic
+- AC 428: Depth exceed logs SCH002 diagnostic
 - AC 429: Cycle detection prevents infinite traversal
 - AC 430: Multiple cycles produce single placeholder per cycle root
 - AC 431: Depth change recalculates schema traversal deterministically

@@ -207,7 +207,7 @@ public class PerformanceMonitorTests
         var monitor = new PerformanceMonitor(options, logger, "test-operation");
 
         // Act
-    #pragma warning disable CA2202 // Intentional double dispose for idempotence verification
+#pragma warning disable CA2202 // Intentional double dispose for idempotence verification
         monitor.Dispose();
         var eventsAfterFirstDispose = logger.GetEvents();
 
@@ -220,7 +220,7 @@ public class PerformanceMonitorTests
         var eventsAfterSecondDispose = logger.GetEvents();
         Assert.Equal(totalEventsAfterFirstDispose, eventsAfterSecondDispose.Count);
         Assert.Equal(1, eventsAfterSecondDispose.Count(e => e.Code == DiagnosticCodes.Performance.PerformanceMetrics));
-    #pragma warning restore CA2202
+#pragma warning restore CA2202
     }
 
     [Fact]
