@@ -3,6 +3,8 @@ using Microsoft.Extensions.Options;
 using SecureSpec.AspNetCore.Configuration;
 using SecureSpec.AspNetCore.Core;
 using SecureSpec.AspNetCore.Diagnostics;
+using SecureSpec.AspNetCore.Filters;
+using SecureSpec.AspNetCore.Schema;
 
 namespace SecureSpec.AspNetCore;
 
@@ -38,8 +40,88 @@ public static class SecureSpecServiceCollectionExtensions
             return new DocumentCache(logger, options.Cache.DefaultExpiration);
         });
 
-        // Register core services
-        // TODO: Register additional services as they are implemented
+        // Register schema generator as singleton
+        services.AddSingleton<SchemaGenerator>();
+
+        // Register discovery strategies as singletons
+        services.AddSingleton<IEndpointDiscoveryStrategy, ControllerDiscoveryStrategy>();
+        services.AddSingleton<IEndpointDiscoveryStrategy, MinimalApiDiscoveryStrategy>();
+
+        // Register metadata extractor as singleton
+        services.AddSingleton<MetadataExtractor>();
+
+        // Register API discovery engine as singleton
+        services.AddSingleton<ApiDiscoveryEngine>();
+
+        // Register filter pipeline as singleton
+        services.AddSingleton<FilterPipeline>(sp =>
+        {
+            var logger = sp.GetRequiredService<DiagnosticsLogger>();
+            var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
+            return new FilterPipeline(sp, options.Filters, logger);
+        });
+
+        // Register all filter types from the configuration
+        services.AddSingleton(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
+
+            // Register all schema filters
+            foreach (var filterType in options.Filters.SchemaFilters)
+            {
+                if (!services.Any(d => d.ServiceType == filterType))
+                {
+                    services.AddSingleton(filterType);
+                }
+            }
+
+            // Register all operation filters
+            foreach (var filterType in options.Filters.OperationFilters)
+            {
+                if (!services.Any(d => d.ServiceType == filterType))
+                {
+                    services.AddSingleton(filterType);
+                }
+            }
+
+            // Register all parameter filters
+            foreach (var filterType in options.Filters.ParameterFilters)
+            {
+                if (!services.Any(d => d.ServiceType == filterType))
+                {
+                    services.AddSingleton(filterType);
+                }
+            }
+
+            // Register all request body filters
+            foreach (var filterType in options.Filters.RequestBodyFilters)
+            {
+                if (!services.Any(d => d.ServiceType == filterType))
+                {
+                    services.AddSingleton(filterType);
+                }
+            }
+
+            // Register all document filters
+            foreach (var filterType in options.Filters.DocumentFilters)
+            {
+                if (!services.Any(d => d.ServiceType == filterType))
+                {
+                    services.AddSingleton(filterType);
+                }
+            }
+
+            // Register all pre-serialize filters
+            foreach (var filterType in options.Filters.PreSerializeFilters)
+            {
+                if (!services.Any(d => d.ServiceType == filterType))
+                {
+                    services.AddSingleton(filterType);
+                }
+            }
+
+            return new object(); // Dummy return for build action
+        });
 
         return services;
     }

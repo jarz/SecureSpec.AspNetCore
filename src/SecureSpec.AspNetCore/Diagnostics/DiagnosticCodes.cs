@@ -7,6 +7,72 @@ namespace SecureSpec.AspNetCore.Diagnostics;
 public static class DiagnosticCodes
 {
     // ============================================
+    // Discovery Codes (DISC)
+    // ============================================
+
+    /// <summary>
+    /// Discovery-specific diagnostic codes.
+    /// </summary>
+    internal static class Discovery
+    {
+        /// <summary>
+        /// Endpoints discovered successfully.
+        /// Severity: Info
+        /// Action: None
+        /// </summary>
+        public const string EndpointsDiscovered = "DISC001";
+
+        /// <summary>
+        /// Metadata extraction failed for endpoint.
+        /// Severity: Error
+        /// Action: Review endpoint configuration
+        /// </summary>
+        public const string MetadataExtractionFailed = "DISC002";
+
+        /// <summary>
+        /// Endpoint filtered (excluded/included).
+        /// Severity: Info
+        /// Action: Review filtering configuration
+        /// </summary>
+        public const string EndpointFiltered = "DISC003";
+
+        /// <summary>
+        /// Filter execution completed.
+        /// Severity: Info
+        /// Action: None
+        /// </summary>
+        public const string FilterExecutionCompleted = "DISC004";
+    }
+
+    /// <summary>
+    /// Endpoints discovered successfully.
+    /// Severity: Info
+    /// Action: None
+    /// </summary>
+    public const string EndpointsDiscovered = "DISC001";
+
+    /// <summary>
+    /// Metadata extraction failed for endpoint.
+    /// Severity: Error
+    /// Action: Review endpoint configuration
+    /// </summary>
+    public const string MetadataExtractionFailed = "DISC002";
+
+    /// <summary>
+    /// Endpoint filtered (excluded/included).
+    /// Severity: Info
+    /// Action: Review filtering configuration
+    /// </summary>
+    public const string EndpointFiltered = "DISC003";
+
+    /// <summary>
+    /// Filter execution completed.
+    /// Severity: Info
+    /// Action: None
+    /// </summary>
+    public const string FilterExecutionCompleted = "DISC004";
+
+    // ============================================
     // Security Codes (SEC)
     // ============================================
 
@@ -300,6 +366,10 @@ public static class DiagnosticCodes
     {
         return code switch
         {
+            EndpointsDiscovered => new("Endpoints discovered successfully", DiagnosticLevel.Info, "None"),
+            MetadataExtractionFailed => new("Metadata extraction failed for endpoint", DiagnosticLevel.Error, "Review endpoint configuration"),
+            EndpointFiltered => new("Endpoint filtered (excluded/included)", DiagnosticLevel.Info, "Review filtering configuration"),
+            FilterExecutionCompleted => new("Filter execution completed", DiagnosticLevel.Info, "None"),
             IntegrityCheckFailed => new("Integrity check failed", DiagnosticLevel.Critical, "Abort load"),
             SecurityRequirementsMutated => new("Operation security requirements mutated", DiagnosticLevel.Info, "Review security configuration"),
             CspMismatch => new("CSP mismatch or missing directives", DiagnosticLevel.Error, "Review policy"),
@@ -353,6 +423,10 @@ public static class DiagnosticCodes
     {
         return new[]
         {
+            EndpointsDiscovered,
+            MetadataExtractionFailed,
+            EndpointFiltered,
+            FilterExecutionCompleted,
             IntegrityCheckFailed,
             SecurityRequirementsMutated,
             CspMismatch,
