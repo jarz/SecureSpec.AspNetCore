@@ -13,6 +13,7 @@ namespace SecureSpec.AspNetCore;
 /// </summary>
 public static class SecureSpecServiceCollectionExtensions
 {
+    private static readonly object _registrationLock = new();
     /// <summary>
     /// Adds SecureSpec services to the specified <see cref="IServiceCollection"/>.
     /// </summary>
@@ -26,51 +27,57 @@ public static class SecureSpecServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configure);
 
-        // Configure options
-        services.Configure(configure);
-
-        // Register diagnostics logger as singleton
-        services.AddSingleton<DiagnosticsLogger>();
-
-        // Register document cache as singleton
-        services.AddSingleton<DocumentCache>(sp =>
+        // Prevent double registration (thread-safe)
+        lock (_registrationLock)
         {
-            var logger = sp.GetRequiredService<DiagnosticsLogger>();
-            var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
-            return new DocumentCache(logger, options.Cache.DefaultExpiration);
-        });
+            if (services.Any(d => d.ServiceType == typeof(ApiDiscoveryEngine)))
+            {
+                return services;
+            }
 
-        // Register schema generator as singleton
-        services.AddSingleton<SchemaGenerator>();
+            // Configure options
+            services.Configure(configure);
 
-        // Register discovery strategies as singletons
-        services.AddSingleton<IEndpointDiscoveryStrategy, ControllerDiscoveryStrategy>();
-        services.AddSingleton<IEndpointDiscoveryStrategy, MinimalApiDiscoveryStrategy>();
+            // Register diagnostics logger as singleton
+            services.AddSingleton<DiagnosticsLogger>();
 
-        // Register metadata extractor as singleton
-        services.AddSingleton<MetadataExtractor>();
+            // Register document cache as singleton
+            services.AddSingleton<DocumentCache>(sp =>
+            {
+                var logger = sp.GetRequiredService<DiagnosticsLogger>();
+                var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
+                return new DocumentCache(logger, options.Cache.DefaultExpiration);
+            });
 
-        // Register API discovery engine as singleton
-        services.AddSingleton<ApiDiscoveryEngine>();
+            // Register schema generator as singleton
+            services.AddSingleton<SchemaGenerator>();
 
-        // Register filter pipeline as singleton
-        services.AddSingleton<FilterPipeline>(sp =>
-        {
-            var logger = sp.GetRequiredService<DiagnosticsLogger>();
-            var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
-            return new FilterPipeline(sp, options.Filters, logger);
-        });
+            // Register discovery strategies as singletons
+            services.AddSingleton<IEndpointDiscoveryStrategy, ControllerDiscoveryStrategy>();
+            services.AddSingleton<IEndpointDiscoveryStrategy, MinimalApiDiscoveryStrategy>();
 
-        // Register all filter types from the configuration
-        services.AddSingleton(sp =>
-        {
-            var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
-            RegisterConfiguredFilters(services, options.Filters);
+            // Register metadata extractor as singleton
+            services.AddSingleton<MetadataExtractor>();
 
-            return new object(); // Dummy return for build action
-        });
+            // Register API discovery engine as singleton
+            services.AddSingleton<ApiDiscoveryEngine>();
 
-        return services;
+            // Register all filter types from the configuration BEFORE FilterPipeline
+            // Build temporary options to get filter types
+            var tempOptions = new SecureSpecOptions();
+            configure(tempOptions);
+            RegisterConfiguredFilters(services, tempOptions.Filters);
+
+            // Register filter pipeline as singleton (after filters are registered)
+            services.AddSingleton<FilterPipeline>(sp =>
+            {
+                var logger = sp.GetRequiredService<DiagnosticsLogger>();
+                var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
+                return new FilterPipeline(sp, options.Filters, logger);
+            });
+
+            return services;
+        }
     }
 
     private static void RegisterConfiguredFilters(IServiceCollection services, FilterCollection filters)
@@ -78,21 +85,61 @@ public static class SecureSpecServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(filters);
 
-        var registeredTypes = new HashSet<Type>(services.Select(descriptor => descriptor.ServiceType));
-
-        foreach (var filterType in GetConfiguredFilterTypes(filters).Where(filterType => registeredTypes.Add(filterType)))
+        // Get already registered implementation types
+        var registeredTypes = new HashSet<Type>(
+            services
+                .Where(d => d.ImplementationType != null)
+                .Select(d => d.ImplementationType!));
+        foreach (var filterType in GetConfiguredFilterTypes(filters).Where(filterType => !registeredTypes.Contains(filterType)))
         {
             services.AddSingleton(filterType);
+            registeredTypes.Add(filterType);
         }
     }
 
-    private static IEnumerable<Type> GetConfiguredFilterTypes(FilterCollection filters)
+    private static HashSet<Type> GetConfiguredFilterTypes(FilterCollection filters)
     {
-        return filters.SchemaFilters
-            .Concat(filters.OperationFilters)
-            .Concat(filters.ParameterFilters)
-            .Concat(filters.RequestBodyFilters)
-            .Concat(filters.DocumentFilters)
-            .Concat(filters.PreSerializeFilters);
+        // Use HashSet to automatically deduplicate filter types
+        var filterTypes = new HashSet<Type>();
+
+        AddValidatedFilterTypes<ISchemaFilter>(filterTypes, filters.SchemaFilters, nameof(filters.SchemaFilters));
+        AddValidatedFilterTypes<IOperationFilter>(filterTypes, filters.OperationFilters, nameof(filters.OperationFilters));
+        AddValidatedFilterTypes<IParameterFilter>(filterTypes, filters.ParameterFilters, nameof(filters.ParameterFilters));
+        AddValidatedFilterTypes<IRequestBodyFilter>(filterTypes, filters.RequestBodyFilters, nameof(filters.RequestBodyFilters));
+        AddValidatedFilterTypes<IDocumentFilter>(filterTypes, filters.DocumentFilters, nameof(filters.DocumentFilters));
+        AddValidatedFilterTypes<IPreSerializeFilter>(filterTypes, filters.PreSerializeFilters, nameof(filters.PreSerializeFilters));
+
+        return filterTypes;
+    }
+
+    private static void AddValidatedFilterTypes<TFilter>(HashSet<Type> filterTypes, IReadOnlyList<Type>? types, string collectionName)
+    {
+        if (types == null)
+        {
+            return;
+        }
+
+        foreach (var type in types)
+        {
+            ValidateFilterType<TFilter>(type, collectionName);
+            filterTypes.Add(type);
+        }
+    }
+
+    private static void ValidateFilterType<TFilter>(Type filterType, string collectionName)
+    {
+        if (filterType.IsAbstract || filterType.IsInterface)
+        {
+            throw new ArgumentException(
+                $"Filter type {filterType.Name} in {collectionName} cannot be abstract or an interface.",
+                nameof(filterType));
+        }
+
+        if (!typeof(TFilter).IsAssignableFrom(filterType))
+        {
+            throw new ArgumentException(
+                $"Type {filterType.Name} in {collectionName} does not implement {typeof(TFilter).Name}.",
+                nameof(filterType));
+        }
     }
 }
