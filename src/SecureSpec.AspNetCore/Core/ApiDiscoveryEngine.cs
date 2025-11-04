@@ -99,7 +99,7 @@ public class ApiDiscoveryEngine
         return filtered;
     }
 
-    private bool ShouldIncludeEndpoint(EndpointMetadata endpoint, DiscoveryOptions options, out string reason)
+    private static bool ShouldIncludeEndpoint(EndpointMetadata endpoint, DiscoveryOptions options, out string reason)
     {
         reason = string.Empty;
 
