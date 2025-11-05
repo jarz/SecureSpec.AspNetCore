@@ -100,7 +100,8 @@ public class MinimalApiDiscoveryStrategy : IEndpointDiscoveryStrategy
             return null;
         }
 
-        var httpMethod = httpMethodMetadata.HttpMethods[0];
+        var httpMethods = httpMethodMetadata.HttpMethods.ToList();
+        var httpMethod = httpMethods[0];
         var routePattern = routeEndpoint.RoutePattern.RawText ?? string.Empty;
 
         // Extract MethodInfo if available
@@ -109,6 +110,7 @@ public class MinimalApiDiscoveryStrategy : IEndpointDiscoveryStrategy
         return new EndpointMetadata
         {
             HttpMethod = httpMethod,
+            HttpMethods = httpMethods,
             RoutePattern = routePattern,
             OperationName = routeEndpoint.DisplayName,
             MethodInfo = methodInfo,

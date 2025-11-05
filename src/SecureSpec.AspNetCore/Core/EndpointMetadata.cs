@@ -12,8 +12,14 @@ public class EndpointMetadata
 {
     /// <summary>
     /// Gets or sets the HTTP method (GET, POST, etc.).
+    /// For endpoints that support multiple methods, this contains the primary method.
     /// </summary>
     public required string HttpMethod { get; set; }
+
+    /// <summary>
+    /// Gets or sets all HTTP methods supported by this endpoint.
+    /// </summary>
+    public IList<string> HttpMethods { get; set; } = new List<string>();
 
     /// <summary>
     /// Gets or sets the route pattern.
