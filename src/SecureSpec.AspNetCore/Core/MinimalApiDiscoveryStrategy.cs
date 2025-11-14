@@ -1,6 +1,8 @@
 #pragma warning disable CA1031 // Do not catch general exception types - intentional for metadata extraction resilience
 
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
+using SecureSpec.AspNetCore.Core.Attributes;
 using SecureSpec.AspNetCore.Diagnostics;
 using System.Reflection;
 
@@ -28,10 +30,36 @@ public class MinimalApiDiscoveryStrategy : IEndpointDiscoveryStrategy
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// This method is thread-safe and can be called concurrently.
+    /// </remarks>
     public Task<IEnumerable<EndpointMetadata>> DiscoverAsync(CancellationToken cancellationToken = default)
     {
+        // Check cancellation before any work
+        cancellationToken.ThrowIfCancellationRequested();
+
         var endpoints = new List<EndpointMetadata>();
-        var routeEndpoints = _endpointDataSource.Endpoints.OfType<RouteEndpoint>().ToList();
+
+        // Create snapshot to avoid collection modification issues
+        List<RouteEndpoint> routeEndpoints;
+        try
+        {
+            routeEndpoints = _endpointDataSource.Endpoints.OfType<RouteEndpoint>().ToList();
+        }
+        catch (ObjectDisposedException ex)
+        {
+            _diagnosticsLogger.LogError(
+                DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                $"EndpointDataSource was disposed during enumeration: {ex.Message}");
+            return Task.FromResult<IEnumerable<EndpointMetadata>>(endpoints);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _diagnosticsLogger.LogError(
+                DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                $"EndpointDataSource collection was modified during enumeration: {ex.Message}");
+            return Task.FromResult<IEnumerable<EndpointMetadata>>(endpoints);
+        }
 
         _diagnosticsLogger.LogInfo(
             DiagnosticCodes.Discovery.EndpointsDiscovered,
@@ -59,7 +87,7 @@ public class MinimalApiDiscoveryStrategy : IEndpointDiscoveryStrategy
             {
                 _diagnosticsLogger.LogError(
                     DiagnosticCodes.Discovery.MetadataExtractionFailed,
-                    $"Failed to extract metadata from minimal API endpoint {routeEndpoint.DisplayName}: {ex.Message}");
+                    $"Failed to extract metadata from minimal API endpoint {routeEndpoint.DisplayName ?? routeEndpoint.RoutePattern?.RawText ?? "<unknown>"}: {ex.Message}");
             }
         }
 
@@ -78,16 +106,29 @@ public class MinimalApiDiscoveryStrategy : IEndpointDiscoveryStrategy
             return false;
         }
 
-        // Skip framework endpoints (Blazor, SignalR, etc.)
-        var displayName = endpoint.DisplayName ?? string.Empty;
-        if (displayName.Contains("/_framework/", StringComparison.Ordinal) ||
-            displayName.Contains("/_blazor/", StringComparison.Ordinal) ||
-            displayName.Contains("/hub/", StringComparison.Ordinal))
+        // Defensive null check for metadata
+        if (endpoint.Metadata == null)
         {
             return false;
         }
 
-        // Check for HTTP method metadata
+        // Check for explicit exclusion attribute
+        if (endpoint.Metadata.GetMetadata<ExcludeFromSpecAttribute>() != null)
+        {
+            return false;
+        }
+
+        var routePattern = endpoint.RoutePattern.RawText;
+
+        // Only filter true framework internals that should NEVER be documented
+        // These are ASP.NET Core internal routes that are never user-facing APIs
+        if (routePattern.StartsWith("/_", StringComparison.OrdinalIgnoreCase))
+        {
+            // Framework routes like /_framework/, /_blazor/, /_vs/browserLink, etc.
+            return false;
+        }
+
+        // Check for HTTP method metadata - this is the primary indicator of an API endpoint
         var httpMethodMetadata = endpoint.Metadata.GetMetadata<IHttpMethodMetadata>();
         return httpMethodMetadata != null;
     }
@@ -95,27 +136,73 @@ public class MinimalApiDiscoveryStrategy : IEndpointDiscoveryStrategy
     private EndpointMetadata? CreateEndpointMetadata(RouteEndpoint routeEndpoint)
     {
         var httpMethodMetadata = routeEndpoint.Metadata.GetMetadata<IHttpMethodMetadata>();
-        if (httpMethodMetadata == null || httpMethodMetadata.HttpMethods.Count == 0)
+        if (httpMethodMetadata?.HttpMethods == null || httpMethodMetadata.HttpMethods.Count == 0)
         {
             return null;
         }
 
-        var httpMethods = httpMethodMetadata.HttpMethods.ToList();
-        var httpMethod = httpMethods[0];
-        var routePattern = routeEndpoint.RoutePattern.RawText ?? string.Empty;
+        // Clean up HTTP methods - accept any methods that ASP.NET Core accepts
+        // Use HashSet for efficient deduplication with case-sensitive comparison
+        // since we normalize to uppercase
+        var httpMethodsSet = new HashSet<string>(httpMethodMetadata.HttpMethods.Count, StringComparer.Ordinal);
+        string? firstMethod = null;
+
+        foreach (var method in httpMethodMetadata.HttpMethods)
+        {
+            if (string.IsNullOrWhiteSpace(method))
+            {
+                continue;
+            }
+
+            var normalizedMethod = method.Trim().ToUpperInvariant();
+            if (httpMethodsSet.Add(normalizedMethod))
+            {
+                // Capture the first unique method
+                firstMethod ??= normalizedMethod;
+            }
+        }
+
+        // Additional safety check after conversion
+        if (httpMethodsSet.Count == 0 || firstMethod == null)
+        {
+            return null;
+        }
+
+        // Use first method for HttpMethod property (for backward compatibility)
+        // Consumers should use HttpMethods collection for complete information
+        var httpMethod = firstMethod;
+        var httpMethods = new List<string>(httpMethodsSet);
+
+        // RoutePattern.RawText is guaranteed non-null by IsApiEndpoint validation
+        var routePattern = routeEndpoint.RoutePattern.RawText!;
 
         // Extract MethodInfo if available
         MethodInfo? methodInfo = routeEndpoint.Metadata.GetMetadata<MethodInfo>();
+
+        // Detect if this is actually a controller endpoint
+        var actionDescriptor = routeEndpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
+        var isMinimalApi = actionDescriptor == null;
+
+        // Better operation name fallback chain: DisplayName → MethodInfo.Name → RoutePattern
+        var operationName = routeEndpoint.DisplayName;
+        if (string.IsNullOrWhiteSpace(operationName))
+        {
+            operationName = methodInfo?.Name;
+            if (string.IsNullOrWhiteSpace(operationName))
+            {
+                operationName = routePattern;
+            }
+        }
 
         return new EndpointMetadata
         {
             HttpMethod = httpMethod,
             HttpMethods = httpMethods,
             RoutePattern = routePattern,
-            OperationName = routeEndpoint.DisplayName,
+            OperationName = operationName,
             MethodInfo = methodInfo,
             RouteEndpoint = routeEndpoint,
-            IsMinimalApi = true
+            IsMinimalApi = isMinimalApi
         };
     }
 }
