@@ -13,13 +13,16 @@ namespace SecureSpec.AspNetCore;
 /// </summary>
 public static class SecureSpecServiceCollectionExtensions
 {
-    private static readonly object _registrationLock = new();
     /// <summary>
     /// Adds SecureSpec services to the specified <see cref="IServiceCollection"/>.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
     /// <param name="configure">An <see cref="Action{SecureSpecOptions}"/> to configure the provided <see cref="SecureSpecOptions"/>.</param>
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    /// <remarks>
+    /// This method is idempotent and can be called multiple times on the same service collection.
+    /// Subsequent calls will skip registration if services are already registered, but will still apply configuration.
+    /// </remarks>
     public static IServiceCollection AddSecureSpec(
         this IServiceCollection services,
         Action<SecureSpecOptions> configure)
@@ -27,16 +30,17 @@ public static class SecureSpecServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configure);
 
-        // Prevent double registration (thread-safe)
-        lock (_registrationLock)
+        // Check if already registered - no lock needed as IServiceCollection operations are safe
+        // and each service collection instance is independent
+        if (services.Any(d => d.ServiceType == typeof(ApiDiscoveryEngine)))
         {
-            if (services.Any(d => d.ServiceType == typeof(ApiDiscoveryEngine)))
-            {
-                return services;
-            }
-
-            // Configure options
+            // Still apply configuration even if services are already registered
             services.Configure(configure);
+            return services;
+        }
+
+        // Configure options
+        services.Configure(configure);
 
             // Register diagnostics logger as singleton
             services.AddSingleton<DiagnosticsLogger>();
@@ -77,7 +81,6 @@ public static class SecureSpecServiceCollectionExtensions
             });
 
             return services;
-        }
     }
 
     private static void RegisterConfiguredFilters(IServiceCollection services, FilterCollection filters)
