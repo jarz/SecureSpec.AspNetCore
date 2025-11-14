@@ -111,7 +111,7 @@ Each diagnostic event has the following structure:
 | **Security** | SEC001 | Integrity check failed | Critical | Abort load |
 | **CSP** | CSP001 | CSP mismatch or missing directives | Error | Review policy |
 | **Schema** | SCH001 | SchemaId collision suffix applied | Info | Confirm stability |
-| **Schema** | SCH001-DEPTH | Schema generation exceeded maximum depth | Warn | Review schema structure |
+| **Schema** | SCH002 | Schema generation exceeded maximum depth | Warn | Review schema structure |
 | **Annotations** | ANN001 | DataAnnotations conflict (last wins) | Warn | Harmonize constraints |
 | **Rate Limiting** | LIM001 | Rate limit bucket enforced | Info | Evaluate thresholds |
 | **Rate Limiting** | LIM002 | Rate limit reset anomaly | Warn | Check time source |

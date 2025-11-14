@@ -20,7 +20,7 @@ public class DiagnosticsIntegrationTests
 
         // Act - Log integrity failure with sanitized data
         logger.LogCritical(
-            DiagnosticCodes.IntegrityCheckFailed,
+            DiagnosticCodes.Security.IntegrityCheckFailed,
             "Integrity check failed for OpenAPI document",
             context: new
             {
@@ -34,7 +34,7 @@ public class DiagnosticsIntegrationTests
         var events = logger.GetEvents();
         Assert.Single(events);
         Assert.Equal(DiagnosticLevel.Critical, events[0].Level);
-        Assert.Equal(DiagnosticCodes.IntegrityCheckFailed, events[0].Code);
+        Assert.Equal(DiagnosticCodes.Security.IntegrityCheckFailed, events[0].Code);
         Assert.True(events[0].Sanitized);
         Assert.NotNull(events[0].Context);
     }
@@ -47,7 +47,7 @@ public class DiagnosticsIntegrationTests
 
         // Act - Log schema collision (Info level per metadata)
         logger.LogInfo(
-            DiagnosticCodes.SchemaIdCollision,
+            DiagnosticCodes.Schema.SchemaIdCollision,
             "SchemaId collision detected, applying suffix",
             context: new
             {
@@ -72,7 +72,7 @@ public class DiagnosticsIntegrationTests
 
         // Act - Log rate limit enforcement
         logger.LogInfo(
-            DiagnosticCodes.RateLimitEnforced,
+            DiagnosticCodes.RateLimit.RateLimitEnforced,
             "Rate limit bucket enforced",
             context: new
             {
@@ -86,7 +86,7 @@ public class DiagnosticsIntegrationTests
         var events = logger.GetEvents();
         Assert.Single(events);
         Assert.Equal(DiagnosticLevel.Info, events[0].Level);
-        Assert.Equal(DiagnosticCodes.RateLimitEnforced, events[0].Code);
+        Assert.Equal(DiagnosticCodes.RateLimit.RateLimitEnforced, events[0].Code);
         dynamic? ctx = events[0].Context;
         Assert.NotNull(ctx);
     }
@@ -99,13 +99,13 @@ public class DiagnosticsIntegrationTests
         var logger = new DiagnosticsLogger(fakeTime);
 
         // Act - Log multiple events in sequence
-        logger.LogInfo(DiagnosticCodes.SchemaIdCollision, "First event");
+        logger.LogInfo(DiagnosticCodes.Schema.SchemaIdCollision, "First event");
         fakeTime.Advance(TimeSpan.FromMilliseconds(1));
-        logger.LogWarning(DiagnosticCodes.DataAnnotationsConflict, "Second event");
+        logger.LogWarning(DiagnosticCodes.Annotations.DataAnnotationsConflict, "Second event");
         fakeTime.Advance(TimeSpan.FromMilliseconds(1));
-        logger.LogError(DiagnosticCodes.NullabilityMismatch, "Third event");
+        logger.LogError(DiagnosticCodes.Nullability.NullabilityMismatch, "Third event");
         fakeTime.Advance(TimeSpan.FromMilliseconds(1));
-        logger.LogCritical(DiagnosticCodes.IntegrityCheckFailed, "Fourth event");
+        logger.LogCritical(DiagnosticCodes.Security.IntegrityCheckFailed, "Fourth event");
 
         // Assert
         var events = logger.GetEvents();
@@ -165,7 +165,7 @@ public class DiagnosticsIntegrationTests
 
         // Act
         logger.LogError(
-            DiagnosticCodes.CspMismatch,
+            DiagnosticCodes.Csp.CspMismatch,
             "CSP directive mismatch detected",
             context: new
             {
@@ -189,7 +189,7 @@ public class DiagnosticsIntegrationTests
 
         // Act
         logger.LogInfo(
-            DiagnosticCodes.VirtualizationThresholdTriggered,
+            DiagnosticCodes.Virtualization.VirtualizationThresholdTriggered,
             "Enum virtualization triggered due to size",
             context: new
             {
@@ -218,7 +218,7 @@ public class DiagnosticsIntegrationTests
         var sanitizedHash = DiagnosticsLogger.SanitizeHash(longHash);
 
         logger.LogError(
-            DiagnosticCodes.IntegrityCheckFailed,
+            DiagnosticCodes.Security.IntegrityCheckFailed,
             "File integrity violation",
             context: new
             {

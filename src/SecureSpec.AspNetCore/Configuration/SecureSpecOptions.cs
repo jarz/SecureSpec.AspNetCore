@@ -1,3 +1,5 @@
+using SecureSpec.AspNetCore.Filters;
+
 namespace SecureSpec.AspNetCore.Configuration;
 
 /// <summary>
@@ -9,6 +11,16 @@ public class SecureSpecOptions
     /// Gets the collection of OpenAPI documents to generate.
     /// </summary>
     public DocumentCollection Documents { get; } = new();
+
+    /// <summary>
+    /// Gets the filter collection for customizing OpenAPI generation.
+    /// </summary>
+    public FilterCollection Filters { get; } = new();
+
+    /// <summary>
+    /// Gets the discovery configuration options.
+    /// </summary>
+    public DiscoveryOptions Discovery { get; } = new();
 
     /// <summary>
     /// Gets security configuration options.
