@@ -317,7 +317,7 @@ public sealed class ExampleGenerator
 
         // Emit EXM001 diagnostic
         _diagnosticsLogger.LogWarning(
-            DiagnosticCodes.ExampleGeneration.ExampleGenerationThrottled,
+            DiagnosticCodes.ExampleGenerationThrottled,
             $"Example generation throttled after {elapsedMs}ms (budget: {_options.ExampleGenerationTimeoutMs}ms)",
             new
             {

@@ -52,7 +52,7 @@ public class FilterPipeline
             catch (Exception ex)
             {
                 _diagnosticsLogger.LogError(
-                    DiagnosticCodes.Discovery.FilterExecutionCompleted,
+                    DiagnosticCodes.FilterExecutionCompleted,
                     $"Schema filter {filterType.Name} failed: {ex.Message}");
             }
         }
@@ -78,7 +78,7 @@ public class FilterPipeline
             catch (Exception ex)
             {
                 _diagnosticsLogger.LogError(
-                    DiagnosticCodes.Discovery.FilterExecutionCompleted,
+                    DiagnosticCodes.FilterExecutionCompleted,
                     $"Operation filter {filterType.Name} failed: {ex.Message}");
             }
         }
@@ -104,7 +104,7 @@ public class FilterPipeline
             catch (Exception ex)
             {
                 _diagnosticsLogger.LogError(
-                    DiagnosticCodes.Discovery.FilterExecutionCompleted,
+                    DiagnosticCodes.FilterExecutionCompleted,
                     $"Parameter filter {filterType.Name} failed: {ex.Message}");
             }
         }
@@ -130,7 +130,7 @@ public class FilterPipeline
             catch (Exception ex)
             {
                 _diagnosticsLogger.LogError(
-                    DiagnosticCodes.Discovery.FilterExecutionCompleted,
+                    DiagnosticCodes.FilterExecutionCompleted,
                     $"Request body filter {filterType.Name} failed: {ex.Message}");
             }
         }
@@ -156,13 +156,13 @@ public class FilterPipeline
             catch (Exception ex)
             {
                 _diagnosticsLogger.LogError(
-                    DiagnosticCodes.Discovery.FilterExecutionCompleted,
+                    DiagnosticCodes.FilterExecutionCompleted,
                     $"Document filter {filterType.Name} failed: {ex.Message}");
             }
         }
 
         _diagnosticsLogger.LogInfo(
-            DiagnosticCodes.Discovery.FilterExecutionCompleted,
+            DiagnosticCodes.FilterExecutionCompleted,
             $"Applied {_filters.DocumentFilters.Count} document filters to document '{context.DocumentName}'.");
     }
 
@@ -186,13 +186,13 @@ public class FilterPipeline
             catch (Exception ex)
             {
                 _diagnosticsLogger.LogError(
-                    DiagnosticCodes.Discovery.FilterExecutionCompleted,
+                    DiagnosticCodes.FilterExecutionCompleted,
                     $"Pre-serialize filter {filterType.Name} failed: {ex.Message}");
             }
         }
 
         _diagnosticsLogger.LogInfo(
-            DiagnosticCodes.Discovery.FilterExecutionCompleted,
+            DiagnosticCodes.FilterExecutionCompleted,
             $"Applied {_filters.PreSerializeFilters.Count} pre-serialize filters to document '{context.DocumentName}'.");
     }
 }

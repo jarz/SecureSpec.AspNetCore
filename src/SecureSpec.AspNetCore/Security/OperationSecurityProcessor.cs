@@ -155,7 +155,7 @@ public class OperationSecurityProcessor
         string message)
     {
         _logger.LogInfo(
-            DiagnosticCodes.Security.SecurityRequirementsMutated,
+            DiagnosticCodes.SecurityRequirementsMutated,
             message,
             new
             {

@@ -61,14 +61,14 @@ public partial class ApiDiscoveryEngine
         var allEndpoints = await ExecuteDiscoveryStrategiesAsync(cancellationToken).ConfigureAwait(false);
 
         _diagnosticsLogger.LogInfo(
-            DiagnosticCodes.Discovery.EndpointsDiscovered,
+            DiagnosticCodes.EndpointsDiscovered,
             $"Discovered {allEndpoints.Count} total endpoints from all strategies.");
 
         // Filter endpoints
         var filteredEndpoints = FilterEndpoints(allEndpoints, cancellationToken);
 
         _diagnosticsLogger.LogInfo(
-            DiagnosticCodes.Discovery.EndpointsDiscovered,
+            DiagnosticCodes.EndpointsDiscovered,
             $"After filtering: {filteredEndpoints.Count} endpoints included.");
 
         // Enrich and validate endpoints
@@ -86,7 +86,7 @@ public partial class ApiDiscoveryEngine
         if (strategies.Count == 0)
         {
             _diagnosticsLogger.LogWarning(
-                DiagnosticCodes.Discovery.EndpointFiltered,
+                DiagnosticCodes.EndpointFiltered,
                 "No discovery strategies configured. No endpoints will be discovered.");
             return new List<EndpointMetadata>();
         }
@@ -154,7 +154,7 @@ public partial class ApiDiscoveryEngine
         if (string.IsNullOrWhiteSpace(normalizedMethod) || string.IsNullOrWhiteSpace(normalizedRoute))
         {
             _diagnosticsLogger.LogWarning(
-                DiagnosticCodes.Discovery.EndpointsDiscovered,
+                DiagnosticCodes.EndpointsDiscovered,
                 "Skipped endpoint with missing HTTP method or route pattern during discovery.");
             return;
         }
@@ -169,7 +169,7 @@ public partial class ApiDiscoveryEngine
         else
         {
             _diagnosticsLogger.LogInfo(
-                DiagnosticCodes.Discovery.EndpointFiltered,
+                DiagnosticCodes.EndpointFiltered,
                 $"Duplicate endpoint ignored: {normalizedMethod} {normalizedRoute}");
         }
     }
@@ -201,7 +201,7 @@ public partial class ApiDiscoveryEngine
             else
             {
                 _diagnosticsLogger.LogInfo(
-                    DiagnosticCodes.Discovery.EndpointFiltered,
+                    DiagnosticCodes.EndpointFiltered,
                     $"Excluded endpoint {endpoint.HttpMethod ?? NullPlaceholder} {endpoint.RoutePattern ?? NullPlaceholder}: {reason}");
             }
         }
@@ -369,7 +369,7 @@ public partial class ApiDiscoveryEngine
 #pragma warning restore CA1031 // Do not catch general exception types
         {
             _diagnosticsLogger.LogWarning(
-                DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                DiagnosticCodes.MetadataExtractionFailed,
                 $"Failed to enrich metadata for {originalMethod} {originalRoute}: {ex.GetType().Name}");
         }
         finally
@@ -389,7 +389,7 @@ public partial class ApiDiscoveryEngine
         if (endpoint == null)
         {
             _diagnosticsLogger.LogError(
-                DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                DiagnosticCodes.MetadataExtractionFailed,
                 $"Endpoint {originalMethod ?? NullPlaceholder} {originalRoute ?? NullPlaceholder} became null during enrichment. This should not happen.");
             // Cannot process null endpoint, but we need to track it for removal
             // Note: We can't add null to endpointsToRemove, so filteredEndpoints will need null filtering
@@ -399,7 +399,7 @@ public partial class ApiDiscoveryEngine
         if (string.IsNullOrWhiteSpace(endpoint.HttpMethod) || string.IsNullOrWhiteSpace(endpoint.RoutePattern))
         {
             _diagnosticsLogger.LogError(
-                DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                DiagnosticCodes.MetadataExtractionFailed,
                 $"Endpoint {originalMethod ?? NullPlaceholder} {originalRoute ?? NullPlaceholder} has invalid state after enrichment: required properties were modified to invalid values. Removing from results.");
             endpointsToRemove.Add(endpoint);
             return;
@@ -410,7 +410,7 @@ public partial class ApiDiscoveryEngine
             !string.Equals(endpoint.RoutePattern, originalRoute, StringComparison.OrdinalIgnoreCase))
         {
             _diagnosticsLogger.LogWarning(
-                DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                DiagnosticCodes.MetadataExtractionFailed,
                 $"Endpoint identity changed during enrichment from {originalMethod} {originalRoute} to {endpoint.HttpMethod} {endpoint.RoutePattern}");
         }
 
@@ -425,7 +425,7 @@ public partial class ApiDiscoveryEngine
 #pragma warning restore CA1031 // Do not catch general exception types
         {
             _diagnosticsLogger.LogWarning(
-                DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                DiagnosticCodes.MetadataExtractionFailed,
                 $"Failed to freeze collections for {endpoint.HttpMethod} {endpoint.RoutePattern}: {freezeEx.GetType().Name}");
             // Collection freezing failed, but endpoint is still valid - add to removal list to be safe
             endpointsToRemove.Add(endpoint);
@@ -446,14 +446,14 @@ public partial class ApiDiscoveryEngine
         if (nullCount > 0)
         {
             _diagnosticsLogger.LogError(
-                DiagnosticCodes.Discovery.EndpointsDiscovered,
+                DiagnosticCodes.EndpointsDiscovered,
                 $"Removed {nullCount} null endpoints after enrichment.");
         }
 
         if (endpointsToRemove.Count > 0)
         {
             _diagnosticsLogger.LogWarning(
-                DiagnosticCodes.Discovery.EndpointsDiscovered,
+                DiagnosticCodes.EndpointsDiscovered,
                 $"Removed {endpointsToRemove.Count} corrupted endpoints after enrichment. Final count: {endpoints.Count}");
         }
     }

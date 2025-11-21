@@ -92,7 +92,7 @@ public class FilterPipelineTests
         Assert.Contains("x-test-applied", document.Extensions.Keys);
 
         var events = logger.GetEvents();
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.Discovery.FilterExecutionCompleted);
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.FilterExecutionCompleted);
     }
 
     [Fact]
@@ -117,7 +117,7 @@ public class FilterPipelineTests
         Assert.Contains("x-test-applied", document.Extensions.Keys);
 
         var events = logger.GetEvents();
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.Discovery.FilterExecutionCompleted);
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.FilterExecutionCompleted);
     }
 
     [Fact]

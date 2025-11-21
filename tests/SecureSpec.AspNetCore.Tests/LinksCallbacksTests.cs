@@ -16,7 +16,7 @@ public class LinksCallbacksTests
     public void CircularLinkDetection_LogsDiagnostic()
     {
         // Arrange - This test validates that the diagnostic code exists and is properly configured
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.CircularLinkDetected);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.CircularLinkDetected);
 
         // Assert
         Assert.NotNull(metadata);
@@ -31,7 +31,7 @@ public class LinksCallbacksTests
     public void LinkOperationRefFallback_UsesOperationRefWhenOperationIdMissing()
     {
         // Arrange - This test validates that the diagnostic code exists for operationRef fallback
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.LinkOperationRefFallback);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkOperationRefFallback);
 
         // Assert
         Assert.NotNull(metadata);
@@ -46,7 +46,7 @@ public class LinksCallbacksTests
     public void LinkMissingReference_LogsWarningAndRendersStub()
     {
         // Arrange - This test validates that the diagnostic code exists for missing references
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.LinkMissingReference);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkMissingReference);
 
         // Assert
         Assert.NotNull(metadata);
@@ -61,7 +61,7 @@ public class LinksCallbacksTests
     public void CallbackReadOnly_LogsInformational()
     {
         // Arrange - This test validates that the diagnostic code exists for read-only callbacks
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Callback.CallbackReadOnly);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.CallbackReadOnly);
 
         // Assert
         Assert.NotNull(metadata);
@@ -76,7 +76,7 @@ public class LinksCallbacksTests
     public void LinkBrokenReference_EmitsErrorAndOmitsReference()
     {
         // Arrange - This test validates that the diagnostic code exists for broken link references
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.LinkBrokenReference);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkBrokenReference);
 
         // Assert
         Assert.NotNull(metadata);
@@ -89,7 +89,7 @@ public class LinksCallbacksTests
     public void CallbackBrokenReference_EmitsErrorAndOmitsReference()
     {
         // Arrange - This test validates that the diagnostic code exists for broken callback references
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Callback.CallbackBrokenReference);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.CallbackBrokenReference);
 
         // Assert
         Assert.NotNull(metadata);
@@ -102,7 +102,7 @@ public class LinksCallbacksTests
     public void LinkExternalReference_WarnsAboutUnsupportedReference()
     {
         // Arrange - This test validates that the diagnostic code exists for external link references
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.LinkExternalReference);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkExternalReference);
 
         // Assert
         Assert.NotNull(metadata);
@@ -136,13 +136,13 @@ public class LinksCallbacksTests
         // Arrange
         var codes = new[]
         {
-            DiagnosticCodes.Link.CircularLinkDetected,
-            DiagnosticCodes.Link.LinkOperationRefFallback,
-            DiagnosticCodes.Link.LinkMissingReference,
-            DiagnosticCodes.Link.LinkBrokenReference,
-            DiagnosticCodes.Link.LinkExternalReference,
-            DiagnosticCodes.Callback.CallbackReadOnly,
-            DiagnosticCodes.Callback.CallbackBrokenReference
+            DiagnosticCodes.CircularLinkDetected,
+            DiagnosticCodes.LinkOperationRefFallback,
+            DiagnosticCodes.LinkMissingReference,
+            DiagnosticCodes.LinkBrokenReference,
+            DiagnosticCodes.LinkExternalReference,
+            DiagnosticCodes.CallbackReadOnly,
+            DiagnosticCodes.CallbackBrokenReference
         };
 
         // Act & Assert
@@ -162,41 +162,41 @@ public class LinksCallbacksTests
     public void LinksAndCallbacksCodes_HaveAppropriatePrefix()
     {
         // Assert - Link codes should start with LNK
-        Assert.StartsWith("LNK", DiagnosticCodes.Link.CircularLinkDetected);
-        Assert.StartsWith("LNK", DiagnosticCodes.Link.LinkOperationRefFallback);
-        Assert.StartsWith("LNK", DiagnosticCodes.Link.LinkMissingReference);
-        Assert.StartsWith("LNK", DiagnosticCodes.Link.LinkBrokenReference);
-        Assert.StartsWith("LNK", DiagnosticCodes.Link.LinkExternalReference);
+        Assert.StartsWith("LNK", DiagnosticCodes.CircularLinkDetected);
+        Assert.StartsWith("LNK", DiagnosticCodes.LinkOperationRefFallback);
+        Assert.StartsWith("LNK", DiagnosticCodes.LinkMissingReference);
+        Assert.StartsWith("LNK", DiagnosticCodes.LinkBrokenReference);
+        Assert.StartsWith("LNK", DiagnosticCodes.LinkExternalReference);
 
         // Assert - Callback codes should start with CBK
-        Assert.StartsWith("CBK", DiagnosticCodes.Callback.CallbackReadOnly);
-        Assert.StartsWith("CBK", DiagnosticCodes.Callback.CallbackBrokenReference);
+        Assert.StartsWith("CBK", DiagnosticCodes.CallbackReadOnly);
+        Assert.StartsWith("CBK", DiagnosticCodes.CallbackBrokenReference);
     }
 
     [Fact]
     public void LinksAndCallbacksCodes_AreSequentiallyNumbered()
     {
         // Assert - Link codes are numbered sequentially
-        Assert.Equal("LNK001", DiagnosticCodes.Link.CircularLinkDetected);
-        Assert.Equal("LNK002", DiagnosticCodes.Link.LinkOperationRefFallback);
-        Assert.Equal("LNK003", DiagnosticCodes.Link.LinkMissingReference);
-        Assert.Equal("LNK004", DiagnosticCodes.Link.LinkBrokenReference);
-        Assert.Equal("LNK005", DiagnosticCodes.Link.LinkExternalReference);
+        Assert.Equal("LNK001", DiagnosticCodes.CircularLinkDetected);
+        Assert.Equal("LNK002", DiagnosticCodes.LinkOperationRefFallback);
+        Assert.Equal("LNK003", DiagnosticCodes.LinkMissingReference);
+        Assert.Equal("LNK004", DiagnosticCodes.LinkBrokenReference);
+        Assert.Equal("LNK005", DiagnosticCodes.LinkExternalReference);
 
         // Assert - Callback codes are numbered sequentially
-        Assert.Equal("CBK001", DiagnosticCodes.Callback.CallbackReadOnly);
-        Assert.Equal("CBK002", DiagnosticCodes.Callback.CallbackBrokenReference);
+        Assert.Equal("CBK001", DiagnosticCodes.CallbackReadOnly);
+        Assert.Equal("CBK002", DiagnosticCodes.CallbackBrokenReference);
     }
 
     [Fact]
     public void LinkCodes_HaveAppropriateLogLevels()
     {
         // Arrange & Act
-        var circularLink = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.CircularLinkDetected);
-        var operationRefFallback = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.LinkOperationRefFallback);
-        var missingReference = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.LinkMissingReference);
-        var brokenReference = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.LinkBrokenReference);
-        var externalReference = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.LinkExternalReference);
+        var circularLink = DiagnosticCodes.GetMetadata(DiagnosticCodes.CircularLinkDetected);
+        var operationRefFallback = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkOperationRefFallback);
+        var missingReference = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkMissingReference);
+        var brokenReference = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkBrokenReference);
+        var externalReference = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkExternalReference);
 
         // Assert
         Assert.Equal(DiagnosticLevel.Warn, circularLink!.Level);
@@ -210,8 +210,8 @@ public class LinksCallbacksTests
     public void CallbackCodes_HaveAppropriateLogLevels()
     {
         // Arrange & Act
-        var readOnly = DiagnosticCodes.GetMetadata(DiagnosticCodes.Callback.CallbackReadOnly);
-        var brokenReference = DiagnosticCodes.GetMetadata(DiagnosticCodes.Callback.CallbackBrokenReference);
+        var readOnly = DiagnosticCodes.GetMetadata(DiagnosticCodes.CallbackReadOnly);
+        var brokenReference = DiagnosticCodes.GetMetadata(DiagnosticCodes.CallbackBrokenReference);
 
         // Assert
         Assert.Equal(DiagnosticLevel.Info, readOnly!.Level);

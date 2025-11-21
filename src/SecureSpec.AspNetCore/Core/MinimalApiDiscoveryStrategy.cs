@@ -49,20 +49,20 @@ public class MinimalApiDiscoveryStrategy : IEndpointDiscoveryStrategy
         catch (ObjectDisposedException ex)
         {
             _diagnosticsLogger.LogError(
-                DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                DiagnosticCodes.MetadataExtractionFailed,
                 $"EndpointDataSource was disposed during enumeration: {ex.Message}");
             return Task.FromResult<IEnumerable<EndpointMetadata>>(endpoints);
         }
         catch (InvalidOperationException ex)
         {
             _diagnosticsLogger.LogError(
-                DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                DiagnosticCodes.MetadataExtractionFailed,
                 $"EndpointDataSource collection was modified during enumeration: {ex.Message}");
             return Task.FromResult<IEnumerable<EndpointMetadata>>(endpoints);
         }
 
         _diagnosticsLogger.LogInfo(
-            DiagnosticCodes.Discovery.EndpointsDiscovered,
+            DiagnosticCodes.EndpointsDiscovered,
             $"Discovering minimal API endpoints. Found {routeEndpoints.Count} route endpoints.");
 
         foreach (var routeEndpoint in routeEndpoints)
@@ -86,13 +86,13 @@ public class MinimalApiDiscoveryStrategy : IEndpointDiscoveryStrategy
             catch (Exception ex)
             {
                 _diagnosticsLogger.LogError(
-                    DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                    DiagnosticCodes.MetadataExtractionFailed,
                     $"Failed to extract metadata from minimal API endpoint {routeEndpoint.DisplayName ?? routeEndpoint.RoutePattern?.RawText ?? "<unknown>"}: {ex.Message}");
             }
         }
 
         _diagnosticsLogger.LogInfo(
-            DiagnosticCodes.Discovery.EndpointsDiscovered,
+            DiagnosticCodes.EndpointsDiscovered,
             $"Minimal API discovery completed. Discovered {endpoints.Count} endpoints.");
 
         return Task.FromResult<IEnumerable<EndpointMetadata>>(endpoints);

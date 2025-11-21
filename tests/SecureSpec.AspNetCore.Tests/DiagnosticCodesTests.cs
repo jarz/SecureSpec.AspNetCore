@@ -60,7 +60,7 @@ public class DiagnosticCodesTests
     public void SEC001_IntegrityCheckFailed_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Security.IntegrityCheckFailed);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.IntegrityCheckFailed);
 
         // Assert
         Assert.NotNull(metadata);
@@ -73,7 +73,7 @@ public class DiagnosticCodesTests
     public void SEC002_SecurityRequirementsMutated_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Security.SecurityRequirementsMutated);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.SecurityRequirementsMutated);
 
         // Assert
         Assert.NotNull(metadata);
@@ -88,7 +88,7 @@ public class DiagnosticCodesTests
     public void CSP001_CspMismatch_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Csp.CspMismatch);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.CspMismatch);
 
         // Assert
         Assert.NotNull(metadata);
@@ -103,7 +103,7 @@ public class DiagnosticCodesTests
     public void SCH001_SchemaIdCollision_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Schema.SchemaIdCollision);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.SchemaIdCollision);
 
         // Assert
         Assert.NotNull(metadata);
@@ -116,7 +116,7 @@ public class DiagnosticCodesTests
     public void SCH002_SchemaDepthExceeded_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Schema.SchemaDepthExceeded);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.SchemaDepthExceeded);
 
         // Assert
         Assert.NotNull(metadata);
@@ -131,7 +131,7 @@ public class DiagnosticCodesTests
     public void ANN001_DataAnnotationsConflict_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Annotations.DataAnnotationsConflict);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.DataAnnotationsConflict);
 
         // Assert
         Assert.NotNull(metadata);
@@ -146,7 +146,7 @@ public class DiagnosticCodesTests
     public void LIM001_RateLimitEnforced_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.RateLimit.RateLimitEnforced);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.RateLimitEnforced);
 
         // Assert
         Assert.NotNull(metadata);
@@ -159,7 +159,7 @@ public class DiagnosticCodesTests
     public void LIM002_RateLimitResetAnomaly_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.RateLimit.RateLimitResetAnomaly);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.RateLimitResetAnomaly);
 
         // Assert
         Assert.NotNull(metadata);
@@ -174,7 +174,7 @@ public class DiagnosticCodesTests
     public void MAP001_MapTypeOverride_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.TypeMapping.MapTypeOverride);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.MapTypeOverride);
 
         // Assert
         Assert.NotNull(metadata);
@@ -189,7 +189,7 @@ public class DiagnosticCodesTests
     public void NRT001_NullabilityMismatch_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Nullability.NullabilityMismatch);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.NullabilityMismatch);
 
         // Assert
         Assert.NotNull(metadata);
@@ -204,7 +204,7 @@ public class DiagnosticCodesTests
     public void EXM001_ExampleGenerationThrottled_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.ExampleGeneration.ExampleGenerationThrottled);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.ExampleGenerationThrottled);
 
         // Assert
         Assert.NotNull(metadata);
@@ -219,7 +219,7 @@ public class DiagnosticCodesTests
     public void VIRT001_VirtualizationThresholdTriggered_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Virtualization.VirtualizationThresholdTriggered);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.VirtualizationThresholdTriggered);
 
         // Assert
         Assert.NotNull(metadata);
@@ -234,7 +234,7 @@ public class DiagnosticCodesTests
     public void RET001_RetentionSizePurge_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Retention.RetentionSizePurge);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.RetentionSizePurge);
 
         // Assert
         Assert.NotNull(metadata);
@@ -247,7 +247,7 @@ public class DiagnosticCodesTests
     public void RET002_RetentionAgePurge_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Retention.RetentionAgePurge);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.RetentionAgePurge);
 
         // Assert
         Assert.NotNull(metadata);
@@ -262,7 +262,7 @@ public class DiagnosticCodesTests
     public void POL001_PolicyToScopeMapping_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Policy.PolicyToScopeMapping);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.PolicyToScopeMapping);
 
         // Assert
         Assert.NotNull(metadata);
@@ -277,7 +277,7 @@ public class DiagnosticCodesTests
     public void CFG001_InvalidPerDocRouteTemplate_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Configuration.InvalidPerDocRouteTemplate);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.InvalidPerDocRouteTemplate);
 
         // Assert
         Assert.NotNull(metadata);
@@ -292,7 +292,7 @@ public class DiagnosticCodesTests
     public void SAN001_DisallowedHeadInjection_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Sanitization.DisallowedHeadInjection);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.DisallowedHeadInjection);
 
         // Assert
         Assert.NotNull(metadata);
@@ -305,7 +305,7 @@ public class DiagnosticCodesTests
     public void HD001_DisallowedHeadInjectionAttempt_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Sanitization.DisallowedHeadInjectionAttempt);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.DisallowedHeadInjectionAttempt);
 
         // Assert
         Assert.NotNull(metadata);
@@ -320,7 +320,7 @@ public class DiagnosticCodesTests
     public void BND001_MultipartFieldCountExceeded_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Boundary.MultipartFieldCountExceeded);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.MultipartFieldCountExceeded);
 
         // Assert
         Assert.NotNull(metadata);
@@ -335,7 +335,7 @@ public class DiagnosticCodesTests
     public void LNK001_CircularLinkDetected_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.CircularLinkDetected);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.CircularLinkDetected);
 
         // Assert
         Assert.NotNull(metadata);
@@ -348,7 +348,7 @@ public class DiagnosticCodesTests
     public void LNK002_LinkOperationRefFallback_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.LinkOperationRefFallback);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkOperationRefFallback);
 
         // Assert
         Assert.NotNull(metadata);
@@ -361,7 +361,7 @@ public class DiagnosticCodesTests
     public void LNK003_LinkMissingReference_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.LinkMissingReference);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkMissingReference);
 
         // Assert
         Assert.NotNull(metadata);
@@ -374,7 +374,7 @@ public class DiagnosticCodesTests
     public void LNK004_LinkBrokenReference_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.LinkBrokenReference);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkBrokenReference);
 
         // Assert
         Assert.NotNull(metadata);
@@ -387,7 +387,7 @@ public class DiagnosticCodesTests
     public void LNK005_LinkExternalReference_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Link.LinkExternalReference);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.LinkExternalReference);
 
         // Assert
         Assert.NotNull(metadata);
@@ -402,7 +402,7 @@ public class DiagnosticCodesTests
     public void CBK001_CallbackReadOnly_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Callback.CallbackReadOnly);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.CallbackReadOnly);
 
         // Assert
         Assert.NotNull(metadata);
@@ -415,7 +415,7 @@ public class DiagnosticCodesTests
     public void CBK002_CallbackBrokenReference_HasCorrectMetadata()
     {
         // Act
-        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.Callback.CallbackBrokenReference);
+        var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.CallbackBrokenReference);
 
         // Assert
         Assert.NotNull(metadata);

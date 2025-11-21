@@ -42,45 +42,45 @@ public static class SecureSpecServiceCollectionExtensions
         // Configure options
         services.Configure(configure);
 
-            // Register diagnostics logger as singleton
-            services.AddSingleton<DiagnosticsLogger>();
+        // Register diagnostics logger as singleton
+        services.AddSingleton<DiagnosticsLogger>();
 
-            // Register document cache as singleton
-            services.AddSingleton<DocumentCache>(sp =>
-            {
-                var logger = sp.GetRequiredService<DiagnosticsLogger>();
-                var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
-                return new DocumentCache(logger, options.Cache.DefaultExpiration);
-            });
+        // Register document cache as singleton
+        services.AddSingleton<DocumentCache>(sp =>
+        {
+            var logger = sp.GetRequiredService<DiagnosticsLogger>();
+            var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
+            return new DocumentCache(logger, options.Cache.DefaultExpiration);
+        });
 
-            // Register schema generator as singleton
-            services.AddSingleton<SchemaGenerator>();
+        // Register schema generator as singleton
+        services.AddSingleton<SchemaGenerator>();
 
-            // Register discovery strategies as singletons
-            services.AddSingleton<IEndpointDiscoveryStrategy, ControllerDiscoveryStrategy>();
-            services.AddSingleton<IEndpointDiscoveryStrategy, MinimalApiDiscoveryStrategy>();
+        // Register discovery strategies as singletons
+        services.AddSingleton<IEndpointDiscoveryStrategy, ControllerDiscoveryStrategy>();
+        services.AddSingleton<IEndpointDiscoveryStrategy, MinimalApiDiscoveryStrategy>();
 
-            // Register metadata extractor as singleton
-            services.AddSingleton<MetadataExtractor>();
+        // Register metadata extractor as singleton
+        services.AddSingleton<MetadataExtractor>();
 
-            // Register API discovery engine as singleton
-            services.AddSingleton<ApiDiscoveryEngine>();
+        // Register API discovery engine as singleton
+        services.AddSingleton<ApiDiscoveryEngine>();
 
-            // Register all filter types from the configuration BEFORE FilterPipeline
-            // Build temporary options to get filter types
-            var tempOptions = new SecureSpecOptions();
-            configure(tempOptions);
-            RegisterConfiguredFilters(services, tempOptions.Filters);
+        // Register all filter types from the configuration BEFORE FilterPipeline
+        // Build temporary options to get filter types
+        var tempOptions = new SecureSpecOptions();
+        configure(tempOptions);
+        RegisterConfiguredFilters(services, tempOptions.Filters);
 
-            // Register filter pipeline as singleton (after filters are registered)
-            services.AddSingleton<FilterPipeline>(sp =>
-            {
-                var logger = sp.GetRequiredService<DiagnosticsLogger>();
-                var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
-                return new FilterPipeline(sp, options.Filters, logger);
-            });
+        // Register filter pipeline as singleton (after filters are registered)
+        services.AddSingleton<FilterPipeline>(sp =>
+        {
+            var logger = sp.GetRequiredService<DiagnosticsLogger>();
+            var options = sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value;
+            return new FilterPipeline(sp, options.Filters, logger);
+        });
 
-            return services;
+        return services;
     }
 
     private static void RegisterConfiguredFilters(IServiceCollection services, FilterCollection filters)

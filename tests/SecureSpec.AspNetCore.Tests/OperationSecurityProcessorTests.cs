@@ -133,7 +133,7 @@ public class OperationSecurityProcessorTests
         // Assert - Should log mutation
         var diagnostics = _logger.GetEvents();
         Assert.Contains(diagnostics, d =>
-            d.Code == DiagnosticCodes.Security.SecurityRequirementsMutated &&
+            d.Code == DiagnosticCodes.SecurityRequirementsMutated &&
             d.Message.Contains("cleared global security requirements", StringComparison.Ordinal));
     }
 
@@ -152,7 +152,7 @@ public class OperationSecurityProcessorTests
 
         // Assert - Should not log mutation when there was no global security to override
         var diagnostics = _logger.GetEvents();
-        Assert.DoesNotContain(diagnostics, d => d.Code == DiagnosticCodes.Security.SecurityRequirementsMutated);
+        Assert.DoesNotContain(diagnostics, d => d.Code == DiagnosticCodes.SecurityRequirementsMutated);
     }
 
     #endregion
@@ -327,7 +327,7 @@ public class OperationSecurityProcessorTests
         // Assert - Should log SEC002 diagnostic
         var diagnostics = _logger.GetEvents();
         Assert.Contains(diagnostics, d =>
-            d.Code == DiagnosticCodes.Security.SecurityRequirementsMutated &&
+            d.Code == DiagnosticCodes.SecurityRequirementsMutated &&
             d.Message.Contains("overrode global security requirements", StringComparison.Ordinal));
     }
 
@@ -354,7 +354,7 @@ public class OperationSecurityProcessorTests
 
         // Assert - Log should contain operation ID
         var diagnostics = _logger.GetEvents();
-        var mutationLog = diagnostics.FirstOrDefault(d => d.Code == DiagnosticCodes.Security.SecurityRequirementsMutated);
+        var mutationLog = diagnostics.FirstOrDefault(d => d.Code == DiagnosticCodes.SecurityRequirementsMutated);
         Assert.NotNull(mutationLog);
         Assert.Contains("GetUsers", mutationLog.Message, StringComparison.Ordinal);
     }
@@ -377,7 +377,7 @@ public class OperationSecurityProcessorTests
 
         // Assert - Should not log mutation when there's no global security to override
         var diagnostics = _logger.GetEvents();
-        Assert.DoesNotContain(diagnostics, d => d.Code == DiagnosticCodes.Security.SecurityRequirementsMutated);
+        Assert.DoesNotContain(diagnostics, d => d.Code == DiagnosticCodes.SecurityRequirementsMutated);
     }
 
     [Fact]
@@ -400,7 +400,7 @@ public class OperationSecurityProcessorTests
 
         // Assert - Inheriting global security should not log mutation
         var diagnostics = _logger.GetEvents();
-        Assert.DoesNotContain(diagnostics, d => d.Code == DiagnosticCodes.Security.SecurityRequirementsMutated);
+        Assert.DoesNotContain(diagnostics, d => d.Code == DiagnosticCodes.SecurityRequirementsMutated);
     }
 
     #endregion
@@ -545,7 +545,7 @@ public class OperationSecurityProcessorTests
 
         // Should have logged mutation
         var diagnostics = _logger.GetEvents();
-        Assert.Contains(diagnostics, d => d.Code == DiagnosticCodes.Security.SecurityRequirementsMutated);
+        Assert.Contains(diagnostics, d => d.Code == DiagnosticCodes.SecurityRequirementsMutated);
     }
 
     [Fact]

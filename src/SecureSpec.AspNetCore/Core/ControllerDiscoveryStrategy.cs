@@ -36,7 +36,7 @@ public class ControllerDiscoveryStrategy : IEndpointDiscoveryStrategy
         var actionDescriptors = _actionDescriptorProvider.ActionDescriptors.Items.ToList();
 
         _diagnosticsLogger.LogInfo(
-            DiagnosticCodes.Discovery.EndpointsDiscovered,
+            DiagnosticCodes.EndpointsDiscovered,
             $"Discovering controller endpoints. Found {actionDescriptors.Count} action descriptors.");
 
         var processedCount = 0;
@@ -69,7 +69,7 @@ public class ControllerDiscoveryStrategy : IEndpointDiscoveryStrategy
                      !HasExplicitRouteAttribute(controllerAction)))
                 {
                     _diagnosticsLogger.LogWarning(
-                        DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                        DiagnosticCodes.MetadataExtractionFailed,
                         $"Controller action {actionDisplayName} has no route pattern. Skipping for safety.");
                     continue;
                 }
@@ -77,7 +77,7 @@ public class ControllerDiscoveryStrategy : IEndpointDiscoveryStrategy
                 if (metadata.HttpMethods.Count == 0)
                 {
                     _diagnosticsLogger.LogWarning(
-                        DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                        DiagnosticCodes.MetadataExtractionFailed,
                         $"Controller action {actionDisplayName} has no HTTP methods. Skipping for safety.");
                     continue;
                 }
@@ -88,13 +88,13 @@ public class ControllerDiscoveryStrategy : IEndpointDiscoveryStrategy
             {
                 var actionDisplayName = GetActionDisplayName(controllerAction);
                 _diagnosticsLogger.LogError(
-                    DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                    DiagnosticCodes.MetadataExtractionFailed,
                     $"Failed to extract metadata from controller action {actionDisplayName}: {ex.Message}");
             }
         }
 
         _diagnosticsLogger.LogInfo(
-            DiagnosticCodes.Discovery.EndpointsDiscovered,
+            DiagnosticCodes.EndpointsDiscovered,
             $"Controller discovery completed. Discovered {endpoints.Count} endpoints.");
 
         return Task.FromResult<IEnumerable<EndpointMetadata>>(endpoints);

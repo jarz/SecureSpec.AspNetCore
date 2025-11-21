@@ -43,390 +43,282 @@ public static class DiagnosticCodes
     // ============================================
 
     /// <summary>
-    /// Discovery-specific diagnostic codes.
+    /// Endpoints discovered successfully.
     /// </summary>
-    public static class Discovery
-    {
-        /// <summary>
-        /// Endpoints discovered successfully.
-        /// </summary>
-        [DiagnosticCode("Endpoints discovered successfully", DiagnosticLevel.Info, "None")]
-        public const string EndpointsDiscovered = "DISC001";
+    [DiagnosticCode("Endpoints discovered successfully", DiagnosticLevel.Info, "None")]
+    public const string EndpointsDiscovered = "DISC001";
 
-        /// <summary>
-        /// Metadata extraction failed for endpoint.
-        /// </summary>
-        [DiagnosticCode("Metadata extraction failed for endpoint", DiagnosticLevel.Error, "Review endpoint configuration")]
-        public const string MetadataExtractionFailed = "DISC002";
+    /// <summary>
+    /// Metadata extraction failed for endpoint.
+    /// </summary>
+    [DiagnosticCode("Metadata extraction failed for endpoint", DiagnosticLevel.Error, "Review endpoint configuration")]
+    public const string MetadataExtractionFailed = "DISC002";
 
-        /// <summary>
-        /// Endpoint filtered (excluded/included).
-        /// </summary>
-        [DiagnosticCode("Endpoint filtered (excluded/included)", DiagnosticLevel.Info, "Review filtering configuration")]
-        public const string EndpointFiltered = "DISC003";
+    /// <summary>
+    /// Endpoint filtered (excluded/included).
+    /// </summary>
+    [DiagnosticCode("Endpoint filtered (excluded/included)", DiagnosticLevel.Info, "Review filtering configuration")]
+    public const string EndpointFiltered = "DISC003";
 
-        /// <summary>
-        /// Filter execution completed.
-        /// </summary>
-        [DiagnosticCode("Filter execution completed", DiagnosticLevel.Info, "None")]
-        public const string FilterExecutionCompleted = "DISC004";
-    }
+    /// <summary>
+    /// Filter execution completed.
+    /// </summary>
+    [DiagnosticCode("Filter execution completed", DiagnosticLevel.Info, "None")]
+    public const string FilterExecutionCompleted = "DISC004";
 
     // ============================================
     // Security Codes (SEC)
     // ============================================
 
     /// <summary>
-    /// Security-specific diagnostic codes.
+    /// Integrity check failed.
     /// </summary>
-    internal static class Security
-    {
-        /// <summary>
-        /// Integrity check failed.
-        /// </summary>
-        [DiagnosticCode("Integrity check failed", DiagnosticLevel.Critical, "Abort load")]
-        public const string IntegrityCheckFailed = "SEC001";
+    [DiagnosticCode("Integrity check failed", DiagnosticLevel.Critical, "Abort load")]
+    public const string IntegrityCheckFailed = "SEC001";
 
-        /// <summary>
-        /// Operation security requirements mutated (overridden from global).
-        /// </summary>
-        [DiagnosticCode("Operation security requirements mutated", DiagnosticLevel.Info, "Review security configuration")]
-        public const string SecurityRequirementsMutated = "SEC002";
-    }
+    /// <summary>
+    /// Operation security requirements mutated (overridden from global).
+    /// </summary>
+    [DiagnosticCode("Operation security requirements mutated", DiagnosticLevel.Info, "Review security configuration")]
+    public const string SecurityRequirementsMutated = "SEC002";
 
     // ============================================
     // CSP Codes (CSP)
     // ============================================
 
     /// <summary>
-    /// Content Security Policy diagnostic codes.
+    /// CSP mismatch or missing directives.
     /// </summary>
-    internal static class Csp
-    {
-        /// <summary>
-        /// CSP mismatch or missing directives.
-        /// </summary>
-        [DiagnosticCode("CSP mismatch or missing directives", DiagnosticLevel.Error, "Review policy")]
-        public const string CspMismatch = "CSP001";
-    }
+    [DiagnosticCode("CSP mismatch or missing directives", DiagnosticLevel.Error, "Review policy")]
+    public const string CspMismatch = "CSP001";
 
     // ============================================
     // Schema Codes (SCH)
     // ============================================
 
     /// <summary>
-    /// Schema-specific diagnostic codes.
+    /// SchemaId collision suffix applied.
     /// </summary>
-    internal static class Schema
-    {
-        /// <summary>
-        /// SchemaId collision suffix applied.
-        /// </summary>
-        [DiagnosticCode("SchemaId collision suffix applied", DiagnosticLevel.Info, "Confirm stability")]
-        public const string SchemaIdCollision = "SCH001";
+    [DiagnosticCode("SchemaId collision suffix applied", DiagnosticLevel.Info, "Confirm stability")]
+    public const string SchemaIdCollision = "SCH001";
 
-        /// <summary>
-        /// Schema generation exceeded maximum depth.
-        /// </summary>
-        [DiagnosticCode("Schema generation exceeded maximum depth", DiagnosticLevel.Warn, "Review schema structure")]
-        public const string SchemaDepthExceeded = "SCH002";
-    }
+    /// <summary>
+    /// Schema generation exceeded maximum depth.
+    /// </summary>
+    [DiagnosticCode("Schema generation exceeded maximum depth", DiagnosticLevel.Warn, "Review schema structure")]
+    public const string SchemaDepthExceeded = "SCH002";
 
     // ============================================
     // Annotation Codes (ANN)
     // ============================================
 
     /// <summary>
-    /// Data annotation diagnostic codes.
+    /// DataAnnotations conflict (last wins).
     /// </summary>
-    internal static class Annotations
-    {
-        /// <summary>
-        /// DataAnnotations conflict (last wins).
-        /// </summary>
-        [DiagnosticCode("DataAnnotations conflict (last wins)", DiagnosticLevel.Warn, "Harmonize constraints")]
-        public const string DataAnnotationsConflict = "ANN001";
-    }
+    [DiagnosticCode("DataAnnotations conflict (last wins)", DiagnosticLevel.Warn, "Harmonize constraints")]
+    public const string DataAnnotationsConflict = "ANN001";
 
     // ============================================
     // Rate Limit Codes (LIM)
     // ============================================
 
     /// <summary>
-    /// Rate-limiting diagnostic codes.
+    /// Rate limit bucket enforced.
     /// </summary>
-    internal static class RateLimit
-    {
-        /// <summary>
-        /// Rate limit bucket enforced.
-        /// </summary>
-        [DiagnosticCode("Rate limit bucket enforced", DiagnosticLevel.Info, "Evaluate thresholds")]
-        public const string RateLimitEnforced = "LIM001";
+    [DiagnosticCode("Rate limit bucket enforced", DiagnosticLevel.Info, "Evaluate thresholds")]
+    public const string RateLimitEnforced = "LIM001";
 
-        /// <summary>
-        /// Rate limit reset anomaly.
-        /// </summary>
-        [DiagnosticCode("Rate limit reset anomaly", DiagnosticLevel.Warn, "Check time source")]
-        public const string RateLimitResetAnomaly = "LIM002";
-    }
+    /// <summary>
+    /// Rate limit reset anomaly.
+    /// </summary>
+    [DiagnosticCode("Rate limit reset anomaly", DiagnosticLevel.Warn, "Check time source")]
+    public const string RateLimitResetAnomaly = "LIM002";
 
     // ============================================
     // Type Mapping Codes (MAP)
     // ============================================
 
     /// <summary>
-    /// Type mapping diagnostic codes.
+    /// MapType override applied.
     /// </summary>
-    internal static class TypeMapping
-    {
-        /// <summary>
-        /// MapType override applied.
-        /// </summary>
-        [DiagnosticCode("MapType override applied", DiagnosticLevel.Info, "Validate mapping correctness")]
-        public const string MapTypeOverride = "MAP001";
-    }
+    [DiagnosticCode("MapType override applied", DiagnosticLevel.Info, "Validate mapping correctness")]
+    public const string MapTypeOverride = "MAP001";
 
     // ============================================
     // Nullability Codes (NRT)
     // ============================================
 
     /// <summary>
-    /// Nullability diagnostic codes.
+    /// Nullability mismatch.
     /// </summary>
-    internal static class Nullability
-    {
-        /// <summary>
-        /// Nullability mismatch.
-        /// </summary>
-        [DiagnosticCode("Nullability mismatch", DiagnosticLevel.Error, "Adjust NRT config")]
-        public const string NullabilityMismatch = "NRT001";
-    }
+    [DiagnosticCode("Nullability mismatch", DiagnosticLevel.Error, "Adjust NRT config")]
+    public const string NullabilityMismatch = "NRT001";
 
     // ============================================
     // Performance Codes (PERF)
     // ============================================
 
     /// <summary>
-    /// Performance diagnostic codes.
+    /// Resource limit exceeded (time or memory).
     /// </summary>
-    internal static class Performance
-    {
-        /// <summary>
-        /// Resource limit exceeded (time or memory).
-        /// </summary>
-        [DiagnosticCode("Resource limit exceeded (time or memory)", DiagnosticLevel.Warn, "Review resource configuration")]
-        public const string ResourceLimitExceeded = "PERF001";
+    [DiagnosticCode("Resource limit exceeded (time or memory)", DiagnosticLevel.Warn, "Review resource configuration")]
+    public const string ResourceLimitExceeded = "PERF001";
 
-        /// <summary>
-        /// Performance target met (&lt;500ms for 1000 operations).
-        /// </summary>
-        [DiagnosticCode("Performance target met (<500ms for 1000 operations)", DiagnosticLevel.Info, "None")]
-        public const string PerformanceTargetMet = "PERF002";
+    /// <summary>
+    /// Performance target met (&lt;500ms for 1000 operations).
+    /// </summary>
+    [DiagnosticCode("Performance target met (<500ms for 1000 operations)", DiagnosticLevel.Info, "None")]
+    public const string PerformanceTargetMet = "PERF002";
 
-        /// <summary>
-        /// Performance degraded (500-2000ms for 1000 operations).
-        /// </summary>
-        [DiagnosticCode("Performance degraded (500-2000ms for 1000 operations)", DiagnosticLevel.Warn, "Review performance optimizations")]
-        public const string PerformanceDegraded = "PERF003";
+    /// <summary>
+    /// Performance degraded (500-2000ms for 1000 operations).
+    /// </summary>
+    [DiagnosticCode("Performance degraded (500-2000ms for 1000 operations)", DiagnosticLevel.Warn, "Review performance optimizations")]
+    public const string PerformanceDegraded = "PERF003";
 
-        /// <summary>
-        /// Performance failure (&gt;2000ms for 1000 operations).
-        /// </summary>
-        [DiagnosticCode("Performance failure (>2000ms for 1000 operations)", DiagnosticLevel.Error, "Immediate optimization required")]
-        public const string PerformanceFailure = "PERF004";
+    /// <summary>
+    /// Performance failure (&gt;2000ms for 1000 operations).
+    /// </summary>
+    [DiagnosticCode("Performance failure (>2000ms for 1000 operations)", DiagnosticLevel.Error, "Immediate optimization required")]
+    public const string PerformanceFailure = "PERF004";
 
-        /// <summary>
-        /// Performance monitoring metrics collected.
-        /// </summary>
-        [DiagnosticCode("Performance monitoring metrics collected", DiagnosticLevel.Info, "Review performance trends")]
-        public const string PerformanceMetrics = "PERF005";
-    }
+    /// <summary>
+    /// Performance monitoring metrics collected.
+    /// </summary>
+    [DiagnosticCode("Performance monitoring metrics collected", DiagnosticLevel.Info, "Review performance trends")]
+    public const string PerformanceMetrics = "PERF005";
 
     // ============================================
     // Example Generation Codes (EXM)
     // ============================================
 
     /// <summary>
-    /// Example generation diagnostic codes.
+    /// Example generation throttled.
     /// </summary>
-    internal static class ExampleGeneration
-    {
-        /// <summary>
-        /// Example generation throttled.
-        /// </summary>
-        [DiagnosticCode("Example generation throttled", DiagnosticLevel.Warn, "Provide explicit example")]
-        public const string ExampleGenerationThrottled = "EXM001";
-    }
+    [DiagnosticCode("Example generation throttled", DiagnosticLevel.Warn, "Provide explicit example")]
+    public const string ExampleGenerationThrottled = "EXM001";
 
     // ============================================
     // Virtualization Codes (VIRT)
     // ============================================
 
     /// <summary>
-    /// Virtualization diagnostic codes.
+    /// Virtualization threshold triggered.
     /// </summary>
-    internal static class Virtualization
-    {
-        /// <summary>
-        /// Virtualization threshold triggered.
-        /// </summary>
-        [DiagnosticCode("Virtualization threshold triggered", DiagnosticLevel.Info, "Performance expectation")]
-        public const string VirtualizationThresholdTriggered = "VIRT001";
-    }
+    [DiagnosticCode("Virtualization threshold triggered", DiagnosticLevel.Info, "Performance expectation")]
+    public const string VirtualizationThresholdTriggered = "VIRT001";
 
     // ============================================
     // Retention Codes (RET)
     // ============================================
 
     /// <summary>
-    /// Retention diagnostic codes.
+    /// Retention size purge executed.
     /// </summary>
-    internal static class Retention
-    {
-        /// <summary>
-        /// Retention size purge executed.
-        /// </summary>
-        [DiagnosticCode("Retention size purge executed", DiagnosticLevel.Info, "Monitor volume")]
-        public const string RetentionSizePurge = "RET001";
+    [DiagnosticCode("Retention size purge executed", DiagnosticLevel.Info, "Monitor volume")]
+    public const string RetentionSizePurge = "RET001";
 
-        /// <summary>
-        /// Retention age purge executed.
-        /// </summary>
-        [DiagnosticCode("Retention age purge executed", DiagnosticLevel.Info, "Confirm retentionDays")]
-        public const string RetentionAgePurge = "RET002";
-    }
+    /// <summary>
+    /// Retention age purge executed.
+    /// </summary>
+    [DiagnosticCode("Retention age purge executed", DiagnosticLevel.Info, "Confirm retentionDays")]
+    public const string RetentionAgePurge = "RET002";
 
     // ============================================
     // Policy Codes (POL)
     // ============================================
 
     /// <summary>
-    /// Policy diagnostic codes.
+    /// PolicyToScope mapping applied.
     /// </summary>
-    internal static class Policy
-    {
-        /// <summary>
-        /// PolicyToScope mapping applied.
-        /// </summary>
-        [DiagnosticCode("PolicyToScope mapping applied", DiagnosticLevel.Info, "Validate scopes")]
-        public const string PolicyToScopeMapping = "POL001";
-    }
+    [DiagnosticCode("PolicyToScope mapping applied", DiagnosticLevel.Info, "Validate scopes")]
+    public const string PolicyToScopeMapping = "POL001";
 
     // ============================================
     // Configuration Codes (CFG)
     // ============================================
 
     /// <summary>
-    /// Configuration diagnostic codes.
+    /// Invalid per-doc route template attempt.
     /// </summary>
-    internal static class Configuration
-    {
-        /// <summary>
-        /// Invalid per-doc route template attempt.
-        /// </summary>
-        [DiagnosticCode("Invalid per-doc route template attempt", DiagnosticLevel.Info, "Use global template")]
-        public const string InvalidPerDocRouteTemplate = "CFG001";
-    }
+    [DiagnosticCode("Invalid per-doc route template attempt", DiagnosticLevel.Info, "Use global template")]
+    public const string InvalidPerDocRouteTemplate = "CFG001";
 
     // ============================================
     // Sanitization Codes (SAN)
     // ============================================
 
     /// <summary>
-    /// Sanitization diagnostic codes.
+    /// Disallowed head injection.
     /// </summary>
-    internal static class Sanitization
-    {
-        /// <summary>
-        /// Disallowed head injection.
-        /// </summary>
-        [DiagnosticCode("Disallowed head injection", DiagnosticLevel.Warn, "Restrict to meta/link")]
-        public const string DisallowedHeadInjection = "SAN001";
+    [DiagnosticCode("Disallowed head injection", DiagnosticLevel.Warn, "Restrict to meta/link")]
+    public const string DisallowedHeadInjection = "SAN001";
 
-        /// <summary>
-        /// Disallowed head injection attempt.
-        /// </summary>
-        [DiagnosticCode("Disallowed head injection attempt", DiagnosticLevel.Warn, "Use local meta/link")]
-        public const string DisallowedHeadInjectionAttempt = "HD001";
-    }
+    /// <summary>
+    /// Disallowed head injection attempt.
+    /// </summary>
+    [DiagnosticCode("Disallowed head injection attempt", DiagnosticLevel.Warn, "Use local meta/link")]
+    public const string DisallowedHeadInjectionAttempt = "HD001";
 
     // ============================================
     // Boundary Codes (BND)
     // ============================================
 
     /// <summary>
-    /// Boundary diagnostic codes.
+    /// Multipart field count limit exceeded.
     /// </summary>
-    internal static class Boundary
-    {
-        /// <summary>
-        /// Multipart field count limit exceeded.
-        /// </summary>
-        [DiagnosticCode("Multipart field count limit exceeded", DiagnosticLevel.Warn, "Review field count limits")]
-        public const string MultipartFieldCountExceeded = "BND001";
-    }
+    [DiagnosticCode("Multipart field count limit exceeded", DiagnosticLevel.Warn, "Review field count limits")]
+    public const string MultipartFieldCountExceeded = "BND001";
 
     // ============================================
     // Link Codes (LNK)
     // ============================================
 
     /// <summary>
-    /// Link diagnostic codes.
+    /// Circular link detection.
     /// </summary>
-    internal static class Link
-    {
-        /// <summary>
-        /// Circular link detection.
-        /// </summary>
-        [DiagnosticCode("Circular link detection", DiagnosticLevel.Warn, "Review link structure")]
-        public const string CircularLinkDetected = "LNK001";
+    [DiagnosticCode("Circular link detection", DiagnosticLevel.Warn, "Review link structure")]
+    public const string CircularLinkDetected = "LNK001";
 
-        /// <summary>
-        /// Missing operationId but operationRef present.
-        /// </summary>
-        [DiagnosticCode("Missing operationId but operationRef present", DiagnosticLevel.Info, "Using operationRef fallback")]
-        public const string LinkOperationRefFallback = "LNK002";
+    /// <summary>
+    /// Missing operationId but operationRef present.
+    /// </summary>
+    [DiagnosticCode("Missing operationId but operationRef present", DiagnosticLevel.Info, "Using operationRef fallback")]
+    public const string LinkOperationRefFallback = "LNK002";
 
-        /// <summary>
-        /// Missing both operationId and operationRef.
-        /// </summary>
-        [DiagnosticCode("Missing both operationId and operationRef", DiagnosticLevel.Warn, "Provide operationId or operationRef")]
-        public const string LinkMissingReference = "LNK003";
+    /// <summary>
+    /// Missing both operationId and operationRef.
+    /// </summary>
+    [DiagnosticCode("Missing both operationId and operationRef", DiagnosticLevel.Warn, "Provide operationId or operationRef")]
+    public const string LinkMissingReference = "LNK003";
 
-        /// <summary>
-        /// Broken $ref in link.
-        /// </summary>
-        [DiagnosticCode("Broken $ref in link", DiagnosticLevel.Error, "Fix reference path")]
-        public const string LinkBrokenReference = "LNK004";
+    /// <summary>
+    /// Broken $ref in link.
+    /// </summary>
+    [DiagnosticCode("Broken $ref in link", DiagnosticLevel.Error, "Fix reference path")]
+    public const string LinkBrokenReference = "LNK004";
 
-        /// <summary>
-        /// External or unsupported reference in link.
-        /// </summary>
-        [DiagnosticCode("External or unsupported reference in link", DiagnosticLevel.Warn, "Use internal references only")]
-        public const string LinkExternalReference = "LNK005";
-    }
+    /// <summary>
+    /// External or unsupported reference in link.
+    /// </summary>
+    [DiagnosticCode("External or unsupported reference in link", DiagnosticLevel.Warn, "Use internal references only")]
+    public const string LinkExternalReference = "LNK005";
 
     // ============================================
     // Callback Codes (CBK)
     // ============================================
 
     /// <summary>
-    /// Callback diagnostic codes.
+    /// Callback section rendered read-only.
     /// </summary>
-    internal static class Callback
-    {
-        /// <summary>
-        /// Callback section rendered read-only.
-        /// </summary>
-        [DiagnosticCode("Callback section rendered read-only", DiagnosticLevel.Info, "Callbacks do not support Try It Out")]
-        public const string CallbackReadOnly = "CBK001";
+    [DiagnosticCode("Callback section rendered read-only", DiagnosticLevel.Info, "Callbacks do not support Try It Out")]
+    public const string CallbackReadOnly = "CBK001";
 
-        /// <summary>
-        /// Broken $ref in callback.
-        /// </summary>
-        [DiagnosticCode("Broken $ref in callback", DiagnosticLevel.Error, "Fix reference path")]
-        public const string CallbackBrokenReference = "CBK002";
-    }
+    /// <summary>
+    /// Broken $ref in callback.
+    /// </summary>
+    [DiagnosticCode("Broken $ref in callback", DiagnosticLevel.Error, "Fix reference path")]
+    public const string CallbackBrokenReference = "CBK002";
 
     /// <summary>
     /// Gets metadata for a diagnostic code.
@@ -461,25 +353,23 @@ public static class DiagnosticCodes
     {
         var cache = new Dictionary<string, DiagnosticCodeMetadata>();
 
-        // Get all nested static classes within DiagnosticCodes
-        var nestedTypes = typeof(DiagnosticCodes).GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+        var fields = typeof(DiagnosticCodes)
+            .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+            .Where(f => f.IsLiteral && f.FieldType == typeof(string));
 
-        foreach (var nestedType in nestedTypes)
+        foreach (var field in fields)
         {
-            // Get all const string fields in each nested class
-            var fields = nestedType.GetFields(BindingFlags.Public | BindingFlags.Static)
-                .Where(f => f.IsLiteral && f.FieldType == typeof(string));
-
-            foreach (var kvp in fields
-                .Select(field => new { field, attribute = field.GetCustomAttribute<DiagnosticCodeAttribute>() })
-                .Where(x => x.attribute != null))
+            var attribute = field.GetCustomAttribute<DiagnosticCodeAttribute>();
+            if (attribute is null)
             {
-                var code = (string)kvp.field.GetValue(null)!;
-                cache[code] = new DiagnosticCodeMetadata(
-                    kvp.attribute.Description,
-                    kvp.attribute.Level,
-                    kvp.attribute.RecommendedAction);
+                continue;
             }
+
+            var code = (string)field.GetValue(null)!;
+            cache[code] = new DiagnosticCodeMetadata(
+                attribute.Description,
+                attribute.Level,
+                attribute.RecommendedAction);
         }
 
         return cache;

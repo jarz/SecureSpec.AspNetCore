@@ -67,7 +67,7 @@ public class DocumentGenerator
             // Check if limits were exceeded after generation
             if (guard.IsLimitExceeded(out var reason))
             {
-                _logger.LogWarning(DiagnosticCodes.Performance.ResourceLimitExceeded, $"Document '{documentName}' exceeded resource limits during generation", new
+                _logger.LogWarning(DiagnosticCodes.ResourceLimitExceeded, $"Document '{documentName}' exceeded resource limits during generation", new
                 {
                     DocumentName = documentName,
                     Reason = reason,
@@ -84,7 +84,7 @@ public class DocumentGenerator
         catch (ResourceLimitExceededException ex)
         {
             // Limit exceeded during generation - return fallback
-            _logger.LogWarning(DiagnosticCodes.Performance.ResourceLimitExceeded, $"Document '{documentName}' generation aborted due to resource limits", new
+            _logger.LogWarning(DiagnosticCodes.ResourceLimitExceeded, $"Document '{documentName}' generation aborted due to resource limits", new
             {
                 DocumentName = documentName,
                 Reason = ex.Message,
@@ -99,7 +99,7 @@ public class DocumentGenerator
 #pragma warning restore CA1031 // Do not catch general exception types
         {
             // Other generation errors - also return fallback
-            _logger.LogWarning(DiagnosticCodes.Performance.ResourceLimitExceeded, $"Document '{documentName}' generation failed", new
+            _logger.LogWarning(DiagnosticCodes.ResourceLimitExceeded, $"Document '{documentName}' generation failed", new
             {
                 DocumentName = documentName,
                 Error = ex.Message,

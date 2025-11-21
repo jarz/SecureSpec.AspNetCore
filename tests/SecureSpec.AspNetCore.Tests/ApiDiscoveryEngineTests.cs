@@ -30,7 +30,7 @@ public class ApiDiscoveryEngineTests
         Assert.Empty(result);
 
         var events = diagnosticsLogger.GetEvents();
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.Discovery.EndpointFiltered && e.Message.Contains("No discovery strategies", StringComparison.Ordinal));
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.EndpointFiltered && e.Message.Contains("No discovery strategies", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public class ApiDiscoveryEngineTests
         Assert.Empty(result);
 
         var events = diagnosticsLogger.GetEvents();
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.Discovery.EndpointFiltered);
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.EndpointFiltered);
     }
 
     [Fact]
@@ -286,7 +286,7 @@ public class ApiDiscoveryEngineTests
 
         // Assert
         var events = diagnosticsLogger.GetEvents();
-        Assert.Contains(events, e => e.Code == DiagnosticCodes.Discovery.EndpointsDiscovered);
+        Assert.Contains(events, e => e.Code == DiagnosticCodes.EndpointsDiscovered);
     }
 
     [Fact]

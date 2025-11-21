@@ -119,7 +119,7 @@ public class IntegrityValidator
         if (parts.Length != 2)
         {
             _logger?.LogCritical(
-                DiagnosticCodes.Security.IntegrityCheckFailed,
+                DiagnosticCodes.IntegrityCheckFailed,
                 "Invalid SRI format",
                 new { SriValue = sriValue, ResourcePathRedacted = resourcePath != null ? RedactedPlaceholder : null });
             return false;
@@ -132,7 +132,7 @@ public class IntegrityValidator
         if (!string.Equals(algorithm, "sha256", StringComparison.OrdinalIgnoreCase))
         {
             _logger?.LogCritical(
-                DiagnosticCodes.Security.IntegrityCheckFailed,
+                DiagnosticCodes.IntegrityCheckFailed,
                 "Unsupported SRI algorithm",
                 new { Algorithm = algorithm, Supported = "sha256", ResourcePathRedacted = resourcePath != null ? RedactedPlaceholder : null });
             return false;
@@ -153,7 +153,7 @@ public class IntegrityValidator
             var partialActual = actualBase64Hash.Length >= 12 ? actualBase64Hash[..12] : actualBase64Hash;
 
             _logger?.LogCritical(
-                DiagnosticCodes.Security.IntegrityCheckFailed,
+                DiagnosticCodes.IntegrityCheckFailed,
                 "SRI integrity check failed",
                 new
                 {

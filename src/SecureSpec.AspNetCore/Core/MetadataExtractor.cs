@@ -58,7 +58,7 @@ public class MetadataExtractor
         catch (Exception ex)
         {
             _diagnosticsLogger.LogError(
-                DiagnosticCodes.Discovery.MetadataExtractionFailed,
+                DiagnosticCodes.MetadataExtractionFailed,
                 $"Failed to enrich metadata for {metadata.MethodInfo.Name}: {ex.Message}");
         }
     }
