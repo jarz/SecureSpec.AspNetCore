@@ -16,7 +16,11 @@ public class SchemaGeneratorExampleIntegrationTests
 
     public SchemaGeneratorExampleIntegrationTests()
     {
-        _options = new SchemaOptions();
+        _options = new SchemaOptions
+        {
+            // Disable the timeout so fallback example generation cannot be throttled on slower CI agents.
+            ExampleGenerationTimeoutMs = 0
+        };
         _generator = new SchemaGenerator(_options, new DiagnosticsLogger());
     }
 
