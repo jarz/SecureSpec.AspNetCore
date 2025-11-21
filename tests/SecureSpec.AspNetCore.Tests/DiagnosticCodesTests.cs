@@ -113,7 +113,7 @@ public class DiagnosticCodesTests
     }
 
     [Fact]
-    public void SCH001_DEPTH_SchemaDepthExceeded_HasCorrectMetadata()
+    public void SCH002_SchemaDepthExceeded_HasCorrectMetadata()
     {
         // Act
         var metadata = DiagnosticCodes.GetMetadata(DiagnosticCodes.SchemaDepthExceeded);
@@ -428,7 +428,7 @@ public class DiagnosticCodesTests
     [InlineData("SEC001")]
     [InlineData("CSP001")]
     [InlineData("SCH001")]
-    [InlineData("SCH001-DEPTH")]
+    [InlineData("SCH002")]
     [InlineData("ANN001")]
     [InlineData("LIM001")]
     [InlineData("LIM002")]
