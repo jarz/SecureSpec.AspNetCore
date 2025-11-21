@@ -45,7 +45,7 @@ public static class DiagnosticCodes
     /// <summary>
     /// Discovery-specific diagnostic codes.
     /// </summary>
-    internal static class Discovery
+    public static class Discovery
     {
         /// <summary>
         /// Endpoints discovered successfully.
