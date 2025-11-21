@@ -470,17 +470,15 @@ public static class DiagnosticCodes
             var fields = nestedType.GetFields(BindingFlags.Public | BindingFlags.Static)
                 .Where(f => f.IsLiteral && f.FieldType == typeof(string));
 
-            foreach (var field in fields)
+            foreach (var kvp in fields
+                .Select(field => new { field, attribute = field.GetCustomAttribute<DiagnosticCodeAttribute>() })
+                .Where(x => x.attribute != null))
             {
-                var attribute = field.GetCustomAttribute<DiagnosticCodeAttribute>();
-                if (attribute != null)
-                {
-                    var code = (string)field.GetValue(null)!;
-                    cache[code] = new DiagnosticCodeMetadata(
-                        attribute.Description,
-                        attribute.Level,
-                        attribute.RecommendedAction);
-                }
+                var code = (string)kvp.field.GetValue(null)!;
+                cache[code] = new DiagnosticCodeMetadata(
+                    kvp.attribute.Description,
+                    kvp.attribute.Level,
+                    kvp.attribute.RecommendedAction);
             }
         }
 
