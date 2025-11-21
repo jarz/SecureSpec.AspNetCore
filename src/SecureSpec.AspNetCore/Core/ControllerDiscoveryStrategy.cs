@@ -575,14 +575,10 @@ public class ControllerDiscoveryStrategy : IEndpointDiscoveryStrategy
         result = ReplaceTokenCaseInsensitive(result, "[action]", actionPlaceholder);
 
         // Second pass: replace placeholders with actual values
-        if (routeValues != null && routeValues.TryGetValue("area", out var area) && !string.IsNullOrEmpty(area))
-        {
-            result = result.Replace(areaPlaceholder, area, StringComparison.Ordinal);
-        }
-        else
-        {
-            result = result.Replace(areaPlaceholder, string.Empty, StringComparison.Ordinal);
-        }
+        result = result.Replace(
+            areaPlaceholder,
+            (routeValues != null && routeValues.TryGetValue("area", out var area) && !string.IsNullOrEmpty(area)) ? area : string.Empty,
+            StringComparison.Ordinal);
 
         var controllerName = !string.IsNullOrEmpty(actionDescriptor.ControllerName) ? actionDescriptor.ControllerName : string.Empty;
         result = result.Replace(controllerPlaceholder, controllerName, StringComparison.Ordinal);
