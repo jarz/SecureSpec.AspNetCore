@@ -30,17 +30,20 @@ public static class SecureSpecServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configure);
 
+        // Configure options
+        services.Configure(configure);
+
+        // Build a temporary options instance to register any configured filters
+        var tempOptions = new SecureSpecOptions();
+        configure(tempOptions);
+        RegisterConfiguredFilters(services, tempOptions.Filters);
+
         // Check if already registered - no lock needed as IServiceCollection operations are safe
         // and each service collection instance is independent
         if (services.Any(d => d.ServiceType == typeof(ApiDiscoveryEngine)))
         {
-            // Still apply configuration even if services are already registered
-            services.Configure(configure);
             return services;
         }
-
-        // Configure options
-        services.Configure(configure);
 
         // Register diagnostics logger as singleton
         services.AddSingleton<DiagnosticsLogger>();
@@ -65,12 +68,6 @@ public static class SecureSpecServiceCollectionExtensions
 
         // Register API discovery engine as singleton
         services.AddSingleton<ApiDiscoveryEngine>();
-
-        // Register all filter types from the configuration BEFORE FilterPipeline
-        // Build temporary options to get filter types
-        var tempOptions = new SecureSpecOptions();
-        configure(tempOptions);
-        RegisterConfiguredFilters(services, tempOptions.Filters);
 
         // Register filter pipeline as singleton (after filters are registered)
         services.AddSingleton<FilterPipeline>(sp =>

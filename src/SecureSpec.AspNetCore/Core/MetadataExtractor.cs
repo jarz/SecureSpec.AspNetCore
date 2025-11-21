@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using SecureSpec.AspNetCore.Diagnostics;
 using SecureSpec.AspNetCore.Schema;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Reflection;
 using System.Xml.Linq;
@@ -17,7 +18,7 @@ public class MetadataExtractor
 {
     private readonly SchemaGenerator _schemaGenerator;
     private readonly DiagnosticsLogger _diagnosticsLogger;
-    private readonly Dictionary<Assembly, XDocument?> _xmlDocCache = new();
+    private readonly ConcurrentDictionary<Assembly, Lazy<XDocument?>> _xmlDocCache = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MetadataExtractor"/> class.
@@ -370,12 +371,7 @@ public class MetadataExtractor
             return null;
         }
 
-        if (!_xmlDocCache.TryGetValue(assembly, out var xmlDoc))
-        {
-            xmlDoc = LoadXmlDocumentation(assembly);
-            _xmlDocCache[assembly] = xmlDoc;
-        }
-
+        var xmlDoc = GetAssemblyXmlDocumentation(assembly);
         if (xmlDoc == null)
         {
             return null;
@@ -411,12 +407,7 @@ public class MetadataExtractor
             return null;
         }
 
-        if (!_xmlDocCache.TryGetValue(assembly, out var xmlDoc))
-        {
-            xmlDoc = LoadXmlDocumentation(assembly);
-            _xmlDocCache[assembly] = xmlDoc;
-        }
-
+        var xmlDoc = GetAssemblyXmlDocumentation(assembly);
         if (xmlDoc == null)
         {
             return null;
@@ -472,6 +463,15 @@ public class MetadataExtractor
         }
 
         return null;
+    }
+
+    private XDocument? GetAssemblyXmlDocumentation(Assembly assembly)
+    {
+        var lazy = _xmlDocCache.GetOrAdd(
+            assembly,
+            asm => new Lazy<XDocument?>(() => LoadXmlDocumentation(asm), LazyThreadSafetyMode.ExecutionAndPublication));
+
+        return lazy.Value;
     }
 
     private static string GetXmlMemberName(MemberInfo member)
