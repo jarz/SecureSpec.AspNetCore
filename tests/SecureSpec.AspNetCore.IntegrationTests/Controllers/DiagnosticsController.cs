@@ -15,7 +15,7 @@ public class DiagnosticsController : ControllerBase
     /// Endpoint excluded at the method level.
     /// </summary>
     [HttpGet("excluded")]
-    [ExcludeFromSpec("Excluded endpoint" )]
+    [ExcludeFromSpec("Excluded endpoint")]
     public IActionResult ExcludedEndpoint() => Ok();
 
     /// <summary>
