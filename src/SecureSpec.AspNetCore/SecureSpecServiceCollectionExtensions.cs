@@ -48,6 +48,9 @@ public static class SecureSpecServiceCollectionExtensions
         // Register diagnostics logger as singleton
         services.AddSingleton<DiagnosticsLogger>();
 
+        // Register schema options projection for downstream services
+        services.AddSingleton(sp => sp.GetRequiredService<IOptions<SecureSpecOptions>>().Value.Schema);
+
         // Register document cache as singleton
         services.AddSingleton<DocumentCache>(sp =>
         {
@@ -57,7 +60,12 @@ public static class SecureSpecServiceCollectionExtensions
         });
 
         // Register schema generator as singleton
-        services.AddSingleton<SchemaGenerator>();
+        services.AddSingleton<SchemaGenerator>(sp =>
+        {
+            var logger = sp.GetRequiredService<DiagnosticsLogger>();
+            var schemaOptions = sp.GetRequiredService<SchemaOptions>();
+            return new SchemaGenerator(schemaOptions, logger);
+        });
 
         // Register discovery strategies as singletons
         services.AddSingleton<IEndpointDiscoveryStrategy, ControllerDiscoveryStrategy>();
